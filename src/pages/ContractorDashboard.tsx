@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Loader2, Clock, DollarSign, Star, AlertCircle } from "lucide-react";
@@ -87,15 +88,41 @@ export default function ContractorDashboard() {
           <p className="text-muted-foreground">Willkommen zurück</p>
         </div>
 
-        {!profile?.verified && (
+        {!profile && (
+          <Alert className="mb-6">
+            <AlertCircle className="h-4 w-4" />
+            <AlertTitle>Profil vervollständigen</AlertTitle>
+            <AlertDescription>
+              Bitte vervollständigen Sie Ihr Profil um Aufträge zu erhalten.
+              <Button 
+                className="mt-2 w-full"
+                onClick={() => navigate("/handwerker/profil-erstellen")}
+              >
+                Profil jetzt erstellen
+              </Button>
+            </AlertDescription>
+          </Alert>
+        )}
+
+        {profile && !profile.verified && (
           <Alert className="mb-6">
             <AlertCircle className="h-4 w-4" />
             <AlertTitle>Profil wird geprüft</AlertTitle>
             <AlertDescription>
-              Ihr Handwerkerprofil wird derzeit von unserem Team überprüft. 
-              Sie werden benachrichtigt, sobald Ihr Profil verifiziert wurde.
+              Ihr Profil wird aktuell von unserem Team geprüft. 
+              Sie können Aufträge sehen, sobald Ihr Profil verifiziert wurde.
             </AlertDescription>
           </Alert>
+        )}
+
+        {profile && profile.verified && (
+          <Button 
+            size="lg"
+            onClick={() => navigate("/handwerker/projekte")}
+            className="mb-6"
+          >
+            Projekt-Marktplatz durchsuchen
+          </Button>
         )}
 
         <div className="grid gap-6 md:grid-cols-3">
@@ -141,16 +168,6 @@ export default function ContractorDashboard() {
           </Card>
         </div>
 
-        {!profile && (
-          <Card className="mt-6">
-            <CardHeader>
-              <CardTitle>Profil vervollständigen</CardTitle>
-              <CardDescription>
-                Vervollständigen Sie Ihr Handwerkerprofil, um Aufträge zu erhalten
-              </CardDescription>
-            </CardHeader>
-          </Card>
-        )}
       </div>
     </div>
   );
