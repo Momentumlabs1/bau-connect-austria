@@ -22,13 +22,13 @@ const Index = () => {
             Schnell, zuverlässig und transparent.
           </p>
           <div className="flex flex-col items-center justify-center gap-4 sm:flex-row">
-            <Button size="lg" onClick={() => navigate("/register")} className="w-full sm:w-auto">
+            <Button size="lg" onClick={() => navigate("/register?role=customer")} className="w-full sm:w-auto">
               Auftrag erstellen
             </Button>
             <Button 
               size="lg" 
               variant="secondary" 
-              onClick={() => navigate("/register")}
+              onClick={() => navigate("/register?role=contractor")}
               className="w-full sm:w-auto"
             >
               <Wrench className="mr-2 h-5 w-5" />
