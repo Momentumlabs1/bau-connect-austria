@@ -11,27 +11,13 @@ import { Navbar } from "@/components/Navbar";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ProgressStepper } from "@/components/wizard/ProgressStepper";
 import { SelectionCard } from "@/components/wizard/SelectionCard";
+import { TradeSelectionGrid } from "@/components/wizard/TradeSelectionGrid";
 import { tradeQuestions, commonQuestions } from "@/components/wizard/tradeQuestions";
-import { ArrowLeft, ArrowRight, Search, X } from "lucide-react";
-import { 
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2 } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
-
-const trades = [
-  { value: "Maler", label: "Maler", keywords: ["tapezieren", "streichen", "malerarbeiten", "renovieren", "tapete"] },
-  { value: "Elektriker", label: "Elektriker", keywords: ["elektrik", "steckdose", "lichtschalter", "verkabelung"] },
-  { value: "Sanitär", label: "Sanitär", keywords: ["klempner", "bad", "wc", "wasserhahn", "heizung"] },
-  { value: "Bau", label: "Bau", keywords: ["bauarbeiten", "umbau", "neubau", "sanierung"] },
-  { value: "Sonstige", label: "Sonstige", keywords: [] }
-];
+import { motion } from "framer-motion";
+import { Card } from "@/components/ui/card";
 
 const steps = [
   { id: 0, label: "Gewerk" },
@@ -60,8 +46,7 @@ export default function CreateProject() {
   const [currentStep, setCurrentStep] = useState(0);
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string>("");
-  const [searchOpen, setSearchOpen] = useState(false);
-  const [searchValue, setSearchValue] = useState("");
+  const [wantsImages, setWantsImages] = useState(false);
   
   const [projectData, setProjectData] = useState<ProjectData>({
     trade: "",
@@ -89,19 +74,21 @@ export default function CreateProject() {
     : [];
 
   const handleNext = () => {
+    // Validation for Step 0
     if (currentStep === 0 && !projectData.trade) {
       toast({
-        title: "Fehler",
-        description: "Bitte wählen Sie ein Gewerk",
+        title: "Bitte wählen Sie ein Gewerk",
+        description: "Wählen Sie ein Gewerk aus, um fortzufahren",
         variant: "destructive",
       });
       return;
     }
 
+    // Validation for Step 2
     if (currentStep === 2) {
       if (!projectData.postal_code || !projectData.city) {
         toast({
-          title: "Fehler",
+          title: "Pflichtfelder fehlen",
           description: "Bitte geben Sie PLZ und Stadt an",
           variant: "destructive",
         });
@@ -109,10 +96,11 @@ export default function CreateProject() {
       }
     }
 
+    // Validation for Step 3
     if (currentStep === 3 && !projectData.urgency) {
       toast({
-        title: "Fehler",
-        description: "Bitte wählen Sie einen Zeitplan",
+        title: "Bitte wählen Sie einen Zeitplan",
+        description: "Wann soll die Arbeit erledigt werden?",
         variant: "destructive",
       });
       return;
@@ -120,29 +108,32 @@ export default function CreateProject() {
 
     if (currentStep < steps.length - 1) {
       setCurrentStep(currentStep + 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handleBack = () => {
     if (currentStep > 0) {
       setCurrentStep(currentStep - 1);
+      window.scrollTo({ top: 0, behavior: "smooth" });
     }
   };
 
   const handleSubmit = async () => {
     if (!userId) {
       toast({
-        title: "Fehler",
-        description: "Sie müssen angemeldet sein",
+        title: "Anmeldung erforderlich",
+        description: "Sie müssen angemeldet sein, um ein Projekt zu erstellen",
         variant: "destructive",
       });
+      navigate("/login");
       return;
     }
 
     if (!projectData.title || !projectData.description) {
       toast({
-        title: "Fehler",
-        description: "Bitte füllen Sie alle Pflichtfelder aus",
+        title: "Pflichtfelder fehlen",
+        description: "Bitte füllen Sie Titel und Beschreibung aus",
         variant: "destructive",
       });
       return;
@@ -171,14 +162,14 @@ export default function CreateProject() {
       if (error) throw error;
 
       toast({
-        title: "Projekt erstellt!",
-        description: "Ihr Projekt wurde veröffentlicht",
+        title: "🎉 Projekt erfolgreich erstellt!",
+        description: "Handwerker in Ihrer Nähe werden benachrichtigt",
       });
 
       navigate("/kunde/dashboard");
     } catch (error: any) {
       toast({
-        title: "Fehler",
+        title: "Fehler beim Erstellen",
         description: error.message,
         variant: "destructive",
       });
@@ -204,75 +195,45 @@ export default function CreateProject() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        // Trade Selection with Search
+        // Trade Selection with Beautiful Grid
         return (
-          <div className="space-y-8 animate-fade-in">
-            <div className="text-center">
-              <h1 className="text-3xl font-bold tracking-tight">
-                Der zuverlässige Weg, einen Handwerker zu beauftragen
-              </h1>
-            </div>
-
-            <div className="mx-auto max-w-2xl">
-              <Label className="text-lg">Beschreiben Sie Ihren Auftrag</Label>
-              <Popover open={searchOpen} onOpenChange={setSearchOpen}>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    role="combobox"
-                    className="w-full justify-between h-14 text-lg mt-2"
-                  >
-                    {projectData.trade || "z. B.: Malerarbeiten"}
-                    <Search className="ml-2 h-5 w-5 shrink-0 opacity-50" />
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-full p-0" align="start">
-                  <Command>
-                    <CommandInput 
-                      placeholder="Suchen Sie nach einem Gewerk..." 
-                      value={searchValue}
-                      onValueChange={setSearchValue}
-                    />
-                    <CommandList>
-                      <CommandEmpty>Keine Ergebnisse gefunden.</CommandEmpty>
-                      <CommandGroup heading="Passende Leistungen">
-                        {trades
-                          .filter(trade => 
-                            trade.label.toLowerCase().includes(searchValue.toLowerCase()) ||
-                            trade.keywords.some(keyword => 
-                              keyword.toLowerCase().includes(searchValue.toLowerCase())
-                            )
-                          )
-                          .map((trade) => (
-                            <CommandItem
-                              key={trade.value}
-                              value={trade.value}
-                              onSelect={() => {
-                                updateProjectData("trade", trade.value);
-                                setSearchOpen(false);
-                                setSearchValue("");
-                              }}
-                            >
-                              {trade.label}
-                            </CommandItem>
-                          ))}
-                      </CommandGroup>
-                    </CommandList>
-                  </Command>
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+          >
+            <TradeSelectionGrid
+              selectedTrade={projectData.trade}
+              onTradeSelect={(trade) => updateProjectData("trade", trade)}
+            />
+          </motion.div>
         );
 
       case 1:
         // Trade-Specific Questions
         return (
-          <div className="space-y-8 animate-fade-in">
-            {currentTradeQuestions.map((question) => (
-              <div key={question.id} className="space-y-4">
-                <Label className="text-lg">
-                  {question.label} {question.required && "*"}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            <div className="text-center space-y-2">
+              <h2 className="text-3xl font-bold">Details zu Ihrem {projectData.trade}-Projekt</h2>
+              <p className="text-muted-foreground">
+                Je genauer Ihre Angaben, desto besser können Handwerker Ihnen helfen
+              </p>
+            </div>
+
+            {currentTradeQuestions.map((question, index) => (
+              <motion.div
+                key={question.id}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: index * 0.1 }}
+                className="space-y-4"
+              >
+                <Label className="text-lg font-semibold">
+                  {question.label} {question.required && <span className="text-destructive">*</span>}
                 </Label>
 
                 {question.type === "multiselect" && question.options && (
@@ -308,13 +269,15 @@ export default function CreateProject() {
                     <div className="space-y-3">
                       {question.options.map((option) => {
                         const Icon = option.icon;
+                        const isSelected = projectData.tradeSpecificAnswers[question.id] === option.value;
+                        
                         return (
                           <div
                             key={option.value}
                             className={cn(
-                              "flex items-center space-x-3 rounded-lg border-2 p-4 transition-all cursor-pointer hover:border-primary/50",
-                              projectData.tradeSpecificAnswers[question.id] === option.value
-                                ? "border-primary bg-primary/5"
+                              "flex items-center space-x-3 rounded-lg border-2 p-4 transition-all cursor-pointer hover:border-primary/50 hover:shadow-md",
+                              isSelected
+                                ? "border-primary bg-primary/5 shadow-sm"
                                 : "border-border"
                             )}
                             onClick={() => updateTradeSpecificAnswer(question.id, option.value)}
@@ -333,246 +296,386 @@ export default function CreateProject() {
                     </div>
                   </RadioGroup>
                 )}
-              </div>
+
+                {question.type === "textarea" && (
+                  <Textarea
+                    value={projectData.tradeSpecificAnswers[question.id] || ""}
+                    onChange={(e) => updateTradeSpecificAnswer(question.id, e.target.value)}
+                    placeholder={question.placeholder}
+                    rows={6}
+                    className="resize-none"
+                  />
+                )}
+              </motion.div>
             ))}
 
-            {/* Description */}
-            <div className="space-y-2">
-              <Label htmlFor="description" className="text-lg">
-                Weitere Angaben (optional)
-              </Label>
-              <p className="text-sm text-muted-foreground">
-                Bitte erzählen Sie uns weitere Einzelheiten zu Ihrem Auftrag; wenn möglich z. B. die betroffenen Räume und die Art der Tapete, die Sie sich wünschen.
-              </p>
-              <Textarea
-                id="description"
-                value={projectData.description}
-                onChange={(e) => updateProjectData("description", e.target.value)}
-                placeholder="Vermeiden Sie hier die Angabe von Kontaktdaten und nutzen stattdessen die Kontaktfunktionen."
-                rows={6}
-                className="resize-none"
-              />
-            </div>
-          </div>
+            {/* Additional Description */}
+            {projectData.trade !== "Sonstige" && (
+              <motion.div
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: currentTradeQuestions.length * 0.1 }}
+                className="space-y-2"
+              >
+                <Label htmlFor="description" className="text-lg font-semibold">
+                  Weitere Angaben <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <p className="text-sm text-muted-foreground">
+                  Beschreiben Sie weitere Details zu Ihrem Projekt
+                </p>
+                <Textarea
+                  id="description"
+                  value={projectData.description}
+                  onChange={(e) => updateProjectData("description", e.target.value)}
+                  placeholder="z.B. Raumgröße, spezielle Wünsche, Materialien..."
+                  rows={5}
+                  className="resize-none"
+                />
+              </motion.div>
+            )}
+          </motion.div>
         );
 
       case 2:
         // Location
         return (
-          <div className="space-y-6 animate-fade-in">
-            <div>
-              <h2 className="text-2xl font-bold">Wo soll die Arbeit ausgeführt werden?</h2>
-              <p className="text-muted-foreground mt-2">
-                Handwerker in Ihrer Nähe werden benachrichtigt
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            <div className="text-center space-y-2">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <MapPin className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold">Wo soll die Arbeit ausgeführt werden?</h2>
+              <p className="text-muted-foreground">
+                Handwerker in Ihrer Nähe werden automatisch benachrichtigt
               </p>
             </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="postal_code">Postleitzahl *</Label>
-                <Input
-                  id="postal_code"
-                  value={projectData.postal_code}
-                  onChange={(e) => updateProjectData("postal_code", e.target.value)}
-                  placeholder="1010"
-                  maxLength={4}
-                />
+            <Card className="p-6 space-y-6">
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="space-y-2">
+                  <Label htmlFor="postal_code">
+                    Postleitzahl <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="postal_code"
+                    value={projectData.postal_code}
+                    onChange={(e) => updateProjectData("postal_code", e.target.value)}
+                    placeholder="1010"
+                    maxLength={4}
+                    className="h-12"
+                  />
+                </div>
+                <div className="space-y-2">
+                  <Label htmlFor="city">
+                    Stadt <span className="text-destructive">*</span>
+                  </Label>
+                  <Input
+                    id="city"
+                    value={projectData.city}
+                    onChange={(e) => updateProjectData("city", e.target.value)}
+                    placeholder="Wien"
+                    className="h-12"
+                  />
+                </div>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="city">Stadt *</Label>
-                <Input
-                  id="city"
-                  value={projectData.city}
-                  onChange={(e) => updateProjectData("city", e.target.value)}
-                  placeholder="Wien"
-                />
-              </div>
-            </div>
 
-            <div className="space-y-2">
-              <Label htmlFor="address">Adresse (optional)</Label>
-              <Input
-                id="address"
-                value={projectData.address}
-                onChange={(e) => updateProjectData("address", e.target.value)}
-                placeholder="Musterstraße 123"
-              />
-            </div>
+              <div className="space-y-2">
+                <Label htmlFor="address">
+                  Straße und Hausnummer <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <Input
+                  id="address"
+                  value={projectData.address}
+                  onChange={(e) => updateProjectData("address", e.target.value)}
+                  placeholder="Musterstraße 123"
+                  className="h-12"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Die genaue Adresse wird nur an beauftragte Handwerker weitergegeben
+                </p>
+              </div>
 
-            <div className="grid gap-4 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="budget_min">Budget Min (EUR)</Label>
-                <Input
-                  id="budget_min"
-                  type="number"
-                  value={projectData.budget_min || ""}
-                  onChange={(e) => updateProjectData("budget_min", e.target.value ? parseInt(e.target.value) : undefined)}
-                  placeholder="1000"
-                />
+              <div className="border-t pt-6">
+                <Label className="text-base font-semibold mb-4 block">
+                  Budget <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+                </Label>
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="budget_min" className="text-sm">Von (EUR)</Label>
+                    <Input
+                      id="budget_min"
+                      type="number"
+                      value={projectData.budget_min || ""}
+                      onChange={(e) => updateProjectData("budget_min", e.target.value ? parseInt(e.target.value) : undefined)}
+                      placeholder="1000"
+                      className="h-12"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="budget_max" className="text-sm">Bis (EUR)</Label>
+                    <Input
+                      id="budget_max"
+                      type="number"
+                      value={projectData.budget_max || ""}
+                      onChange={(e) => updateProjectData("budget_max", e.target.value ? parseInt(e.target.value) : undefined)}
+                      placeholder="5000"
+                      className="h-12"
+                    />
+                  </div>
+                </div>
+                <p className="text-xs text-muted-foreground mt-2">
+                  Die Budgetangabe hilft Handwerkern, passende Angebote zu erstellen
+                </p>
               </div>
-              <div className="space-y-2">
-                <Label htmlFor="budget_max">Budget Max (EUR)</Label>
-                <Input
-                  id="budget_max"
-                  type="number"
-                  value={projectData.budget_max || ""}
-                  onChange={(e) => updateProjectData("budget_max", e.target.value ? parseInt(e.target.value) : undefined)}
-                  placeholder="5000"
-                />
-              </div>
-            </div>
-          </div>
+            </Card>
+          </motion.div>
         );
 
       case 3:
         // Timing
         return (
-          <div className="space-y-6 animate-fade-in">
-            <div>
-              <h2 className="text-2xl font-bold">Wann soll die Arbeit erledigt werden?</h2>
-              <p className="text-sm text-muted-foreground mt-2">(optional)</p>
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            <div className="text-center space-y-2">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <Calendar className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold">Wann soll die Arbeit erledigt werden?</h2>
+              <p className="text-muted-foreground">
+                Dies hilft Handwerkern bei der Planung
+              </p>
             </div>
 
             <RadioGroup
               value={projectData.urgency}
               onValueChange={(value) => updateProjectData("urgency", value)}
             >
-              <div className="space-y-3">
-                {commonQuestions[0].options?.map((option) => (
-                  <div
-                    key={option.value}
-                    className={cn(
-                      "flex items-center space-x-3 rounded-lg border-2 p-4 transition-all cursor-pointer hover:border-primary/50",
-                      projectData.urgency === option.value
-                        ? "border-primary bg-primary/5"
-                        : "border-border"
-                    )}
-                    onClick={() => updateProjectData("urgency", option.value)}
-                  >
-                    <RadioGroupItem value={option.value} id={option.value} />
-                    <Label 
-                      htmlFor={option.value} 
-                      className="flex-1 cursor-pointer font-normal"
+              <div className="space-y-3 max-w-2xl mx-auto">
+                {commonQuestions[0].options?.map((option) => {
+                  const isSelected = projectData.urgency === option.value;
+                  
+                  return (
+                    <motion.div
+                      key={option.value}
+                      whileHover={{ scale: 1.02 }}
+                      whileTap={{ scale: 0.98 }}
                     >
-                      {option.label}
-                    </Label>
-                  </div>
-                ))}
+                      <div
+                        className={cn(
+                          "flex items-center space-x-4 rounded-lg border-2 p-5 transition-all cursor-pointer hover:border-primary/50 hover:shadow-md",
+                          isSelected
+                            ? "border-primary bg-primary/5 shadow-sm"
+                            : "border-border"
+                        )}
+                        onClick={() => updateProjectData("urgency", option.value)}
+                      >
+                        <RadioGroupItem value={option.value} id={option.value} className="flex-shrink-0" />
+                        <Label 
+                          htmlFor={option.value} 
+                          className="flex-1 cursor-pointer font-medium"
+                        >
+                          {option.label}
+                        </Label>
+                      </div>
+                    </motion.div>
+                  );
+                })}
               </div>
             </RadioGroup>
-          </div>
+          </motion.div>
         );
 
       case 4:
         // Images
         return (
-          <div className="space-y-6 animate-fade-in">
-            <div>
-              <h2 className="text-2xl font-bold">Fotos oder Baupläne</h2>
-              <p className="text-sm text-muted-foreground mt-2">(optional)</p>
-              <p className="text-sm text-muted-foreground mt-1">
-                Indem Sie Bilder hinzufügen, können Handwerker Ihren Auftrag besser beurteilen und Ihnen ein besseres Angebot unterbreiten.
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            <div className="text-center space-y-2">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <ImageIcon className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold">Fotos oder Baupläne hinzufügen</h2>
+              <p className="text-muted-foreground">
+                Bilder helfen Handwerkern, Ihr Projekt besser zu verstehen
               </p>
             </div>
 
-            <div className="space-y-4">
-              <div className="flex items-center space-x-4">
+            <Card className="p-8 max-w-2xl mx-auto space-y-6">
+              <div className="flex items-start space-x-4">
                 <Checkbox 
-                  id="has-images"
-                  checked={projectData.images.length > 0}
+                  id="wants-images"
+                  checked={wantsImages}
+                  onCheckedChange={(checked) => setWantsImages(checked as boolean)}
+                  className="mt-1"
                 />
-                <Label htmlFor="has-images" className="text-base font-normal">
-                  Ja, ich möchte Bilder hochladen
-                </Label>
+                <div className="space-y-1">
+                  <Label htmlFor="wants-images" className="text-base font-medium cursor-pointer">
+                    Ja, ich möchte Bilder hochladen
+                  </Label>
+                  <p className="text-sm text-muted-foreground">
+                    Laden Sie bis zu 25 Bilder hoch (JPG, PNG, max. 5MB pro Bild)
+                  </p>
+                </div>
               </div>
 
-              {projectData.images.length > 0 && (
-                <ImageUpload
-                  bucket="project-images"
-                  folder={userId}
-                  maxImages={25}
-                  onImagesChange={(images) => updateProjectData("images", images)}
-                />
+              {wantsImages && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: "auto" }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="pt-4 border-t"
+                >
+                  <ImageUpload
+                    bucket="project-images"
+                    folder={userId}
+                    maxImages={25}
+                    onImagesChange={(images) => updateProjectData("images", images)}
+                  />
+                </motion.div>
               )}
 
-              <div className="flex items-center space-x-4">
-                <Checkbox id="no-images" checked={projectData.images.length === 0} />
-                <Label htmlFor="no-images" className="text-base font-normal">
-                  Nein, vielleicht später
-                </Label>
-              </div>
-            </div>
-          </div>
+              {!wantsImages && (
+                <div className="flex items-center space-x-2 text-sm text-muted-foreground p-4 bg-muted/50 rounded-lg">
+                  <CheckCircle2 className="h-5 w-5 flex-shrink-0" />
+                  <span>Sie können auch später noch Bilder hinzufügen</span>
+                </div>
+              )}
+            </Card>
+          </motion.div>
         );
 
       case 5:
         // Summary
         return (
-          <div className="space-y-6 animate-fade-in">
-            <div>
-              <h2 className="text-2xl font-bold">Zusammenfassung</h2>
-              <p className="text-muted-foreground mt-2">
-                Bitte überprüfen Sie Ihre Angaben
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="space-y-8"
+          >
+            <div className="text-center space-y-2">
+              <div className="flex justify-center mb-4">
+                <div className="p-4 rounded-full bg-primary/10">
+                  <FileText className="h-8 w-8 text-primary" />
+                </div>
+              </div>
+              <h2 className="text-3xl font-bold">Fast geschafft!</h2>
+              <p className="text-muted-foreground">
+                Überprüfen Sie Ihre Angaben und geben Sie Ihrem Projekt einen Titel
               </p>
             </div>
 
-            <div className="space-y-4 rounded-lg border bg-muted/50 p-6">
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground">Gewerk</h3>
-                <p className="text-lg">{projectData.trade}</p>
+            {/* Project Title */}
+            <Card className="p-6 max-w-2xl mx-auto">
+              <div className="space-y-2">
+                <Label htmlFor="title" className="text-base font-semibold">
+                  Projekttitel <span className="text-destructive">*</span>
+                </Label>
+                <Input
+                  id="title"
+                  value={projectData.title}
+                  onChange={(e) => updateProjectData("title", e.target.value)}
+                  placeholder="z.B. Tapezieren von 3 Zimmern in Wohnung"
+                  className="h-12 text-lg"
+                />
+                <p className="text-xs text-muted-foreground">
+                  Ein aussagekräftiger Titel hilft Handwerkern, Ihr Projekt schnell zu verstehen
+                </p>
               </div>
+            </Card>
 
-              {projectData.description && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground">Beschreibung</h3>
-                  <p>{projectData.description}</p>
+            {/* Summary Cards */}
+            <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
+              <Card className="p-6 space-y-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <Hammer className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Projektdetails</h3>
                 </div>
-              )}
-
-              <div>
-                <h3 className="font-semibold text-sm text-muted-foreground">Standort</h3>
-                <p>{projectData.postal_code} {projectData.city}</p>
-                {projectData.address && <p className="text-sm text-muted-foreground">{projectData.address}</p>}
-              </div>
-
-              {(projectData.budget_min || projectData.budget_max) && (
+                
                 <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground">Budget</h3>
-                  <p>
-                    {projectData.budget_min && `${projectData.budget_min} EUR`}
-                    {projectData.budget_min && projectData.budget_max && " - "}
-                    {projectData.budget_max && `${projectData.budget_max} EUR`}
-                  </p>
+                  <p className="text-sm text-muted-foreground mb-1">Gewerk</p>
+                  <p className="font-medium">{projectData.trade}</p>
                 </div>
-              )}
 
-              {projectData.urgency && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground">Zeitplan</h3>
-                  <p>
-                    {commonQuestions[0].options?.find(o => o.value === projectData.urgency)?.label}
-                  </p>
-                </div>
-              )}
+                {projectData.description && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Beschreibung</p>
+                    <p className="text-sm line-clamp-3">{projectData.description}</p>
+                  </div>
+                )}
+              </Card>
 
-              {projectData.images.length > 0 && (
-                <div>
-                  <h3 className="font-semibold text-sm text-muted-foreground">Bilder</h3>
-                  <p>{projectData.images.length} Bild(er) hochgeladen</p>
+              <Card className="p-6 space-y-4">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="p-2 rounded-lg bg-primary/10">
+                    <MapPin className="h-5 w-5 text-primary" />
+                  </div>
+                  <h3 className="font-semibold text-lg">Standort & Zeitplan</h3>
                 </div>
+                
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">Standort</p>
+                  <p className="font-medium">{projectData.postal_code} {projectData.city}</p>
+                  {projectData.address && <p className="text-sm text-muted-foreground">{projectData.address}</p>}
+                </div>
+
+                {projectData.urgency && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Zeitplan</p>
+                    <p className="font-medium">
+                      {commonQuestions[0].options?.find(o => o.value === projectData.urgency)?.label}
+                    </p>
+                  </div>
+                )}
+              </Card>
+
+              {((projectData.budget_min || projectData.budget_max) || projectData.images.length > 0) && (
+                <Card className="p-6 space-y-4">
+                  <div className="flex items-center gap-3 mb-4">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <ImageIcon className="h-5 w-5 text-primary" />
+                    </div>
+                    <h3 className="font-semibold text-lg">Zusatzinformationen</h3>
+                  </div>
+
+                  {(projectData.budget_min || projectData.budget_max) && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Budget</p>
+                      <p className="font-medium">
+                        {projectData.budget_min && `${projectData.budget_min.toLocaleString()} EUR`}
+                        {projectData.budget_min && projectData.budget_max && " - "}
+                        {projectData.budget_max && `${projectData.budget_max.toLocaleString()} EUR`}
+                      </p>
+                    </div>
+                  )}
+
+                  {projectData.images.length > 0 && (
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">Bilder</p>
+                      <p className="font-medium">{projectData.images.length} Bild(er) hochgeladen</p>
+                    </div>
+                  )}
+                </Card>
               )}
             </div>
-
-            <div className="space-y-2">
-              <Label htmlFor="title">Projekttitel *</Label>
-              <Input
-                id="title"
-                value={projectData.title}
-                onChange={(e) => updateProjectData("title", e.target.value)}
-                placeholder="z.B. Tapezieren von 3 Zimmern"
-              />
-            </div>
-          </div>
+          </motion.div>
         );
 
       default:
@@ -584,32 +687,43 @@ export default function CreateProject() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <div className="mx-auto max-w-4xl">
+        <div className="mx-auto max-w-5xl">
           <ProgressStepper steps={steps} currentStep={currentStep} />
 
-          <div className="mt-8 min-h-[500px]">
+          <div className="mt-12 min-h-[600px]">
             {renderStepContent()}
           </div>
 
-          <div className="mt-8 flex justify-between gap-4">
+          <div className="mt-12 flex justify-between gap-4 pb-8">
             <Button
               variant="outline"
               onClick={handleBack}
               disabled={currentStep === 0}
-              className="gap-2"
+              className="gap-2 h-12 px-6"
+              size="lg"
             >
               <ArrowLeft className="h-4 w-4" />
               Zurück
             </Button>
 
             {currentStep < steps.length - 1 ? (
-              <Button onClick={handleNext} className="gap-2">
+              <Button 
+                onClick={handleNext} 
+                className="gap-2 h-12 px-6"
+                size="lg"
+              >
                 Weiter
                 <ArrowRight className="h-4 w-4" />
               </Button>
             ) : (
-              <Button onClick={handleSubmit} disabled={loading} className="gap-2">
-                {loading ? "Wird erstellt..." : "Projekt veröffentlichen"}
+              <Button 
+                onClick={handleSubmit} 
+                disabled={loading || !projectData.title}
+                className="gap-2 h-12 px-8"
+                size="lg"
+              >
+                {loading ? "Wird erstellt..." : "Projekt jetzt veröffentlichen"}
+                <CheckCircle2 className="h-4 w-4" />
               </Button>
             )}
           </div>
