@@ -13,7 +13,7 @@ import { ProgressStepper } from "@/components/wizard/ProgressStepper";
 import { SelectionCard } from "@/components/wizard/SelectionCard";
 import { TradeSelectionGrid } from "@/components/wizard/TradeSelectionGrid";
 import { tradeQuestions, commonQuestions } from "@/components/wizard/tradeQuestions";
-import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
