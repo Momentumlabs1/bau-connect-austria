@@ -14,6 +14,56 @@ export type Database = {
   }
   public: {
     Tables: {
+      category_questions: {
+        Row: {
+          category_id: string
+          conditional_logic: Json | null
+          created_at: string | null
+          help_text: string | null
+          id: string
+          options: Json | null
+          question_text: string
+          question_type: string
+          required: boolean | null
+          sort_order: number | null
+          validation_rules: Json | null
+        }
+        Insert: {
+          category_id: string
+          conditional_logic?: Json | null
+          created_at?: string | null
+          help_text?: string | null
+          id?: string
+          options?: Json | null
+          question_text: string
+          question_type: string
+          required?: boolean | null
+          sort_order?: number | null
+          validation_rules?: Json | null
+        }
+        Update: {
+          category_id?: string
+          conditional_logic?: Json | null
+          created_at?: string | null
+          help_text?: string | null
+          id?: string
+          options?: Json | null
+          question_text?: string
+          question_type?: string
+          required?: boolean | null
+          sort_order?: number | null
+          validation_rules?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "category_questions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       contractors: {
         Row: {
           accepts_urgent: boolean | null
@@ -351,6 +401,7 @@ export type Database = {
           expires_at: string | null
           final_price: number | null
           fotos: string[] | null
+          gewerk_id: string
           id: string
           images: string[] | null
           keywords: string[] | null
@@ -361,7 +412,6 @@ export type Database = {
           spam_score: number | null
           status: string | null
           title: string
-          trade: string
           updated_at: string
           urgency: string | null
           visibility: string | null
@@ -380,6 +430,7 @@ export type Database = {
           expires_at?: string | null
           final_price?: number | null
           fotos?: string[] | null
+          gewerk_id: string
           id?: string
           images?: string[] | null
           keywords?: string[] | null
@@ -390,7 +441,6 @@ export type Database = {
           spam_score?: number | null
           status?: string | null
           title: string
-          trade: string
           updated_at?: string
           urgency?: string | null
           visibility?: string | null
@@ -409,6 +459,7 @@ export type Database = {
           expires_at?: string | null
           final_price?: number | null
           fotos?: string[] | null
+          gewerk_id?: string
           id?: string
           images?: string[] | null
           keywords?: string[] | null
@@ -419,12 +470,18 @@ export type Database = {
           spam_score?: number | null
           status?: string | null
           title?: string
-          trade?: string
           updated_at?: string
           urgency?: string | null
           visibility?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "fk_projects_gewerk"
+            columns: ["gewerk_id"]
+            isOneToOne: false
+            referencedRelation: "gewerke_config"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "projects_customer_id_fkey"
             columns: ["customer_id"]
@@ -549,6 +606,53 @@ export type Database = {
             columns: ["lead_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      service_categories: {
+        Row: {
+          active: boolean | null
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          level: number
+          name: string
+          parent_id: string | null
+          slug: string
+          sort_order: number | null
+        }
+        Insert: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id: string
+          level: number
+          name: string
+          parent_id?: string | null
+          slug: string
+          sort_order?: number | null
+        }
+        Update: {
+          active?: boolean | null
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          level?: number
+          name?: string
+          parent_id?: string | null
+          slug?: string
+          sort_order?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "service_categories_parent_id_fkey"
+            columns: ["parent_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
             referencedColumns: ["id"]
           },
         ]
