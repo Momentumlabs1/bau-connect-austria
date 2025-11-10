@@ -134,10 +134,10 @@ export default function CreateProject() {
       return;
     }
 
-    if (!projectData.title || !projectData.description) {
+    if (!projectData.title) {
       toast({
         title: "Pflichtfelder fehlen",
-        description: "Bitte füllen Sie Titel und Beschreibung aus",
+        description: "Bitte geben Sie einen Projekttitel ein",
         variant: "destructive",
       });
       return;
@@ -145,21 +145,44 @@ export default function CreateProject() {
 
     setLoading(true);
     try {
-      // Generate title from trade if not provided
-      const finalTitle = projectData.title || `${projectData.trade} Projekt`;
+      // Generate comprehensive description from trade-specific answers
+      let generatedDescription = projectData.description || "";
       
-      // Generate keywords from description
-      const keywords = projectData.description
+      // Add trade-specific answers to description
+      if (Object.keys(projectData.tradeSpecificAnswers).length > 0) {
+        const answerTexts: string[] = [];
+        Object.entries(projectData.tradeSpecificAnswers).forEach(([key, value]) => {
+          if (Array.isArray(value) && value.length > 0) {
+            answerTexts.push(`${value.join(', ')}`);
+          } else if (typeof value === 'string' && value) {
+            answerTexts.push(value);
+          }
+        });
+        
+        if (answerTexts.length > 0) {
+          generatedDescription = answerTexts.join('. ') + (generatedDescription ? '. ' + generatedDescription : '');
+        }
+      }
+
+      // Ensure minimum description length
+      if (!generatedDescription || generatedDescription.length < 20) {
+        generatedDescription = `${projectData.title}. Weitere Details werden mit dem Handwerker besprochen.`;
+      }
+      
+      // Generate keywords from description and title
+      const keywords = (generatedDescription + ' ' + projectData.title)
         .toLowerCase()
         .split(/\s+/)
-        .filter(word => word.length > 3);
+        .filter(word => word.length > 3)
+        .filter((word, index, self) => self.indexOf(word) === index) // unique
+        .slice(0, 20); // max 20 keywords
 
       const { data: newProject, error } = await supabase
         .from("projects")
         .insert([{
           customer_id: userId,
-          title: finalTitle,
-          description: projectData.description,
+          title: projectData.title,
+          description: generatedDescription,
           trade: projectData.trade,
           postal_code: projectData.postal_code,
           city: projectData.city,
@@ -171,7 +194,7 @@ export default function CreateProject() {
           keywords: keywords,
           estimated_value: projectData.estimated_value || null,
           preferred_start_date: projectData.preferred_start_date || null,
-          projekt_typ: finalTitle,
+          projekt_typ: projectData.title,
           fotos: projectData.images,
           status: "open",
           visibility: "public"
@@ -658,13 +681,32 @@ export default function CreateProject() {
                 
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Gewerk</p>
-                  <p className="font-medium">{projectData.trade}</p>
+                  <p className="font-medium capitalize">{projectData.trade.replace('-', ' / ')}</p>
                 </div>
 
+                {Object.keys(projectData.tradeSpecificAnswers).length > 0 && (
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Details</p>
+                    <div className="text-sm space-y-1">
+                      {Object.entries(projectData.tradeSpecificAnswers).slice(0, 3).map(([key, value]) => {
+                        if (Array.isArray(value) && value.length > 0) {
+                          return <p key={key} className="text-muted-foreground">• {value.join(', ')}</p>;
+                        } else if (typeof value === 'string' && value) {
+                          return <p key={key} className="text-muted-foreground line-clamp-1">• {value}</p>;
+                        }
+                        return null;
+                      })}
+                      {Object.keys(projectData.tradeSpecificAnswers).length > 3 && (
+                        <p className="text-xs text-muted-foreground italic">+ {Object.keys(projectData.tradeSpecificAnswers).length - 3} weitere Details</p>
+                      )}
+                    </div>
+                  </div>
+                )}
+                
                 {projectData.description && (
                   <div>
-                    <p className="text-sm text-muted-foreground mb-1">Beschreibung</p>
-                    <p className="text-sm line-clamp-3">{projectData.description}</p>
+                    <p className="text-sm text-muted-foreground mb-1">Zusätzliche Angaben</p>
+                    <p className="text-sm line-clamp-2">{projectData.description}</p>
                   </div>
                 )}
               </Card>
