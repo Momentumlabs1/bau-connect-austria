@@ -16,61 +16,136 @@ export type Database = {
     Tables: {
       contractors: {
         Row: {
+          accepts_urgent: boolean | null
           address: string | null
+          auto_recharge_amount: number | null
+          auto_recharge_enabled: boolean | null
+          auto_recharge_threshold: number | null
           availability_status: string | null
+          avg_response_time_minutes: number | null
+          capacity_per_month: number | null
           city: string | null
           company_name: string
+          conversion_rate: number | null
           created_at: string
           description: string | null
+          firmenname: string | null
           free_leads_remaining: number | null
+          gewerbeschein_url: string | null
+          handwerker_status:
+            | Database["public"]["Enums"]["handwerker_status"]
+            | null
           id: string
+          last_login: string | null
+          leads_bought: number | null
+          leads_won: number | null
+          min_project_value: number | null
           portfolio_images: string[] | null
           postal_codes: string[]
           profile_image_url: string | null
+          quality_score: number | null
           rating: number | null
+          rechtsform: string | null
+          service_radius: number | null
           subscription_tier: string | null
+          team_size: number | null
           total_reviews: number | null
           trades: string[]
+          uid_nummer: string | null
           updated_at: string
           verified: boolean | null
+          versicherung_url: string | null
+          wallet_balance: number | null
+          website: string | null
+          zertifikate_urls: string[] | null
         }
         Insert: {
+          accepts_urgent?: boolean | null
           address?: string | null
+          auto_recharge_amount?: number | null
+          auto_recharge_enabled?: boolean | null
+          auto_recharge_threshold?: number | null
           availability_status?: string | null
+          avg_response_time_minutes?: number | null
+          capacity_per_month?: number | null
           city?: string | null
           company_name: string
+          conversion_rate?: number | null
           created_at?: string
           description?: string | null
+          firmenname?: string | null
           free_leads_remaining?: number | null
+          gewerbeschein_url?: string | null
+          handwerker_status?:
+            | Database["public"]["Enums"]["handwerker_status"]
+            | null
           id: string
+          last_login?: string | null
+          leads_bought?: number | null
+          leads_won?: number | null
+          min_project_value?: number | null
           portfolio_images?: string[] | null
           postal_codes?: string[]
           profile_image_url?: string | null
+          quality_score?: number | null
           rating?: number | null
+          rechtsform?: string | null
+          service_radius?: number | null
           subscription_tier?: string | null
+          team_size?: number | null
           total_reviews?: number | null
           trades?: string[]
+          uid_nummer?: string | null
           updated_at?: string
           verified?: boolean | null
+          versicherung_url?: string | null
+          wallet_balance?: number | null
+          website?: string | null
+          zertifikate_urls?: string[] | null
         }
         Update: {
+          accepts_urgent?: boolean | null
           address?: string | null
+          auto_recharge_amount?: number | null
+          auto_recharge_enabled?: boolean | null
+          auto_recharge_threshold?: number | null
           availability_status?: string | null
+          avg_response_time_minutes?: number | null
+          capacity_per_month?: number | null
           city?: string | null
           company_name?: string
+          conversion_rate?: number | null
           created_at?: string
           description?: string | null
+          firmenname?: string | null
           free_leads_remaining?: number | null
+          gewerbeschein_url?: string | null
+          handwerker_status?:
+            | Database["public"]["Enums"]["handwerker_status"]
+            | null
           id?: string
+          last_login?: string | null
+          leads_bought?: number | null
+          leads_won?: number | null
+          min_project_value?: number | null
           portfolio_images?: string[] | null
           postal_codes?: string[]
           profile_image_url?: string | null
+          quality_score?: number | null
           rating?: number | null
+          rechtsform?: string | null
+          service_radius?: number | null
           subscription_tier?: string | null
+          team_size?: number | null
           total_reviews?: number | null
           trades?: string[]
+          uid_nummer?: string | null
           updated_at?: string
           verified?: boolean | null
+          versicherung_url?: string | null
+          wallet_balance?: number | null
+          website?: string | null
+          zertifikate_urls?: string[] | null
         }
         Relationships: [
           {
@@ -81,6 +156,42 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      gewerke_config: {
+        Row: {
+          base_price: number
+          created_at: string | null
+          description: string | null
+          icon: string | null
+          id: string
+          keywords: string[]
+          label: string
+          min_project_value: number
+          urgent_surcharge: number
+        }
+        Insert: {
+          base_price: number
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id: string
+          keywords: string[]
+          label: string
+          min_project_value: number
+          urgent_surcharge: number
+        }
+        Update: {
+          base_price?: number
+          created_at?: string | null
+          description?: string | null
+          icon?: string | null
+          id?: string
+          keywords?: string[]
+          label?: string
+          min_project_value?: number
+          urgent_surcharge?: number
+        }
+        Relationships: []
       }
       matches: {
         Row: {
@@ -139,6 +250,59 @@ export type Database = {
           },
         ]
       }
+      notifications: {
+        Row: {
+          body: string
+          channels: string[] | null
+          created_at: string | null
+          data: Json | null
+          expires_at: string | null
+          handwerker_id: string
+          id: string
+          read: boolean | null
+          read_at: string | null
+          sent_via: string[] | null
+          title: string
+          type: string
+        }
+        Insert: {
+          body: string
+          channels?: string[] | null
+          created_at?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          handwerker_id: string
+          id?: string
+          read?: boolean | null
+          read_at?: string | null
+          sent_via?: string[] | null
+          title: string
+          type: string
+        }
+        Update: {
+          body?: string
+          channels?: string[] | null
+          created_at?: string | null
+          data?: Json | null
+          expires_at?: string | null
+          handwerker_id?: string
+          id?: string
+          read?: boolean | null
+          read_at?: string | null
+          sent_via?: string[] | null
+          title?: string
+          type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_handwerker_id_fkey"
+            columns: ["handwerker_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -175,16 +339,26 @@ export type Database = {
       projects: {
         Row: {
           address: string | null
+          assigned_handwerker: string[] | null
+          base_price: number | null
           budget_max: number | null
           budget_min: number | null
           city: string
           created_at: string
           customer_id: string
           description: string
+          estimated_value: number | null
+          expires_at: string | null
+          final_price: number | null
+          fotos: string[] | null
           id: string
           images: string[] | null
+          keywords: string[] | null
           postal_code: string
           preferred_start_date: string | null
+          projekt_typ: string | null
+          quality_checks: Json | null
+          spam_score: number | null
           status: string | null
           title: string
           trade: string
@@ -194,16 +368,26 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          assigned_handwerker?: string[] | null
+          base_price?: number | null
           budget_max?: number | null
           budget_min?: number | null
           city: string
           created_at?: string
           customer_id: string
           description: string
+          estimated_value?: number | null
+          expires_at?: string | null
+          final_price?: number | null
+          fotos?: string[] | null
           id?: string
           images?: string[] | null
+          keywords?: string[] | null
           postal_code: string
           preferred_start_date?: string | null
+          projekt_typ?: string | null
+          quality_checks?: Json | null
+          spam_score?: number | null
           status?: string | null
           title: string
           trade: string
@@ -213,16 +397,26 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          assigned_handwerker?: string[] | null
+          base_price?: number | null
           budget_max?: number | null
           budget_min?: number | null
           city?: string
           created_at?: string
           customer_id?: string
           description?: string
+          estimated_value?: number | null
+          expires_at?: string | null
+          final_price?: number | null
+          fotos?: string[] | null
           id?: string
           images?: string[] | null
+          keywords?: string[] | null
           postal_code?: string
           preferred_start_date?: string | null
+          projekt_typ?: string | null
+          quality_checks?: Json | null
+          spam_score?: number | null
           status?: string | null
           title?: string
           trade?: string
@@ -240,15 +434,212 @@ export type Database = {
           },
         ]
       }
+      refund_requests: {
+        Row: {
+          admin_notes: string | null
+          created_at: string | null
+          handwerker_id: string
+          id: string
+          lead_id: string
+          proof_urls: string[] | null
+          reason: string
+          requested_amount: number
+          resolved_at: string | null
+          resolved_by: string | null
+          status: Database["public"]["Enums"]["refund_status"] | null
+          transaction_id: string | null
+        }
+        Insert: {
+          admin_notes?: string | null
+          created_at?: string | null
+          handwerker_id: string
+          id?: string
+          lead_id: string
+          proof_urls?: string[] | null
+          reason: string
+          requested_amount: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["refund_status"] | null
+          transaction_id?: string | null
+        }
+        Update: {
+          admin_notes?: string | null
+          created_at?: string | null
+          handwerker_id?: string
+          id?: string
+          lead_id?: string
+          proof_urls?: string[] | null
+          reason?: string
+          requested_amount?: number
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: Database["public"]["Enums"]["refund_status"] | null
+          transaction_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "refund_requests_handwerker_id_fkey"
+            columns: ["handwerker_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "refund_requests_transaction_id_fkey"
+            columns: ["transaction_id"]
+            isOneToOne: false
+            referencedRelation: "transactions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      reviews: {
+        Row: {
+          comment: string | null
+          created_at: string | null
+          handwerker_id: string
+          id: string
+          lead_id: string
+          rating: number
+          reviewer_type: string
+        }
+        Insert: {
+          comment?: string | null
+          created_at?: string | null
+          handwerker_id: string
+          id?: string
+          lead_id: string
+          rating: number
+          reviewer_type: string
+        }
+        Update: {
+          comment?: string | null
+          created_at?: string | null
+          handwerker_id?: string
+          id?: string
+          lead_id?: string
+          rating?: number
+          reviewer_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "reviews_handwerker_id_fkey"
+            columns: ["handwerker_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "reviews_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      transactions: {
+        Row: {
+          amount: number
+          balance_after: number
+          created_at: string | null
+          description: string | null
+          handwerker_id: string
+          id: string
+          lead_id: string | null
+          metadata: Json | null
+          type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Insert: {
+          amount: number
+          balance_after: number
+          created_at?: string | null
+          description?: string | null
+          handwerker_id: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          type: Database["public"]["Enums"]["transaction_type"]
+        }
+        Update: {
+          amount?: number
+          balance_after?: number
+          created_at?: string | null
+          description?: string | null
+          handwerker_id?: string
+          id?: string
+          lead_id?: string | null
+          metadata?: Json | null
+          type?: Database["public"]["Enums"]["transaction_type"]
+        }
+        Relationships: [
+          {
+            foreignKeyName: "transactions_handwerker_id_fkey"
+            columns: ["handwerker_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "transactions_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      calculate_lead_price: {
+        Args: {
+          p_description_length?: number
+          p_gewerk_id: string
+          p_has_photos?: boolean
+          p_urgency: Database["public"]["Enums"]["urgency_type"]
+        }
+        Returns: number
+      }
     }
     Enums: {
-      [_ in never]: never
+      gewerk_type:
+        | "elektriker"
+        | "sanitar-heizung"
+        | "dachdecker"
+        | "fassade"
+        | "maler"
+      handwerker_status:
+        | "REGISTERED"
+        | "DOCUMENTS_UPLOADED"
+        | "UNDER_REVIEW"
+        | "APPROVED"
+        | "SUSPENDED"
+        | "INCOMPLETE"
+      refund_status: "PENDING" | "APPROVED" | "REJECTED"
+      transaction_type:
+        | "LEAD_PURCHASE"
+        | "WALLET_RECHARGE"
+        | "REFUND"
+        | "ADJUSTMENT"
+      urgency_type: "sofort" | "normal" | "flexibel"
     }
     CompositeTypes: {
       [_ in never]: never
@@ -375,6 +766,30 @@ export type CompositeTypes<
 
 export const Constants = {
   public: {
-    Enums: {},
+    Enums: {
+      gewerk_type: [
+        "elektriker",
+        "sanitar-heizung",
+        "dachdecker",
+        "fassade",
+        "maler",
+      ],
+      handwerker_status: [
+        "REGISTERED",
+        "DOCUMENTS_UPLOADED",
+        "UNDER_REVIEW",
+        "APPROVED",
+        "SUSPENDED",
+        "INCOMPLETE",
+      ],
+      refund_status: ["PENDING", "APPROVED", "REJECTED"],
+      transaction_type: [
+        "LEAD_PURCHASE",
+        "WALLET_RECHARGE",
+        "REFUND",
+        "ADJUSTMENT",
+      ],
+      urgency_type: ["sofort", "normal", "flexibel"],
+    },
   },
 } as const
