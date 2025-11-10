@@ -154,7 +154,7 @@ export default function CreateProject() {
         .split(/\s+/)
         .filter(word => word.length > 3);
 
-      const { error } = await supabase
+      const { data: newProject, error } = await supabase
         .from("projects")
         .insert([{
           customer_id: userId,
@@ -175,9 +175,31 @@ export default function CreateProject() {
           fotos: projectData.images,
           status: "open",
           visibility: "public"
-        }]);
+        }])
+        .select()
+        .single();
 
       if (error) throw error;
+
+      // Trigger contractor matching
+      console.log('🎯 Triggering contractor matching...');
+      try {
+        const { data: matchResult, error: matchError } = await supabase.functions.invoke(
+          'match-contractors',
+          {
+            body: { projectId: newProject.id }
+          }
+        );
+
+        if (matchError) {
+          console.error('Matching error:', matchError);
+        } else {
+          console.log('✅ Matching complete:', matchResult);
+        }
+      } catch (matchErr) {
+        console.error('Failed to trigger matching:', matchErr);
+        // Don't block project creation if matching fails
+      }
 
       toast({
         title: "🎉 Projekt erfolgreich erstellt!",

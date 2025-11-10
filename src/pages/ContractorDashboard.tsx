@@ -1,70 +1,243 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Button } from "@/components/ui/button";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
-import { Loader2, Clock, DollarSign, Star, AlertCircle } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { 
+  Wallet, 
+  TrendingUp, 
+  Star, 
+  Clock, 
+  Briefcase,
+  Bell,
+  MapPin,
+  Euro,
+  CheckCircle2,
+  XCircle,
+  AlertCircle,
+  Loader2,
+  Image as ImageIcon
+} from "lucide-react";
+import { motion } from "framer-motion";
+import { cn } from "@/lib/utils";
 
 interface ContractorProfile {
-  verified: boolean;
+  id: string;
+  company_name: string;
+  wallet_balance: number;
+  leads_bought: number;
+  leads_won: number;
+  conversion_rate: number;
+  quality_score: number;
   rating: number;
+  review_count: number;
   total_reviews: number;
 }
 
-export default function ContractorDashboard() {
-  const [loading, setLoading] = useState(true);
+interface Notification {
+  id: string;
+  type: string;
+  title: string;
+  body: string;
+  data: any;
+  read: boolean;
+  created_at: string;
+  expires_at: string;
+}
+
+interface AvailableLead {
+  id: string;
+  projekt_typ: string;
+  city: string;
+  postal_code: string;
+  urgency: string;
+  estimated_value: number;
+  final_price: number;
+  created_at: string;
+  expires_at: string;
+  description: string;
+  images: string[];
+}
+
+export default function HandwerkerDashboard() {
   const [profile, setProfile] = useState<ContractorProfile | null>(null);
-  const navigate = useNavigate();
+  const [notifications, setNotifications] = useState<Notification[]>([]);
+  const [availableLeads, setAvailableLeads] = useState<AvailableLead[]>([]);
+  const [selectedLead, setSelectedLead] = useState<AvailableLead | null>(null);
+  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
+  const [loading, setLoading] = useState(true);
+  const [userId, setUserId] = useState<string>("");
   const { toast } = useToast();
+  const navigate = useNavigate();
+  
+  const markNotificationAsRead = async (notificationId: string) => {
+    await supabase
+      .from("notifications")
+      .update({ read: true, read_at: new Date().toISOString() })
+      .eq("id", notificationId);
+  };
 
   useEffect(() => {
-    checkAuth();
-    fetchProfile();
+    loadDashboardData();
   }, []);
 
-  const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-      return;
-    }
+  const loadDashboardData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        navigate("/login");
+        return;
+      }
+      setUserId(user.id);
 
-    const { data: profile } = await supabase
-      .from("profiles")
-      .select("role")
-      .eq("id", session.user.id)
-      .single();
+      // Load contractor profile
+      const { data: contractor, error: profileError } = await supabase
+        .from("contractors")
+        .select("*")
+        .eq("id", user.id)
+        .single();
 
-    if (profile?.role !== "contractor") {
-      toast({
-        title: "Zugriff verweigert",
-        description: "Sie haben keine Berechtigung für diese Seite",
-        variant: "destructive",
+      if (profileError) throw profileError;
+      
+      // Map to profile interface with defaults
+      const contractorData = contractor as any;
+      setProfile({
+        id: contractorData.id,
+        company_name: contractorData.company_name || contractorData.firmenname || "Firma",
+        wallet_balance: Number(contractorData.wallet_balance) || 0,
+        leads_bought: contractorData.leads_bought || 0,
+        leads_won: contractorData.leads_won || 0,
+        conversion_rate: Number(contractorData.conversion_rate) || 0,
+        quality_score: contractorData.quality_score || 0,
+        rating: Number(contractorData.rating) || 0,
+        review_count: contractorData.review_count || contractorData.total_reviews || 0,
+        total_reviews: contractorData.total_reviews || 0
       });
-      navigate("/");
+
+      // Load unread notifications
+      const { data: notifs, error: notifsError } = await supabase
+        .from("notifications")
+        .select("*")
+        .eq("handwerker_id", user.id)
+        .eq("read", false)
+        .order("created_at", { ascending: false })
+        .limit(10);
+
+      if (notifsError) throw notifsError;
+      setNotifications(notifs || []);
+
+      // Load available leads from notifications
+      const leadIds = (notifs || [])
+        .map(n => {
+          const data = n.data as any;
+          return data?.lead_id;
+        })
+        .filter(Boolean);
+
+      if (leadIds.length > 0) {
+        const { data: leads, error: leadsError } = await supabase
+          .from("projects")
+          .select("*")
+          .in("id", leadIds)
+          .eq("status", "open");
+
+        if (leadsError) throw leadsError;
+        setAvailableLeads(leads || []);
+      }
+
+    } catch (error: any) {
+      console.error("Error loading dashboard:", error);
+      toast({
+        title: "Fehler beim Laden",
+        description: error.message,
+        variant: "destructive"
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
-  const fetchProfile = async () => {
+  const purchaseLead = async (lead: AvailableLead) => {
+    setPurchasing(true);
     try {
       const { data: { session } } = await supabase.auth.getSession();
-      if (!session) return;
+      if (!session) throw new Error('Not authenticated');
 
-      const { data, error } = await supabase
-        .from("contractors")
-        .select("verified, rating, total_reviews")
-        .eq("id", session.user.id)
-        .single();
+      const { data, error } = await supabase.functions.invoke('purchase-lead', {
+        body: { leadId: lead.id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`
+        }
+      });
 
-      if (error && error.code !== "PGRST116") throw error;
-      setProfile(data);
+      if (error) throw error;
+
+      if (data.error) {
+        toast({
+          title: "Kauf fehlgeschlagen",
+          description: data.message || data.error,
+          variant: "destructive"
+        });
+        return;
+      }
+
+      toast({
+        title: "✅ Lead erfolgreich gekauft!",
+        description: `Neuer Kontostand: €${data.newBalance.toFixed(2)}`,
+      });
+
+      // Update local state
+      setProfile(prev => prev ? {
+        ...prev,
+        wallet_balance: data.newBalance,
+        leads_bought: prev.leads_bought + 1
+      } : null);
+
+      // Remove lead from available leads
+      setAvailableLeads(prev => prev.filter(l => l.id !== lead.id));
+      
+      setPurchaseDialogOpen(false);
+      
+      // Show lead details
+      console.log('Lead details:', data.leadDetails);
+      toast({
+        title: "Lead-Details freigeschaltet",
+        description: "Kontaktdaten und volle Informationen sind nun verfügbar",
+      });
+
     } catch (error: any) {
-      console.error("Error fetching profile:", error);
+      console.error('Purchase error:', error);
+      toast({
+        title: "Fehler beim Kauf",
+        description: error.message,
+        variant: "destructive"
+      });
     } finally {
-      setLoading(false);
+      setPurchasing(false);
+    }
+  };
+
+  const getUrgencyColor = (urgency: string) => {
+    switch (urgency) {
+      case "sofort": return "text-red-500 bg-red-50 dark:bg-red-950";
+      case "normal": return "text-blue-500 bg-blue-50 dark:bg-blue-950";
+      case "flexibel": return "text-green-500 bg-green-50 dark:bg-green-950";
+      default: return "text-gray-500 bg-gray-50 dark:bg-gray-950";
+    }
+  };
+
+  const getUrgencyLabel = (urgency: string) => {
+    switch (urgency) {
+      case "sofort": return "🚨 Sofort";
+      case "normal": return "📅 Normal";
+      case "flexibel": return "🕐 Flexibel";
+      default: return urgency;
     }
   };
 
@@ -72,8 +245,33 @@ export default function ContractorDashboard() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="flex h-[80vh] items-center justify-center">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        <div className="container mx-auto px-4 py-8">
+          <div className="flex items-center justify-center min-h-[400px]">
+            <div className="text-center space-y-4">
+              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
+              <p className="text-muted-foreground">Lade Dashboard...</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (!profile) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <Card className="p-8 text-center">
+            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
+            <h2 className="text-2xl font-bold mb-2">Profil unvollständig</h2>
+            <p className="text-muted-foreground mb-6">
+              Bitte vervollständigen Sie Ihr Handwerker-Profil, um Aufträge zu erhalten.
+            </p>
+            <Button onClick={() => navigate("/handwerker/profile")}>
+              Profil vervollständigen
+            </Button>
+          </Card>
         </div>
       </div>
     );
@@ -82,92 +280,256 @@ export default function ContractorDashboard() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold">Handwerker Dashboard</h1>
-          <p className="text-muted-foreground">Willkommen zurück</p>
-        </div>
+      
+      <div className="container mx-auto px-4 py-8 space-y-8">
+        {/* Header */}
+        <motion.div
+          initial={{ opacity: 0, y: -20 }}
+          animate={{ opacity: 1, y: 0 }}
+        >
+          <h1 className="text-4xl font-bold mb-2">
+            Willkommen zurück, {profile.company_name}!
+          </h1>
+          <p className="text-muted-foreground">
+            Hier ist eine Übersicht Ihrer aktuellen Aktivitäten
+          </p>
+        </motion.div>
 
-        {!profile && (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Profil vervollständigen</AlertTitle>
-            <AlertDescription>
-              Bitte vervollständigen Sie Ihr Profil um Aufträge zu erhalten.
-              <Button 
-                className="mt-2 w-full"
-                onClick={() => navigate("/handwerker/profil-erstellen")}
-              >
-                Profil jetzt erstellen
-              </Button>
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {profile && !profile.verified && (
-          <Alert className="mb-6">
-            <AlertCircle className="h-4 w-4" />
-            <AlertTitle>Profil wird geprüft</AlertTitle>
-            <AlertDescription>
-              Ihr Profil wird aktuell von unserem Team geprüft. 
-              Sie können Aufträge sehen, sobald Ihr Profil verifiziert wurde.
-            </AlertDescription>
-          </Alert>
-        )}
-
-        {profile && profile.verified && (
-          <Button 
-            size="lg"
-            onClick={() => navigate("/handwerker/projekte")}
-            className="mb-6"
+        {/* Stats Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
           >
-            Projekt-Marktplatz durchsuchen
-          </Button>
-        )}
-
-        <div className="grid gap-6 md:grid-cols-3">
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Neue Aufträge</CardTitle>
-              <Clock className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                Verfügbare Projekte in Ihrer Region
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Gekaufte Leads</CardTitle>
-              <DollarSign className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">0</div>
-              <p className="text-xs text-muted-foreground">
-                Leads in diesem Monat
-              </p>
-            </CardContent>
-          </Card>
-
-          <Card>
-            <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-              <CardTitle className="text-sm font-medium">Bewertung</CardTitle>
-              <Star className="h-4 w-4 text-muted-foreground" />
-            </CardHeader>
-            <CardContent>
-              <div className="text-2xl font-bold">
-                {profile?.rating?.toFixed(1) || "0.0"}
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Wallet-Guthaben</p>
+                  <p className="text-3xl font-bold text-primary">
+                    €{profile.wallet_balance.toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-3 bg-primary/10 rounded-full">
+                  <Wallet className="h-6 w-6 text-primary" />
+                </div>
               </div>
-              <p className="text-xs text-muted-foreground">
-                {profile?.total_reviews || 0} Bewertungen
+              <Button variant="outline" size="sm" className="w-full mt-4">
+                Aufladen
+              </Button>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.2 }}
+          >
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Conversion Rate</p>
+                  <p className="text-3xl font-bold">
+                    {profile.conversion_rate}%
+                  </p>
+                </div>
+                <div className="p-3 bg-green-500/10 rounded-full">
+                  <TrendingUp className="h-6 w-6 text-green-500" />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                {profile.leads_won} von {profile.leads_bought} Leads gewonnen
               </p>
-            </CardContent>
-          </Card>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.3 }}
+          >
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Bewertung</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-3xl font-bold">{profile.rating.toFixed(1)}</p>
+                    <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
+                  </div>
+                </div>
+                <div className="p-3 bg-yellow-500/10 rounded-full">
+                  <Star className="h-6 w-6 text-yellow-500" />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                {profile.review_count} Bewertungen
+              </p>
+            </Card>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.4 }}
+          >
+            <Card className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Quality Score</p>
+                  <p className="text-3xl font-bold">{profile.quality_score}</p>
+                </div>
+                <div className="p-3 bg-blue-500/10 rounded-full">
+                  <Briefcase className="h-6 w-6 text-blue-500" />
+                </div>
+              </div>
+              <p className="text-xs text-muted-foreground mt-4">
+                Von 100 Punkten
+              </p>
+            </Card>
+          </motion.div>
         </div>
 
+        {/* Main Content */}
+        <Tabs defaultValue="leads" className="space-y-6">
+          <TabsList className="grid w-full grid-cols-2 lg:w-auto">
+            <TabsTrigger value="leads" className="gap-2">
+              <Briefcase className="h-4 w-4" />
+              Verfügbare Leads ({availableLeads.length})
+            </TabsTrigger>
+            <TabsTrigger value="notifications" className="gap-2">
+              <Bell className="h-4 w-4" />
+              Benachrichtigungen ({notifications.length})
+            </TabsTrigger>
+          </TabsList>
+
+          <TabsContent value="leads" className="space-y-4">
+            {availableLeads.length === 0 ? (
+              <Card className="p-12 text-center">
+                <Briefcase className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">Keine Leads verfügbar</h3>
+                <p className="text-muted-foreground">
+                  Momentan gibt es keine passenden Aufträge für Sie. Schauen Sie später wieder vorbei!
+                </p>
+              </Card>
+            ) : (
+              availableLeads.map((lead, index) => (
+                <motion.div
+                  key={lead.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  animate={{ opacity: 1, y: 0 }}
+                  transition={{ delay: index * 0.1 }}
+                >
+                  <Card className="p-6 hover:shadow-lg transition-shadow">
+                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+                      <div className="flex-1 space-y-3">
+                        <div className="flex items-start justify-between gap-4">
+                          <div>
+                            <h3 className="text-xl font-bold mb-1">
+                              {lead.projekt_typ}
+                            </h3>
+                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
+                              <div className="flex items-center gap-1">
+                                <MapPin className="h-4 w-4" />
+                                {lead.city} ({lead.postal_code.substring(0, 2)}**)
+                              </div>
+                              <Badge className={cn("font-medium", getUrgencyColor(lead.urgency))}>
+                                {getUrgencyLabel(lead.urgency)}
+                              </Badge>
+                            </div>
+                          </div>
+                        </div>
+
+                        <p className="text-sm text-muted-foreground line-clamp-2">
+                          {lead.description}
+                        </p>
+
+                        <div className="flex flex-wrap gap-4 text-sm">
+                          <div className="flex items-center gap-2">
+                            <Euro className="h-4 w-4 text-muted-foreground" />
+                            <span>Geschätzt: €{lead.estimated_value || 'k.A.'}</span>
+                          </div>
+                          <div className="flex items-center gap-2">
+                            <Clock className="h-4 w-4 text-muted-foreground" />
+                            <span>Erstellt vor {new Date(lead.created_at).toLocaleDateString('de-DE')}</span>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div className="flex flex-col items-end gap-3">
+                        <div className="text-right">
+                          <p className="text-sm text-muted-foreground">Lead-Preis</p>
+                          <p className="text-2xl font-bold text-primary">
+                            €{lead.final_price.toFixed(2)}
+                          </p>
+                        </div>
+                        <Button 
+                          size="lg" 
+                          className="w-full lg:w-auto"
+                          onClick={() => {
+                            setSelectedLead(lead);
+                            setPurchaseDialogOpen(true);
+                          }}
+                        >
+                          Details kaufen
+                        </Button>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="notifications" className="space-y-4">
+            {notifications.length === 0 ? (
+              <Card className="p-12 text-center">
+                <Bell className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
+                <h3 className="text-xl font-semibold mb-2">Keine neuen Benachrichtigungen</h3>
+                <p className="text-muted-foreground">
+                  Sie haben alle Benachrichtigungen gelesen
+                </p>
+              </Card>
+            ) : (
+              notifications.map((notification, index) => (
+                <motion.div
+                  key={notification.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: index * 0.05 }}
+                >
+                  <Card 
+                    className={cn(
+                      "p-6 cursor-pointer hover:shadow-md transition-all",
+                      !notification.read && "border-l-4 border-l-primary"
+                    )}
+                    onClick={() => markNotificationAsRead(notification.id)}
+                  >
+                    <div className="flex items-start gap-4">
+                      <div className="p-2 bg-primary/10 rounded-full">
+                        <Bell className="h-5 w-5 text-primary" />
+                      </div>
+                      <div className="flex-1">
+                        <h4 className="font-semibold mb-1">{notification.title}</h4>
+                        <p className="text-sm text-muted-foreground mb-2">
+                          {notification.body}
+                        </p>
+                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
+                          <span>{new Date(notification.created_at).toLocaleString('de-DE')}</span>
+                          {notification.data?.distance && (
+                            <span className="flex items-center gap-1">
+                              <MapPin className="h-3 w-3" />
+                              {notification.data.distance} km entfernt
+                            </span>
+                          )}
+                        </div>
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              ))
+            )}
+          </TabsContent>
+        </Tabs>
       </div>
     </div>
   );
