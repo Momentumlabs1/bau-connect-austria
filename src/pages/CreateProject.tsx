@@ -37,9 +37,11 @@ interface ProjectData {
   address: string;
   budget_min?: number;
   budget_max?: number;
-  urgency: string;
+  urgency: 'sofort' | 'normal' | 'flexibel' | '';
   images: string[];
   tradeSpecificAnswers: Record<string, any>;
+  preferred_start_date?: string;
+  estimated_value?: number;
 }
 
 export default function CreateProject() {
@@ -57,7 +59,9 @@ export default function CreateProject() {
     address: "",
     urgency: "",
     images: [],
-    tradeSpecificAnswers: {}
+    tradeSpecificAnswers: {},
+    estimated_value: undefined,
+    preferred_start_date: undefined
   });
 
   const navigate = useNavigate();
@@ -141,11 +145,20 @@ export default function CreateProject() {
 
     setLoading(true);
     try {
+      // Generate title from trade if not provided
+      const finalTitle = projectData.title || `${projectData.trade} Projekt`;
+      
+      // Generate keywords from description
+      const keywords = projectData.description
+        .toLowerCase()
+        .split(/\s+/)
+        .filter(word => word.length > 3);
+
       const { error } = await supabase
         .from("projects")
         .insert([{
           customer_id: userId,
-          title: projectData.title,
+          title: finalTitle,
           description: projectData.description,
           trade: projectData.trade,
           postal_code: projectData.postal_code,
@@ -153,8 +166,13 @@ export default function CreateProject() {
           address: projectData.address || null,
           budget_min: projectData.budget_min || null,
           budget_max: projectData.budget_max || null,
-          urgency: projectData.urgency,
+          urgency: projectData.urgency || 'normal',
           images: projectData.images,
+          keywords: keywords,
+          estimated_value: projectData.estimated_value || null,
+          preferred_start_date: projectData.preferred_start_date || null,
+          projekt_typ: finalTitle,
+          fotos: projectData.images,
           status: "open",
           visibility: "public"
         }]);
@@ -459,10 +477,14 @@ export default function CreateProject() {
 
             <RadioGroup
               value={projectData.urgency}
-              onValueChange={(value) => updateProjectData("urgency", value)}
+              onValueChange={(value) => updateProjectData("urgency", value as 'sofort' | 'normal' | 'flexibel')}
             >
               <div className="space-y-3 max-w-2xl mx-auto">
-                {commonQuestions[0].options?.map((option) => {
+                {[
+                  { value: "sofort", label: "🚨 Sofort / Notfall (innerhalb 24-48h)", description: "Dringender Auftrag - höhere Lead-Kosten" },
+                  { value: "normal", label: "📅 Normal (innerhalb 1-2 Wochen)", description: "Standard-Zeitrahmen" },
+                  { value: "flexibel", label: "🕐 Flexibel / Nach Absprache", description: "Kein fester Zeitplan" }
+                ].map((option) => {
                   const isSelected = projectData.urgency === option.value;
                   
                   return (
@@ -473,20 +495,23 @@ export default function CreateProject() {
                     >
                       <div
                         className={cn(
-                          "flex items-center space-x-4 rounded-lg border-2 p-5 transition-all cursor-pointer hover:border-primary/50 hover:shadow-md",
+                          "flex items-start space-x-4 rounded-lg border-2 p-5 transition-all cursor-pointer hover:border-primary/50 hover:shadow-md",
                           isSelected
                             ? "border-primary bg-primary/5 shadow-sm"
                             : "border-border"
                         )}
-                        onClick={() => updateProjectData("urgency", option.value)}
+                        onClick={() => updateProjectData("urgency", option.value as 'sofort' | 'normal' | 'flexibel')}
                       >
-                        <RadioGroupItem value={option.value} id={option.value} className="flex-shrink-0" />
-                        <Label 
-                          htmlFor={option.value} 
-                          className="flex-1 cursor-pointer font-medium"
-                        >
-                          {option.label}
-                        </Label>
+                        <RadioGroupItem value={option.value} id={option.value} className="flex-shrink-0 mt-1" />
+                        <div className="flex-1">
+                          <Label 
+                            htmlFor={option.value} 
+                            className="cursor-pointer font-medium text-base block mb-1"
+                          >
+                            {option.label}
+                          </Label>
+                          <p className="text-sm text-muted-foreground">{option.description}</p>
+                        </div>
                       </div>
                     </motion.div>
                   );

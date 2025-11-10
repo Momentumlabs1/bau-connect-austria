@@ -2,59 +2,34 @@ import {
   Paintbrush, 
   Zap, 
   Droplet, 
-  Construction,
-  Hammer,
-  Wrench,
-  Flame,
-  Trees,
-  Wind,
   Home,
-  Fence,
-  DoorOpen,
-  Sofa,
-  Lightbulb,
-  ShowerHead,
-  ArrowRight,
   Search,
-  Drill,
-  Snowflake,
-  PackageOpen,
-  Sparkles,
-  MoreHorizontal
+  ArrowRight,
+  Lightbulb
 } from "lucide-react";
 import { SelectionCard } from "./SelectionCard";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { supabase } from "@/integrations/supabase/client";
 
 export interface Trade {
-  value: string;
+  id: string;
   label: string;
   icon: any;
   color: string;
+  description: string;
+  base_price: number;
   popular?: boolean;
 }
 
-export const allTrades: Trade[] = [
-  { value: "Maler", label: "Maler", icon: Paintbrush, color: "text-purple-500", popular: true },
-  { value: "Elektriker", label: "Elektriker", icon: Zap, color: "text-yellow-500", popular: true },
-  { value: "Sanitär", label: "Sanitär", icon: Droplet, color: "text-blue-500", popular: true },
-  { value: "Heizung", label: "Heizung", icon: Flame, color: "text-red-500", popular: true },
-  { value: "Bau", label: "Bau & Maurer", icon: Construction, color: "text-orange-500", popular: false },
-  { value: "Tischler", label: "Tischler", icon: Hammer, color: "text-amber-700", popular: false },
-  { value: "Klima", label: "Klima & Lüftung", icon: Wind, color: "text-cyan-500", popular: false },
-  { value: "Garten", label: "Garten & Landschaft", icon: Trees, color: "text-green-500", popular: false },
-  { value: "Dachdecker", label: "Dachdecker", icon: Home, color: "text-slate-600", popular: false },
-  { value: "Bodenleger", label: "Bodenleger", icon: PackageOpen, color: "text-amber-600", popular: false },
-  { value: "Fensterbau", label: "Fenster & Türen", icon: DoorOpen, color: "text-blue-600", popular: false },
-  { value: "Möbelmontage", label: "Möbelmontage", icon: Sofa, color: "text-indigo-500", popular: false },
-  { value: "Zaunbau", label: "Zaunbau", icon: Fence, color: "text-green-700", popular: false },
-  { value: "Bohrarbeiten", label: "Bohrarbeiten", icon: Drill, color: "text-gray-600", popular: false },
-  { value: "Reinigung", label: "Reinigung", icon: Sparkles, color: "text-pink-500", popular: false },
-  { value: "Sonstige", label: "Sonstige", icon: MoreHorizontal, color: "text-muted-foreground", popular: false }
-];
+const iconMap: Record<string, any> = {
+  'Zap': Zap,
+  'Droplet': Droplet,
+  'Home': Home,
+  'Paintbrush': Paintbrush
+};
 
 interface TradeSelectionGridProps {
   selectedTrade: string;
@@ -63,13 +38,69 @@ interface TradeSelectionGridProps {
 
 export function TradeSelectionGrid({ selectedTrade, onTradeSelect }: TradeSelectionGridProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const [trades, setTrades] = useState<Trade[]>([]);
+  const [loading, setLoading] = useState(true);
 
-  const popularTrades = allTrades.filter(t => t.popular);
+  useEffect(() => {
+    loadTrades();
+  }, []);
+
+  const loadTrades = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('gewerke_config')
+        .select('*')
+        .order('base_price', { ascending: false });
+
+      if (error) throw error;
+
+      const mappedTrades: Trade[] = (data || []).map(gewerk => ({
+        id: gewerk.id,
+        label: gewerk.label,
+        icon: iconMap[gewerk.icon] || Home,
+        color: getColorForGewerk(gewerk.id),
+        description: gewerk.description,
+        base_price: Number(gewerk.base_price),
+        popular: ['elektriker', 'sanitar-heizung', 'maler'].includes(gewerk.id)
+      }));
+
+      setTrades(mappedTrades);
+    } catch (error) {
+      console.error('Error loading gewerke:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getColorForGewerk = (id: string): string => {
+    const colors: Record<string, string> = {
+      'elektriker': 'text-yellow-500',
+      'sanitar-heizung': 'text-blue-500',
+      'dachdecker': 'text-slate-600',
+      'fassade': 'text-orange-500',
+      'maler': 'text-purple-500'
+    };
+    return colors[id] || 'text-muted-foreground';
+  };
+
+  const popularTrades = trades.filter(t => t.popular);
   const filteredTrades = searchQuery
-    ? allTrades.filter(trade => 
-        trade.label.toLowerCase().includes(searchQuery.toLowerCase())
+    ? trades.filter(trade => 
+        trade.label.toLowerCase().includes(searchQuery.toLowerCase()) ||
+        trade.description.toLowerCase().includes(searchQuery.toLowerCase())
       )
-    : allTrades;
+    : trades;
+
+  if (loading) {
+    return (
+      <div className="flex items-center justify-center py-12">
+        <div className="text-center space-y-3">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>
+          <p className="text-muted-foreground">Lade Gewerke...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-8">
@@ -122,7 +153,7 @@ export function TradeSelectionGrid({ selectedTrade, onTradeSelect }: TradeSelect
               const Icon = trade.icon;
               return (
                 <motion.div
-                  key={trade.value}
+                  key={trade.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: 0.3 + index * 0.05 }}
@@ -130,8 +161,8 @@ export function TradeSelectionGrid({ selectedTrade, onTradeSelect }: TradeSelect
                   <SelectionCard
                     icon={<Icon className={cn("h-10 w-10", trade.color)} />}
                     label={trade.label}
-                    isSelected={selectedTrade === trade.value}
-                    onClick={() => onTradeSelect(trade.value)}
+                    isSelected={selectedTrade === trade.id}
+                    onClick={() => onTradeSelect(trade.id)}
                     className="h-32"
                   />
                 </motion.div>
@@ -159,7 +190,7 @@ export function TradeSelectionGrid({ selectedTrade, onTradeSelect }: TradeSelect
               const Icon = trade.icon;
               return (
                 <motion.div
-                  key={trade.value}
+                  key={trade.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: searchQuery ? 0 : 0.45 + index * 0.03 }}
@@ -167,8 +198,8 @@ export function TradeSelectionGrid({ selectedTrade, onTradeSelect }: TradeSelect
                   <SelectionCard
                     icon={<Icon className={cn("h-8 w-8", trade.color)} />}
                     label={trade.label}
-                    isSelected={selectedTrade === trade.value}
-                    onClick={() => onTradeSelect(trade.value)}
+                    isSelected={selectedTrade === trade.id}
+                    onClick={() => onTradeSelect(trade.id)}
                     className="h-28"
                   />
                 </motion.div>
