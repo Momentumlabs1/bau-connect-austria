@@ -7,10 +7,10 @@ const corsHeaders = {
 
 interface Project {
   id: string
-  trade: string
+  gewerk_id: string
   city: string
   postal_code: string
-  urgency: 'sofort' | 'normal' | 'flexibel'
+  urgency: 'high' | 'medium' | 'low'
   budget_min?: number
   budget_max?: number
   description: string
@@ -105,7 +105,7 @@ function calculateRelevanceScore(
   }
   
   // Urgency handling
-  if (project.urgency === 'sofort' && !contractor.accepts_urgent) {
+  if (project.urgency === 'high' && !contractor.accepts_urgent) {
     score -= 50 // Big penalty for urgent projects if contractor doesn't accept them
   }
   
@@ -122,7 +122,7 @@ function calculateLeadPrice(
   let price = gewerkConfig.base_price
   
   // Urgency surcharge
-  if (urgency === 'sofort') {
+  if (urgency === 'high') {
     price += gewerkConfig.urgent_surcharge
   }
   
@@ -160,7 +160,7 @@ Deno.serve(async (req) => {
     }
 
     console.log('📋 Project details:', {
-      trade: project.trade,
+      gewerk_id: project.gewerk_id,
       city: project.city,
       urgency: project.urgency
     })
@@ -169,7 +169,7 @@ Deno.serve(async (req) => {
     const { data: gewerkConfig, error: gewerkError } = await supabase
       .from('gewerke_config')
       .select('*')
-      .eq('id', project.trade)
+      .eq('id', project.gewerk_id)
       .single()
 
     if (gewerkError || !gewerkConfig) {
@@ -179,7 +179,7 @@ Deno.serve(async (req) => {
     // 3. Calculate lead price
     const leadPrice = calculateLeadPrice(
       gewerkConfig,
-      project.urgency || 'normal',
+      project.urgency || 'medium',
       (project.images || []).length > 0,
       (project.description || '').length
     )
@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
     const { data: contractors, error: contractorsError } = await supabase
       .from('contractors')
       .select('*')
-      .contains('trades', [project.trade])
+      .contains('trades', [project.gewerk_id])
       .eq('handwerker_status', 'APPROVED')
       .gte('wallet_balance', leadPrice)
 
@@ -273,7 +273,7 @@ Deno.serve(async (req) => {
     const notifications = topMatches.map(match => ({
       handwerker_id: match!.contractor.id,
       type: 'NEW_LEAD_AVAILABLE',
-      title: `Neuer ${project.trade} Auftrag in ${project.city}`,
+      title: `Neuer ${project.gewerk_id} Auftrag in ${project.city}`,
       body: `${project.projekt_typ || 'Projekt'} - Geschätzter Wert: €${project.estimated_value || project.budget_max || 'k.A.'} - Lead-Preis: €${leadPrice}`,
       data: {
         lead_id: projectId,

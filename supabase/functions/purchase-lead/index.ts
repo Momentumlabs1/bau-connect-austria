@@ -199,7 +199,7 @@ Deno.serve(async (req) => {
           id: lead.id,
           title: lead.title || lead.projekt_typ,
           description: lead.description,
-          trade: lead.trade,
+          gewerk_id: lead.gewerk_id,
           city: lead.city,
           postal_code: lead.postal_code,
           address: lead.address,
