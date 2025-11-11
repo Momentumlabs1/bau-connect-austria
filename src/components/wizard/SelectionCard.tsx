@@ -5,18 +5,19 @@ import { cn } from "@/lib/utils";
 interface SelectionCardProps {
   icon?: ReactNode;
   label: string;
+  description?: string;
   isSelected: boolean;
   onClick: () => void;
   className?: string;
 }
 
-export function SelectionCard({ icon, label, isSelected, onClick, className }: SelectionCardProps) {
+export function SelectionCard({ icon, label, description, isSelected, onClick, className }: SelectionCardProps) {
   return (
     <button
       type="button"
       onClick={onClick}
       className={cn(
-        "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 bg-background p-6 transition-all hover:border-primary/50 hover:shadow-md",
+        "relative flex flex-col items-center justify-center gap-3 rounded-lg border-2 bg-background p-6 transition-all hover:border-primary/50 hover:shadow-md text-left",
         isSelected ? "border-primary bg-primary/5 shadow-md" : "border-border",
         className
       )}
@@ -36,12 +37,20 @@ export function SelectionCard({ icon, label, isSelected, onClick, className }: S
         </div>
       )}
       
-      <span className={cn(
-        "text-center text-sm font-medium transition-colors",
-        isSelected ? "text-foreground" : "text-muted-foreground"
-      )}>
-        {label}
-      </span>
+      <div className="w-full space-y-1">
+        <span className={cn(
+          "block text-center text-sm font-medium transition-colors",
+          isSelected ? "text-foreground" : "text-muted-foreground"
+        )}>
+          {label}
+        </span>
+        
+        {description && (
+          <p className="text-xs text-center text-muted-foreground line-clamp-2">
+            {description}
+          </p>
+        )}
+      </div>
     </button>
   );
 }

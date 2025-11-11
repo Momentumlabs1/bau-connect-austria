@@ -11,8 +11,6 @@ import { Navbar } from "@/components/Navbar";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ProgressStepper } from "@/components/wizard/ProgressStepper";
 import { SelectionCard } from "@/components/wizard/SelectionCard";
-import { TradeSelectionGrid } from "@/components/wizard/TradeSelectionGrid";
-import { tradeQuestions, commonQuestions } from "@/components/wizard/tradeQuestions";
 import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { cn } from "@/lib/utils";
@@ -20,7 +18,7 @@ import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 
 const steps = [
-  { id: 0, label: "Gewerk" },
+  { id: 0, label: "Kategorie" },
   { id: 1, label: "Details" },
   { id: 2, label: "Standort" },
   { id: 3, label: "Zeitplan" },
@@ -28,8 +26,28 @@ const steps = [
   { id: 5, label: "Zusammenfassung" }
 ];
 
+interface ServiceCategory {
+  id: string;
+  name: string;
+  description: string;
+  icon: string;
+  level: number;
+  parent_id: string | null;
+}
+
+interface CategoryQuestion {
+  id: string;
+  question_text: string;
+  question_type: string;
+  options: any;
+  required: boolean;
+  help_text: string | null;
+  sort_order: number;
+}
+
 interface ProjectData {
   gewerk_id: string;
+  subcategory_id: string;
   title: string;
   description: string;
   postal_code: string;
@@ -50,8 +68,15 @@ export default function CreateProject() {
   const [userId, setUserId] = useState<string>("");
   const [wantsImages, setWantsImages] = useState(false);
   
+  // Categories state
+  const [mainCategories, setMainCategories] = useState<ServiceCategory[]>([]);
+  const [subCategories, setSubCategories] = useState<ServiceCategory[]>([]);
+  const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
+  const [categoryQuestions, setCategoryQuestions] = useState<CategoryQuestion[]>([]);
+  
   const [projectData, setProjectData] = useState<ProjectData>({
     gewerk_id: "",
+    subcategory_id: "",
     title: "",
     description: "",
     postal_code: "",
@@ -71,18 +96,72 @@ export default function CreateProject() {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) setUserId(data.user.id);
     });
+    loadCategories();
   }, []);
 
-  const currentTradeQuestions = projectData.gewerk_id && tradeQuestions[projectData.gewerk_id] 
-    ? tradeQuestions[projectData.gewerk_id] 
-    : [];
+  useEffect(() => {
+    if (selectedMainCategory) {
+      loadSubCategories(selectedMainCategory);
+    }
+  }, [selectedMainCategory]);
+
+  useEffect(() => {
+    if (projectData.subcategory_id) {
+      loadCategoryQuestions(projectData.subcategory_id);
+    }
+  }, [projectData.subcategory_id]);
+
+  const loadCategories = async () => {
+    const { data } = await supabase
+      .from('service_categories')
+      .select('*')
+      .eq('level', 1)
+      .eq('active', true)
+      .order('sort_order');
+    
+    if (data) setMainCategories(data);
+  };
+
+  const loadSubCategories = async (parentId: string) => {
+    const { data } = await supabase
+      .from('service_categories')
+      .select('*')
+      .eq('parent_id', parentId)
+      .eq('level', 2)
+      .eq('active', true)
+      .order('sort_order');
+    
+    if (data) setSubCategories(data);
+  };
+
+  const loadCategoryQuestions = async (categoryId: string) => {
+    const { data } = await supabase
+      .from('category_questions')
+      .select('*')
+      .eq('category_id', categoryId)
+      .order('sort_order');
+    
+    if (data) setCategoryQuestions(data);
+  };
+
+  const currentTradeQuestions = categoryQuestions;
 
   const handleNext = () => {
-    // Validation for Step 0
-    if (currentStep === 0 && !projectData.gewerk_id) {
+    // Validation for Step 0 - Main category selection
+    if (currentStep === 0 && selectedMainCategory === "") {
       toast({
-        title: "Bitte wählen Sie ein Gewerk",
-        description: "Wählen Sie ein Gewerk aus, um fortzufahren",
+        title: "Bitte wählen Sie eine Hauptkategorie",
+        description: "Wählen Sie zunächst eine Hauptkategorie aus",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // Validation for Step 0 - Subcategory selection (substep)
+    if (currentStep === 0 && !projectData.subcategory_id) {
+      toast({
+        title: "Bitte wählen Sie eine Unterkategorie",
+        description: "Wählen Sie eine spezifische Unterkategorie aus",
         variant: "destructive",
       });
       return;
@@ -258,22 +337,78 @@ export default function CreateProject() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        // Trade Selection with Beautiful Grid
+        // Category Selection - Main + Sub
         return (
           <motion.div
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
+            className="space-y-8"
           >
-            <TradeSelectionGrid
-              selectedTrade={projectData.gewerk_id}
-              onTradeSelect={(trade) => updateProjectData("gewerk_id", trade)}
-            />
+            {/* Main Categories */}
+            {!selectedMainCategory && (
+              <div className="text-center space-y-6">
+                <div>
+                  <h2 className="text-3xl font-bold mb-2">Welche Dienstleistung benötigen Sie?</h2>
+                  <p className="text-muted-foreground">Wählen Sie zunächst eine Hauptkategorie</p>
+                </div>
+                
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+                  {mainCategories.map((category) => (
+                    <SelectionCard
+                      key={category.id}
+                      label={category.name}
+                      description={category.description}
+                      isSelected={false}
+                      onClick={() => {
+                        setSelectedMainCategory(category.id);
+                        updateProjectData("gewerk_id", category.id);
+                      }}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
+
+            {/* Subcategories */}
+            {selectedMainCategory && (
+              <div className="space-y-6">
+                <div className="text-center">
+                  <Button 
+                    variant="ghost" 
+                    onClick={() => {
+                      setSelectedMainCategory("");
+                      setSubCategories([]);
+                      updateProjectData("subcategory_id", "");
+                    }}
+                    className="mb-4"
+                  >
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    Zurück zur Hauptkategorie
+                  </Button>
+                  
+                  <h2 className="text-3xl font-bold mb-2">Was genau benötigen Sie?</h2>
+                  <p className="text-muted-foreground">Wählen Sie die spezifische Dienstleistung</p>
+                </div>
+                
+                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
+                  {subCategories.map((category) => (
+                    <SelectionCard
+                      key={category.id}
+                      label={category.name}
+                      description={category.description}
+                      isSelected={projectData.subcategory_id === category.id}
+                      onClick={() => updateProjectData("subcategory_id", category.id)}
+                    />
+                  ))}
+                </div>
+              </div>
+            )}
           </motion.div>
         );
 
       case 1:
-        // Trade-Specific Questions
+        // Category-Specific Questions
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -281,7 +416,7 @@ export default function CreateProject() {
             className="space-y-8"
           >
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold">Details zu Ihrem {projectData.gewerk_id}-Projekt</h2>
+              <h2 className="text-3xl font-bold">Details zu Ihrem Projekt</h2>
               <p className="text-muted-foreground">
                 Je genauer Ihre Angaben, desto besser können Handwerker Ihnen helfen
               </p>
@@ -296,19 +431,20 @@ export default function CreateProject() {
                 className="space-y-4"
               >
                 <Label className="text-lg font-semibold">
-                  {question.label} {question.required && <span className="text-destructive">*</span>}
+                  {question.question_text} {question.required && <span className="text-destructive">*</span>}
                 </Label>
+                {question.help_text && (
+                  <p className="text-sm text-muted-foreground">{question.help_text}</p>
+                )}
 
-                {question.type === "multiselect" && question.options && (
+                {question.question_type === "multiselect" && question.options && (
                   <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
-                    {question.options.map((option) => {
+                    {question.options.map((option: any) => {
                       const isSelected = (projectData.tradeSpecificAnswers[question.id] || []).includes(option.value);
-                      const Icon = option.icon;
                       
                       return (
                         <SelectionCard
                           key={option.value}
-                          icon={Icon ? <Icon className="h-8 w-8" /> : undefined}
                           label={option.label}
                           isSelected={isSelected}
                           onClick={() => {
@@ -324,14 +460,13 @@ export default function CreateProject() {
                   </div>
                 )}
 
-                {question.type === "radio" && question.options && (
+                {question.question_type === "radio" && question.options && (
                   <RadioGroup
                     value={projectData.tradeSpecificAnswers[question.id]}
                     onValueChange={(value) => updateTradeSpecificAnswer(question.id, value)}
                   >
                     <div className="space-y-3">
-                      {question.options.map((option) => {
-                        const Icon = option.icon;
+                      {question.options.map((option: any) => {
                         const isSelected = projectData.tradeSpecificAnswers[question.id] === option.value;
                         
                         return (
@@ -346,7 +481,6 @@ export default function CreateProject() {
                             onClick={() => updateTradeSpecificAnswer(question.id, option.value)}
                           >
                             <RadioGroupItem value={option.value} id={option.value} />
-                            {Icon && <Icon className="h-5 w-5 text-muted-foreground" />}
                             <Label 
                               htmlFor={option.value} 
                               className="flex-1 cursor-pointer font-normal"
@@ -360,11 +494,21 @@ export default function CreateProject() {
                   </RadioGroup>
                 )}
 
-                {question.type === "textarea" && (
+                {question.question_type === "number" && (
+                  <Input
+                    type="number"
+                    value={projectData.tradeSpecificAnswers[question.id] || ""}
+                    onChange={(e) => updateTradeSpecificAnswer(question.id, e.target.value)}
+                    placeholder="Bitte Zahl eingeben"
+                    className="h-12"
+                  />
+                )}
+
+                {question.question_type === "textarea" && (
                   <Textarea
                     value={projectData.tradeSpecificAnswers[question.id] || ""}
                     onChange={(e) => updateTradeSpecificAnswer(question.id, e.target.value)}
-                    placeholder={question.placeholder}
+                    placeholder="Bitte Details eingeben"
                     rows={6}
                     className="resize-none"
                   />
@@ -373,29 +517,27 @@ export default function CreateProject() {
             ))}
 
             {/* Additional Description */}
-            {projectData.gewerk_id !== "Sonstige" && (
-              <motion.div
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                transition={{ delay: currentTradeQuestions.length * 0.1 }}
-                className="space-y-2"
-              >
-                <Label htmlFor="description" className="text-lg font-semibold">
-                  Weitere Angaben <span className="text-sm font-normal text-muted-foreground">(optional)</span>
-                </Label>
-                <p className="text-sm text-muted-foreground">
-                  Beschreiben Sie weitere Details zu Ihrem Projekt
-                </p>
-                <Textarea
-                  id="description"
-                  value={projectData.description}
-                  onChange={(e) => updateProjectData("description", e.target.value)}
-                  placeholder="z.B. Raumgröße, spezielle Wünsche, Materialien..."
-                  rows={5}
-                  className="resize-none"
-                />
-              </motion.div>
-            )}
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              animate={{ opacity: 1, y: 0 }}
+              transition={{ delay: currentTradeQuestions.length * 0.1 }}
+              className="space-y-2"
+            >
+              <Label htmlFor="description" className="text-lg font-semibold">
+                Weitere Angaben <span className="text-sm font-normal text-muted-foreground">(optional)</span>
+              </Label>
+              <p className="text-sm text-muted-foreground">
+                Beschreiben Sie weitere Details zu Ihrem Projekt
+              </p>
+              <Textarea
+                id="description"
+                value={projectData.description}
+                onChange={(e) => updateProjectData("description", e.target.value)}
+                placeholder="z.B. Raumgröße, spezielle Wünsche, Materialien..."
+                rows={5}
+                className="resize-none"
+              />
+            </motion.div>
           </motion.div>
         );
 
@@ -729,7 +871,9 @@ export default function CreateProject() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Zeitplan</p>
                     <p className="font-medium">
-                      {commonQuestions[0].options?.find(o => o.value === projectData.urgency)?.label}
+                      {projectData.urgency === 'high' ? 'Sofort / Notfall' : 
+                       projectData.urgency === 'medium' ? 'Normal (1-2 Wochen)' : 
+                       'Flexibel'}
                     </p>
                   </div>
                 )}
