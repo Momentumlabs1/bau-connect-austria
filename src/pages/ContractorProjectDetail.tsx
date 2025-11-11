@@ -16,7 +16,7 @@ interface Project {
   id: string;
   title: string;
   description: string;
-  trade: string;
+  gewerk_id: string;
   postal_code: string;
   city: string;
   address: string | null;
@@ -198,7 +198,7 @@ export default function ContractorProjectDetail() {
             <Card>
               <CardHeader>
                 <div className="flex items-start justify-between mb-2">
-                  <Badge>{project.trade}</Badge>
+                  <Badge>{project.gewerk_id}</Badge>
                   <Badge variant={project.urgency === "high" ? "destructive" : "default"}>
                     {project.urgency === "high" ? "Dringend" : project.urgency === "medium" ? "Normal" : "Niedrig"}
                   </Badge>

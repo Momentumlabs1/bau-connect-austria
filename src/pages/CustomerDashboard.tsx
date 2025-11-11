@@ -12,7 +12,7 @@ import { useToast } from "@/hooks/use-toast";
 interface Project {
   id: string;
   title: string;
-  trade: string;
+  gewerk_id: string;
   budget_min: number | null;
   budget_max: number | null;
   status: string;
@@ -151,7 +151,7 @@ export default function CustomerDashboard() {
                         <div className="flex items-start justify-between">
                           <div className="flex-1">
                             <CardTitle className="text-lg">{project.title}</CardTitle>
-                            <CardDescription>{project.trade}</CardDescription>
+                            <CardDescription>{project.gewerk_id}</CardDescription>
                           </div>
                           {getStatusBadge(project.status)}
                         </div>

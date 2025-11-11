@@ -14,7 +14,7 @@ interface Project {
   id: string;
   title: string;
   description: string;
-  trade: string;
+  gewerk_id: string;
   postal_code: string;
   city: string;
   budget_min: number | null;
@@ -46,7 +46,7 @@ export default function ContractorProjects() {
         .order("created_at", { ascending: false });
 
       if (filterTrade !== "all") {
-        query = query.eq("trade", filterTrade);
+        query = query.eq("gewerk_id", filterTrade);
       }
 
       if (filterPostal) {
@@ -157,7 +157,7 @@ export default function ContractorProjects() {
               <Card key={project.id} className="hover:shadow-lg transition-shadow">
                 <CardHeader>
                   <div className="flex items-start justify-between mb-2">
-                    <Badge>{project.trade}</Badge>
+                    <Badge>{project.gewerk_id}</Badge>
                     <Badge variant={getUrgencyColor(project.urgency)}>
                       {getUrgencyLabel(project.urgency)}
                     </Badge>

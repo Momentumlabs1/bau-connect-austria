@@ -9,7 +9,7 @@ import { cn } from "@/lib/utils";
 interface Project {
   id: string;
   title: string;
-  trade: string;
+  gewerk_id: string;
   postalCode: string;
   city: string;
   budgetMin?: number;
@@ -139,7 +139,7 @@ export const ProjectCard = ({
 
             {/* Trade Badge */}
             <Badge variant="outline" className="mb-4">
-              {project.trade}
+              {project.gewerk_id}
             </Badge>
 
             {/* Info Grid */}

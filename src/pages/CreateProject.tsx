@@ -29,7 +29,7 @@ const steps = [
 ];
 
 interface ProjectData {
-  trade: string;
+  gewerk_id: string;
   title: string;
   description: string;
   postal_code: string;
@@ -51,7 +51,7 @@ export default function CreateProject() {
   const [wantsImages, setWantsImages] = useState(false);
   
   const [projectData, setProjectData] = useState<ProjectData>({
-    trade: "",
+    gewerk_id: "",
     title: "",
     description: "",
     postal_code: "",
@@ -73,13 +73,13 @@ export default function CreateProject() {
     });
   }, []);
 
-  const currentTradeQuestions = projectData.trade && tradeQuestions[projectData.trade] 
-    ? tradeQuestions[projectData.trade] 
+  const currentTradeQuestions = projectData.gewerk_id && tradeQuestions[projectData.gewerk_id] 
+    ? tradeQuestions[projectData.gewerk_id] 
     : [];
 
   const handleNext = () => {
     // Validation for Step 0
-    if (currentStep === 0 && !projectData.trade) {
+    if (currentStep === 0 && !projectData.gewerk_id) {
       toast({
         title: "Bitte wählen Sie ein Gewerk",
         description: "Wählen Sie ein Gewerk aus, um fortzufahren",
@@ -183,7 +183,7 @@ export default function CreateProject() {
           customer_id: userId,
           title: projectData.title,
           description: generatedDescription,
-          trade: projectData.trade,
+          gewerk_id: projectData.gewerk_id,
           postal_code: projectData.postal_code,
           city: projectData.city,
           address: projectData.address || null,
@@ -266,8 +266,8 @@ export default function CreateProject() {
             exit={{ opacity: 0 }}
           >
             <TradeSelectionGrid
-              selectedTrade={projectData.trade}
-              onTradeSelect={(trade) => updateProjectData("trade", trade)}
+              selectedTrade={projectData.gewerk_id}
+              onTradeSelect={(trade) => updateProjectData("gewerk_id", trade)}
             />
           </motion.div>
         );
@@ -281,7 +281,7 @@ export default function CreateProject() {
             className="space-y-8"
           >
             <div className="text-center space-y-2">
-              <h2 className="text-3xl font-bold">Details zu Ihrem {projectData.trade}-Projekt</h2>
+              <h2 className="text-3xl font-bold">Details zu Ihrem {projectData.gewerk_id}-Projekt</h2>
               <p className="text-muted-foreground">
                 Je genauer Ihre Angaben, desto besser können Handwerker Ihnen helfen
               </p>
@@ -373,7 +373,7 @@ export default function CreateProject() {
             ))}
 
             {/* Additional Description */}
-            {projectData.trade !== "Sonstige" && (
+            {projectData.gewerk_id !== "Sonstige" && (
               <motion.div
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
@@ -681,7 +681,7 @@ export default function CreateProject() {
                 
                 <div>
                   <p className="text-sm text-muted-foreground mb-1">Gewerk</p>
-                  <p className="font-medium capitalize">{projectData.trade.replace('-', ' / ')}</p>
+                  <p className="font-medium capitalize">{projectData.gewerk_id.replace('-', ' / ')}</p>
                 </div>
 
                 {Object.keys(projectData.tradeSpecificAnswers).length > 0 && (
