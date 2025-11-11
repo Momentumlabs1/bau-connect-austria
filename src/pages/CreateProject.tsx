@@ -37,7 +37,7 @@ interface ProjectData {
   address: string;
   budget_min?: number;
   budget_max?: number;
-  urgency: 'sofort' | 'normal' | 'flexibel' | '';
+  urgency: 'high' | 'medium' | 'low' | '';
   images: string[];
   tradeSpecificAnswers: Record<string, any>;
   preferred_start_date?: string;
@@ -189,7 +189,7 @@ export default function CreateProject() {
           address: projectData.address || null,
           budget_min: projectData.budget_min || null,
           budget_max: projectData.budget_max || null,
-          urgency: projectData.urgency || 'normal',
+          urgency: projectData.urgency || 'medium',
           images: projectData.images,
           keywords: keywords,
           estimated_value: projectData.estimated_value || null,
@@ -522,13 +522,13 @@ export default function CreateProject() {
 
             <RadioGroup
               value={projectData.urgency}
-              onValueChange={(value) => updateProjectData("urgency", value as 'sofort' | 'normal' | 'flexibel')}
+              onValueChange={(value) => updateProjectData("urgency", value as 'high' | 'medium' | 'low')}
             >
               <div className="space-y-3 max-w-2xl mx-auto">
                 {[
-                  { value: "sofort", label: "🚨 Sofort / Notfall (innerhalb 24-48h)", description: "Dringender Auftrag - höhere Lead-Kosten" },
-                  { value: "normal", label: "📅 Normal (innerhalb 1-2 Wochen)", description: "Standard-Zeitrahmen" },
-                  { value: "flexibel", label: "🕐 Flexibel / Nach Absprache", description: "Kein fester Zeitplan" }
+                  { value: "high", label: "🚨 Sofort / Notfall (innerhalb 24-48h)", description: "Dringender Auftrag - höhere Lead-Kosten" },
+                  { value: "medium", label: "📅 Normal (innerhalb 1-2 Wochen)", description: "Standard-Zeitrahmen" },
+                  { value: "low", label: "🕐 Flexibel / Nach Absprache", description: "Kein fester Zeitplan" }
                 ].map((option) => {
                   const isSelected = projectData.urgency === option.value;
                   
@@ -545,7 +545,7 @@ export default function CreateProject() {
                             ? "border-primary bg-primary/5 shadow-sm"
                             : "border-border"
                         )}
-                        onClick={() => updateProjectData("urgency", option.value as 'sofort' | 'normal' | 'flexibel')}
+                        onClick={() => updateProjectData("urgency", option.value as 'high' | 'medium' | 'low')}
                       >
                         <RadioGroupItem value={option.value} id={option.value} className="flex-shrink-0 mt-1" />
                         <div className="flex-1">
