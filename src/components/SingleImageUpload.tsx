@@ -28,13 +28,19 @@ export function SingleImageUpload({
     setUploading(true);
 
     try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        throw new Error("Sie müssen angemeldet sein, um Dateien hochzuladen.");
+      }
+
       const fileExt = file.name.split('.').pop();
-      const fileName = `${Math.random()}.${fileExt}`;
-      const filePath = folder ? `${folder}/${fileName}` : fileName;
+      const safeName = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+      const effectiveFolder = folder && folder.trim().length > 0 ? folder : user.id;
+      const filePath = effectiveFolder ? `${effectiveFolder}/${safeName}.${fileExt}` : `${safeName}.${fileExt}`;
 
       const { error: uploadError } = await supabase.storage
         .from(bucket)
-        .upload(filePath, file);
+        .upload(filePath, file, { contentType: file.type, upsert: true });
 
       if (uploadError) throw uploadError;
 

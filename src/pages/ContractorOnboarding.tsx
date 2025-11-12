@@ -304,6 +304,7 @@ export default function ContractorOnboarding() {
                 value={profileImage}
                 onChange={setProfileImage}
                 bucket="profile-images"
+                folder={contractorId || ''}
               />
             </div>
           </div>
@@ -445,6 +446,7 @@ export default function ContractorOnboarding() {
                 value={gewerbescheinUrl}
                 onChange={setGewerbescheinUrl}
                 bucket="contractor-portfolios"
+                folder={`${contractorId || ''}/documents`}
               />
             </div>
 
@@ -454,29 +456,39 @@ export default function ContractorOnboarding() {
                 value={versicherungUrl}
                 onChange={setVersicherungUrl}
                 bucket="contractor-portfolios"
+                folder={`${contractorId || ''}/documents`}
               />
             </div>
 
             <div>
               <Label>Zertifikate (optional, max. 5)</Label>
-              <ImageUpload
-                bucket="contractor-portfolios"
-                folder="certificates"
-                maxImages={5}
-                onImagesChange={setZertifikateUrls}
-                existingImages={zertifikateUrls}
-              />
+              {contractorId ? (
+                <ImageUpload
+                  bucket="contractor-portfolios"
+                  folder={`${contractorId}/certificates`
+                  }
+                  maxImages={5}
+                  onImagesChange={setZertifikateUrls}
+                  existingImages={zertifikateUrls}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">Lädt...</p>
+              )}
             </div>
 
             <div>
               <Label>Portfolio-Bilder (max. 10)</Label>
-              <ImageUpload
-                bucket="contractor-portfolios"
-                folder="portfolio"
-                maxImages={10}
-                onImagesChange={setPortfolioImages}
-                existingImages={portfolioImages}
-              />
+              {contractorId ? (
+                <ImageUpload
+                  bucket="contractor-portfolios"
+                  folder={`${contractorId}/portfolio`}
+                  maxImages={10}
+                  onImagesChange={setPortfolioImages}
+                  existingImages={portfolioImages}
+                />
+              ) : (
+                <p className="text-sm text-muted-foreground">Lädt...</p>
+              )}
             </div>
           </div>
         );
