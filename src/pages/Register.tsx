@@ -98,7 +98,7 @@ export default function Register() {
         if (role === "customer") {
           navigate("/kunde/dashboard");
         } else {
-          navigate("/handwerker/dashboard");
+          navigate("/handwerker/onboarding");
         }
       }, 1000);
     } catch (error: any) {

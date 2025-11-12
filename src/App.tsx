@@ -8,6 +8,7 @@ import Register from "./pages/Register";
 import Login from "./pages/Login";
 import CustomerDashboard from "./pages/CustomerDashboard";
 import ContractorDashboard from "./pages/ContractorDashboard";
+import ContractorOnboarding from "./pages/ContractorOnboarding";
 import CreateProject from "./pages/CreateProject";
 import ContractorProfile from "./pages/ContractorProfile";
 import ContractorProfileEdit from "./pages/ContractorProfileEdit";
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/kunde/projekt/:id" element={<CustomerProjectDetail />} />
           <Route path="/kunde/handwerker-suchen" element={<CustomerContractorSearch />} />
           <Route path="/handwerker/dashboard" element={<ContractorDashboard />} />
+          <Route path="/handwerker/onboarding" element={<ContractorOnboarding />} />
           <Route path="/handwerker/profil-erstellen" element={<ContractorProfile />} />
           <Route path="/handwerker/profil-bearbeiten" element={<ContractorProfileEdit />} />
           <Route path="/handwerker/projekte" element={<ContractorProjects />} />

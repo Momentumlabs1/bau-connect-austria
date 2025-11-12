@@ -1,5 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
 import { useEffect } from "react";
 import {
@@ -63,15 +64,30 @@ export default function Index() {
     }
   });
 
+  // Fetch top contractors
+  const { data: topContractors } = useQuery({
+    queryKey: ['top-contractors'],
+    queryFn: async () => {
+      const { data, error } = await supabase
+        .from('contractors')
+        .select('id, company_name, rating, total_reviews, trades, profile_image_url, city')
+        .eq('verified', true)
+        .gt('rating', 0)
+        .order('rating', { ascending: false })
+        .order('total_reviews', { ascending: false })
+        .limit(3);
+      
+      if (error) throw error;
+      return data || [];
+    }
+  });
+
   const gewerke = [
-    { name: 'Elektriker', icon: Zap, color: 'text-yellow-500' },
-    { name: 'Sanitär', icon: Droplet, color: 'text-blue-500' },
-    { name: 'Maler', icon: Paintbrush, color: 'text-purple-500' },
-    { name: 'Bau', icon: Construction, color: 'text-orange-500' },
-    { name: 'Tischler', icon: Hammer, color: 'text-amber-700' },
-    { name: 'Heizung', icon: Flame, color: 'text-red-500' },
-    { name: 'Garten', icon: Trees, color: 'text-green-500' },
-    { name: 'Sonstige', icon: Wrench, color: 'text-muted-foreground' }
+    { id: 'elektriker', name: 'Elektriker', icon: Zap, color: 'text-yellow-500' },
+    { id: 'sanitar-heizung', name: 'Sanitär-Heizung', icon: Droplet, color: 'text-blue-500' },
+    { id: 'maler', name: 'Maler', icon: Paintbrush, color: 'text-purple-500' },
+    { id: 'dachdecker', name: 'Dachdecker', icon: Construction, color: 'text-orange-500' },
+    { id: 'fassade', name: 'Fassade', icon: Hammer, color: 'text-amber-700' }
   ];
 
   const steps = [
@@ -136,7 +152,7 @@ export default function Index() {
               Finden Sie den perfekten Handwerker
             </h1>
             <p className="text-xl md:text-2xl text-muted-foreground mb-8 max-w-3xl mx-auto">
-              Österreichs führende Plattform für Handwerker-Vermittlung. 
+              Die Plattform für Handwerker und Auftraggeber in Österreich. 
               Schnell, zuverlässig und transparent.
             </p>
 
@@ -205,9 +221,9 @@ export default function Index() {
               transition={{ delay: 0.1 }}
             >
               <div className="text-3xl font-bold text-primary mb-2">
-                {stats?.totalProjects?.toLocaleString() || '2.400+'}
+                {stats?.totalProjects ? stats.totalProjects.toLocaleString() : 'Erste Projekte werden gepostet'}
               </div>
-              <p className="text-muted-foreground">Erfolgreiche Projekte</p>
+              <p className="text-muted-foreground">Projekte</p>
             </motion.div>
 
             <motion.div
@@ -217,9 +233,9 @@ export default function Index() {
               transition={{ delay: 0.2 }}
             >
               <div className="text-3xl font-bold text-primary mb-2">
-                {stats?.totalContractors?.toLocaleString() || '800+'}
+                {stats?.totalContractors ? stats.totalContractors.toLocaleString() : 'Handwerker registrieren sich'}
               </div>
-              <p className="text-muted-foreground">Verifizierte Handwerker</p>
+              <p className="text-muted-foreground">Handwerker</p>
             </motion.div>
           </div>
         </div>
@@ -276,29 +292,29 @@ export default function Index() {
             viewport={{ once: true }}
             className="text-center mb-12"
           >
-            <h2 className="text-4xl font-bold mb-4">Alle Gewerke abgedeckt</h2>
+            <h2 className="text-4xl font-bold mb-4">Unsere Gewerke</h2>
             <p className="text-xl text-muted-foreground">
-              Finden Sie Experten für jede Art von Projekt
+              Spezialisierte Handwerker für Ihre Projekte
             </p>
           </motion.div>
 
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
             {gewerke.map((gewerk, index) => {
               const Icon = gewerk.icon;
               return (
                 <motion.div
-                  key={gewerk.name}
+                  key={gewerk.id}
                   initial={{ opacity: 0, scale: 0.9 }}
                   whileInView={{ opacity: 1, scale: 1 }}
                   viewport={{ once: true }}
                   transition={{ delay: index * 0.1 }}
                   whileHover={{ scale: 1.05 }}
                   className="cursor-pointer"
-                  onClick={() => navigate(`/handwerker/projekte?trade=${gewerk.name}`)}
+                  onClick={() => navigate(`/kunde/projekt-erstellen?gewerk=${gewerk.id}`)}
                 >
                   <Card className="p-6 text-center hover:shadow-lg transition-all bg-card">
                     <Icon className={`h-12 w-12 mx-auto mb-3 ${gewerk.color}`} />
-                    <p className="font-semibold">{gewerk.name}</p>
+                    <h3 className="font-semibold">{gewerk.name}</h3>
                   </Card>
                 </motion.div>
               );
@@ -307,47 +323,68 @@ export default function Index() {
         </div>
       </section>
 
-      {/* Testimonials */}
-      <section className="py-20 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-4xl font-bold mb-4">Was unsere Kunden sagen</h2>
-          </motion.div>
+      {/* Top Contractors */}
+      {topContractors && topContractors.length > 0 && (
+        <section className="py-20 px-4">
+          <div className="container mx-auto max-w-6xl">
+            <motion.div
+              initial={{ opacity: 0, y: 20 }}
+              whileInView={{ opacity: 1, y: 0 }}
+              viewport={{ once: true }}
+              className="text-center mb-12"
+            >
+              <h2 className="text-4xl font-bold mb-4">Top-bewertete Handwerker</h2>
+              <p className="text-xl text-muted-foreground">
+                Unsere verifizierten Profis mit den besten Bewertungen
+              </p>
+            </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-8">
-            {testimonials.map((testimonial, index) => (
-              <motion.div
-                key={index}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.2 }}
-              >
-                <Card className="p-6 h-full">
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="text-4xl">{testimonial.avatar}</div>
-                    <div>
-                      <p className="font-semibold">{testimonial.name}</p>
-                      <p className="text-sm text-muted-foreground">{testimonial.location}</p>
+            <div className="grid md:grid-cols-3 gap-8">
+              {topContractors.map((contractor, index) => (
+                <motion.div
+                  key={contractor.id}
+                  initial={{ opacity: 0, y: 20 }}
+                  whileInView={{ opacity: 1, y: 0 }}
+                  viewport={{ once: true }}
+                  transition={{ delay: index * 0.2 }}
+                  onClick={() => navigate(`/handwerker/${contractor.id}`)}
+                  className="cursor-pointer"
+                >
+                  <Card className="p-6 h-full hover:shadow-lg transition-shadow">
+                    <div className="flex flex-col items-center text-center">
+                      {contractor.profile_image_url ? (
+                        <img 
+                          src={contractor.profile_image_url} 
+                          alt={contractor.company_name}
+                          className="w-20 h-20 rounded-full object-cover mb-4"
+                        />
+                      ) : (
+                        <div className="w-20 h-20 rounded-full bg-primary/10 flex items-center justify-center mb-4">
+                          <Wrench className="h-10 w-10 text-primary" />
+                        </div>
+                      )}
+                      <h3 className="font-semibold text-lg mb-1">{contractor.company_name}</h3>
+                      <p className="text-sm text-muted-foreground mb-3">{contractor.city}</p>
+                      <div className="flex items-center gap-1 mb-3">
+                        <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                        <span className="font-semibold">{contractor.rating?.toFixed(1) || '0.0'}</span>
+                        <span className="text-sm text-muted-foreground">({contractor.total_reviews} Bewertungen)</span>
+                      </div>
+                      <div className="flex flex-wrap gap-2 justify-center">
+                        {contractor.trades?.slice(0, 2).map((trade: string) => (
+                          <Badge key={trade} variant="secondary" className="text-xs">
+                            {gewerke.find(g => g.id === trade)?.name || trade}
+                          </Badge>
+                        ))}
+                      </div>
                     </div>
-                  </div>
-                  <div className="flex gap-1 mb-3">
-                    {[...Array(testimonial.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                    ))}
-                  </div>
-                  <p className="text-muted-foreground italic">"{testimonial.text}"</p>
-                </Card>
-              </motion.div>
-            ))}
+                  </Card>
+                </motion.div>
+              ))}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Final CTA */}
       <section className="py-20 px-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground">

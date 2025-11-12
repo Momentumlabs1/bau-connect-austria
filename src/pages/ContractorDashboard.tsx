@@ -87,6 +87,35 @@ export default function HandwerkerDashboard() {
     loadDashboardData();
   }, []);
 
+  useEffect(() => {
+    if (profile && userId) {
+      checkProfileCompleteness();
+    }
+  }, [profile, userId]);
+
+  const checkProfileCompleteness = async () => {
+    if (!userId) return;
+    
+    const { data: contractor } = await supabase
+      .from("contractors")
+      .select("trades, postal_codes, description, city, address")
+      .eq("id", userId)
+      .maybeSingle();
+      
+    if (contractor) {
+      const isIncomplete = 
+        !contractor.trades || contractor.trades.length === 0 ||
+        !contractor.postal_codes || contractor.postal_codes.length === 0 ||
+        !contractor.description || 
+        !contractor.city ||
+        !contractor.address;
+      
+      if (isIncomplete) {
+        navigate('/handwerker/onboarding');
+      }
+    }
+  };
+
   const loadDashboardData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
