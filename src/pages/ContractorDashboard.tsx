@@ -105,6 +105,12 @@ export default function HandwerkerDashboard() {
 
       if (profileError) throw profileError;
       
+      // Check if contractor profile exists
+      if (!contractor) {
+        setLoading(false);
+        return;
+      }
+      
       // Map to profile interface with defaults
       const contractorData = contractor as any;
       setProfile({

@@ -70,6 +70,23 @@ export default function Register() {
           .eq("id", authData.user.id);
 
         if (profileError) console.error("Profile update error:", profileError);
+        
+        // Create contractor profile if registering as contractor
+        if (role === 'contractor' && authData.user) {
+          const { error: contractorError } = await supabase
+            .from('contractors')
+            .insert({
+              id: authData.user.id,
+              company_name: `${data.firstName} ${data.lastName}`,
+              trades: [],
+              postal_codes: [],
+              service_radius: 50,
+              verified: false,
+              handwerker_status: 'REGISTERED'
+            });
+          
+          if (contractorError) console.error("Contractor creation error:", contractorError);
+        }
       }
 
       toast({
