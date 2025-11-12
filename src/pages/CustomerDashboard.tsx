@@ -41,7 +41,7 @@ export default function CustomerDashboard() {
       .from("profiles")
       .select("role")
       .eq("id", session.user.id)
-      .single();
+      .maybeSingle();
 
     if (profile?.role !== "customer") {
       toast({

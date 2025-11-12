@@ -12,6 +12,7 @@ import CreateProject from "./pages/CreateProject";
 import ContractorProfile from "./pages/ContractorProfile";
 import ContractorProjects from "./pages/ContractorProjects";
 import ContractorProjectDetail from "./pages/ContractorProjectDetail";
+import SeedDemo from "./pages/SeedDemo";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -32,6 +33,7 @@ const App = () => (
           <Route path="/handwerker/profil-erstellen" element={<ContractorProfile />} />
           <Route path="/handwerker/projekte" element={<ContractorProjects />} />
           <Route path="/handwerker/projekt/:id" element={<ContractorProjectDetail />} />
+          <Route path="/seed-demo" element={<SeedDemo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
