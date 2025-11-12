@@ -101,7 +101,7 @@ export default function HandwerkerDashboard() {
         .from("contractors")
         .select("*")
         .eq("id", user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) throw profileError;
       
