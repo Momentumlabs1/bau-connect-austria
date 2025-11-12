@@ -55,9 +55,13 @@ export default function CustomerDashboard() {
 
   const fetchProjects = async () => {
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
       const { data, error } = await supabase
         .from("projects")
         .select("*")
+        .eq('customer_id', session.user.id)
         .order("created_at", { ascending: false });
 
       if (error) throw error;
@@ -146,7 +150,11 @@ export default function CustomerDashboard() {
               ) : (
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
                   {filterProjects(tab).map((project) => (
-                    <Card key={project.id} className="cursor-pointer transition-shadow hover:shadow-md">
+                    <Card 
+                      key={project.id} 
+                      className="cursor-pointer transition-shadow hover:shadow-md"
+                      onClick={() => navigate(`/kunde/projekt/${project.id}`)}
+                    >
                       <CardHeader>
                         <div className="flex items-start justify-between">
                           <div className="flex-1">

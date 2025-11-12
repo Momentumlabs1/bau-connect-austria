@@ -12,6 +12,11 @@ import CreateProject from "./pages/CreateProject";
 import ContractorProfile from "./pages/ContractorProfile";
 import ContractorProjects from "./pages/ContractorProjects";
 import ContractorProjectDetail from "./pages/ContractorProjectDetail";
+import CustomerProjectDetail from "./pages/CustomerProjectDetail";
+import CustomerContractorSearch from "./pages/CustomerContractorSearch";
+import Messages from "./pages/Messages";
+import PublicContractorProfile from "./pages/PublicContractorProfile";
+import Notifications from "./pages/Notifications";
 import SeedDemo from "./pages/SeedDemo";
 import NotFound from "./pages/NotFound";
 
@@ -29,10 +34,15 @@ const App = () => (
           <Route path="/login" element={<Login />} />
           <Route path="/kunde/dashboard" element={<CustomerDashboard />} />
           <Route path="/kunde/projekt-erstellen" element={<CreateProject />} />
+          <Route path="/kunde/projekt/:id" element={<CustomerProjectDetail />} />
+          <Route path="/kunde/handwerker-suchen" element={<CustomerContractorSearch />} />
           <Route path="/handwerker/dashboard" element={<ContractorDashboard />} />
           <Route path="/handwerker/profil-erstellen" element={<ContractorProfile />} />
           <Route path="/handwerker/projekte" element={<ContractorProjects />} />
           <Route path="/handwerker/projekt/:id" element={<ContractorProjectDetail />} />
+          <Route path="/handwerker/:id" element={<PublicContractorProfile />} />
+          <Route path="/nachrichten" element={<Messages />} />
+          <Route path="/benachrichtigungen" element={<Notifications />} />
           <Route path="/seed-demo" element={<SeedDemo />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />

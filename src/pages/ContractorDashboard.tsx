@@ -132,20 +132,16 @@ export default function HandwerkerDashboard() {
       if (notifsError) throw notifsError;
       setNotifications(notifs || []);
 
-      // Load available leads from notifications
-      const leadIds = (notifs || [])
-        .map(n => {
-          const data = n.data as any;
-          return data?.lead_id;
-        })
-        .filter(Boolean);
-
-      if (leadIds.length > 0) {
+      // Load ALL open projects matching contractor's trades
+      const contractorTrades = contractorData.trades || [];
+      if (contractorTrades.length > 0) {
         const { data: leads, error: leadsError } = await supabase
           .from("projects")
           .select("*")
-          .in("id", leadIds)
-          .eq("status", "open");
+          .eq("status", "open")
+          .eq("visibility", "public")
+          .in("gewerk_id", contractorTrades)
+          .order("created_at", { ascending: false });
 
         if (leadsError) throw leadsError;
         setAvailableLeads(leads || []);
@@ -296,30 +292,7 @@ export default function HandwerkerDashboard() {
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Wallet-Guthaben</p>
-                  <p className="text-3xl font-bold text-primary">
-                    €{profile.wallet_balance.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-primary/10 rounded-full">
-                  <Wallet className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-              <Button variant="outline" size="sm" className="w-full mt-4">
-                Aufladen
-              </Button>
-            </Card>
-          </motion.div>
-
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -465,12 +438,9 @@ export default function HandwerkerDashboard() {
                         <Button 
                           size="lg" 
                           className="w-full lg:w-auto"
-                          onClick={() => {
-                            setSelectedLead(lead);
-                            setPurchaseDialogOpen(true);
-                          }}
+                          onClick={() => navigate(`/handwerker/projekt/${lead.id}`)}
                         >
-                          Details kaufen
+                          Details ansehen
                         </Button>
                       </div>
                     </div>

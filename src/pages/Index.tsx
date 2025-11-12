@@ -1,7 +1,8 @@
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useNavigate } from "react-router-dom";
-import { 
+import { useEffect } from "react";
+import {
   Hammer, 
   Zap, 
   Droplet, 
@@ -23,6 +24,27 @@ import { Navbar } from "@/components/Navbar";
 
 export default function Index() {
   const navigate = useNavigate();
+
+  // Check if user is logged in and redirect to dashboard
+  useEffect(() => {
+    const checkAuth = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', session.user.id)
+          .maybeSingle();
+        
+        if (profile?.role === 'customer') {
+          navigate('/kunde/dashboard');
+        } else if (profile?.role === 'contractor') {
+          navigate('/handwerker/dashboard');
+        }
+      }
+    };
+    checkAuth();
+  }, [navigate]);
 
   // Fetch live stats
   const { data: stats } = useQuery({

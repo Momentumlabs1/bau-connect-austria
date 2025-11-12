@@ -207,6 +207,51 @@ export type Database = {
           },
         ]
       }
+      conversations: {
+        Row: {
+          contractor_id: string | null
+          created_at: string | null
+          customer_id: string | null
+          id: string
+          last_message_at: string | null
+          project_id: string | null
+          updated_at: string | null
+        }
+        Insert: {
+          contractor_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          project_id?: string | null
+          updated_at?: string | null
+        }
+        Update: {
+          contractor_id?: string | null
+          created_at?: string | null
+          customer_id?: string | null
+          id?: string
+          last_message_at?: string | null
+          project_id?: string | null
+          updated_at?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_customer_id_fkey"
+            columns: ["customer_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       gewerke_config: {
         Row: {
           base_price: number
@@ -296,6 +341,48 @@ export type Database = {
             columns: ["project_id"]
             isOneToOne: false
             referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      messages: {
+        Row: {
+          conversation_id: string | null
+          created_at: string | null
+          id: string
+          message: string
+          read: boolean | null
+          sender_id: string | null
+        }
+        Insert: {
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          message: string
+          read?: boolean | null
+          sender_id?: string | null
+        }
+        Update: {
+          conversation_id?: string | null
+          created_at?: string | null
+          id?: string
+          message?: string
+          read?: boolean | null
+          sender_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
             referencedColumns: ["id"]
           },
         ]

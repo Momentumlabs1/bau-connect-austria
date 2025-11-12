@@ -5,14 +5,17 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ProgressStepper } from "@/components/wizard/ProgressStepper";
 import { SelectionCard } from "@/components/wizard/SelectionCard";
-import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer, Star, MessageSquare } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
@@ -67,6 +70,9 @@ export default function CreateProject() {
   const [loading, setLoading] = useState(false);
   const [userId, setUserId] = useState<string>("");
   const [wantsImages, setWantsImages] = useState(false);
+  const [showSuccessDialog, setShowSuccessDialog] = useState(false);
+  const [createdProjectId, setCreatedProjectId] = useState<string>("");
+  const [matchedContractors, setMatchedContractors] = useState<any[]>([]);
   
   // Categories state
   const [mainCategories, setMainCategories] = useState<ServiceCategory[]>([]);
@@ -308,7 +314,18 @@ export default function CreateProject() {
         description: "Handwerker in Ihrer Nähe werden benachrichtigt",
       });
 
-      navigate("/kunde/dashboard");
+      // Find matching contractors for success dialog
+      const { data: contractors } = await supabase
+        .from('contractors')
+        .select('*')
+        .contains('trades', [projectData.gewerk_id])
+        .eq('verified', true)
+        .order('rating', { ascending: false })
+        .limit(5);
+
+      setMatchedContractors(contractors || []);
+      setCreatedProjectId(newProject.id);
+      setShowSuccessDialog(true);
     } catch (error: any) {
       toast({
         title: "Fehler beim Erstellen",
@@ -332,6 +349,31 @@ export default function CreateProject() {
         [questionId]: value
       }
     }));
+  };
+
+  const startConversation = async (contractorId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    if (!session) return;
+
+    try {
+      const { data: newConv } = await supabase
+        .from('conversations')
+        .insert({
+          project_id: createdProjectId,
+          customer_id: session.user.id,
+          contractor_id: contractorId
+        })
+        .select()
+        .single();
+
+      navigate(`/nachrichten?conversation=${newConv.id}`);
+    } catch (error: any) {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
 
   const renderStepContent = () => {
@@ -919,6 +961,85 @@ export default function CreateProject() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
+      
+      {/* Success Dialog */}
+      <Dialog open={showSuccessDialog} onOpenChange={setShowSuccessDialog}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="text-2xl">
+              🎉 Auftrag erfolgreich erstellt!
+            </DialogTitle>
+            <DialogDescription>
+              Hier sind passende Handwerker für Ihr Projekt
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            {matchedContractors.length === 0 ? (
+              <p className="text-center text-muted-foreground py-8">
+                Keine passenden Handwerker gefunden. Wir benachrichtigen Sie, sobald sich jemand meldet.
+              </p>
+            ) : (
+              matchedContractors.map(contractor => (
+                <Card key={contractor.id} className="p-4">
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-4">
+                      <Avatar>
+                        <AvatarImage src={contractor.profile_image_url} />
+                        <AvatarFallback>{contractor.company_name[0]}</AvatarFallback>
+                      </Avatar>
+                      <div>
+                        <h3 className="font-semibold">{contractor.company_name}</h3>
+                        <div className="flex items-center gap-2 text-sm">
+                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                          <span>{contractor.rating.toFixed(1)} ⭐</span>
+                          <span className="text-muted-foreground">
+                            ({contractor.total_reviews} Bewertungen)
+                          </span>
+                        </div>
+                        <p className="text-sm text-muted-foreground">
+                          📍 {contractor.city}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex gap-2">
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setShowSuccessDialog(false);
+                          navigate(`/handwerker/${contractor.id}`);
+                        }}
+                      >
+                        Profil
+                      </Button>
+                      <Button onClick={() => startConversation(contractor.id)}>
+                        <MessageSquare className="h-4 w-4 mr-2" />
+                        Nachricht
+                      </Button>
+                    </div>
+                  </div>
+                </Card>
+              ))
+            )}
+          </div>
+          
+          <DialogFooter className="flex gap-2">
+            <Button variant="outline" onClick={() => {
+              setShowSuccessDialog(false);
+              navigate('/kunde/dashboard');
+            }}>
+              Überspringen
+            </Button>
+            <Button onClick={() => {
+              setShowSuccessDialog(false);
+              navigate('/kunde/handwerker-suchen');
+            }}>
+              Alle Handwerker durchsuchen
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
       <div className="container mx-auto px-4 py-8">
         <div className="mx-auto max-w-5xl">
           <ProgressStepper steps={steps} currentStep={currentStep} />
