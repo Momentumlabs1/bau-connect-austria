@@ -13,12 +13,21 @@ import { Navbar } from "@/components/Navbar";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ProgressStepper } from "@/components/wizard/ProgressStepper";
 import { SelectionCard } from "@/components/wizard/SelectionCard";
-import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer, Star, MessageSquare } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer, Star, MessageSquare, Zap, Droplet, Home, Paintbrush } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+
+// Icon mapping for service categories
+const iconMap: Record<string, any> = {
+  'Zap': Zap,
+  'Droplet': Droplet,
+  'Home': Home,
+  'Paintbrush': Paintbrush,
+  'Hammer': Hammer
+};
 
 const steps = [
   { id: 0, label: "Kategorie" },
