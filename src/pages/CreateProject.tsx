@@ -13,12 +13,21 @@ import { Navbar } from "@/components/Navbar";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ProgressStepper } from "@/components/wizard/ProgressStepper";
 import { SelectionCard } from "@/components/wizard/SelectionCard";
-import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer, Star, MessageSquare } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer, Star, MessageSquare, Zap, Droplet, Home, Paintbrush } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+
+// Icon mapping for service categories
+const iconMap: Record<string, any> = {
+  'Zap': Zap,
+  'Droplet': Droplet,
+  'Home': Home,
+  'Paintbrush': Paintbrush,
+  'Hammer': Hammer
+};
 
 const steps = [
   { id: 0, label: "Kategorie" },
@@ -396,19 +405,22 @@ export default function CreateProject() {
                 </div>
                 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-                  {mainCategories.map((category) => (
-                    <SelectionCard
-                      key={category.id}
-                      icon={<span className="text-4xl">{category.icon}</span>}
-                      label={category.name}
-                      description={category.description}
-                      isSelected={false}
-                      onClick={() => {
-                        setSelectedMainCategory(category.id);
-                        updateProjectData("gewerk_id", category.id);
-                      }}
-                    />
-                  ))}
+                  {mainCategories.map((category) => {
+                    const IconComponent = iconMap[category.icon] || Home;
+                    return (
+                      <SelectionCard
+                        key={category.id}
+                        icon={<IconComponent className="h-12 w-12" />}
+                        label={category.name}
+                        description={category.description}
+                        isSelected={false}
+                        onClick={() => {
+                          setSelectedMainCategory(category.id);
+                          updateProjectData("gewerk_id", category.id);
+                        }}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}
@@ -435,16 +447,19 @@ export default function CreateProject() {
                 </div>
                 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-                  {subCategories.map((category) => (
-                    <SelectionCard
-                      key={category.id}
-                      icon={<span className="text-4xl">{category.icon}</span>}
-                      label={category.name}
-                      description={category.description}
-                      isSelected={projectData.subcategory_id === category.id}
-                      onClick={() => updateProjectData("subcategory_id", category.id)}
-                    />
-                  ))}
+                  {subCategories.map((category) => {
+                    const IconComponent = category.icon ? iconMap[category.icon] : null;
+                    return (
+                      <SelectionCard
+                        key={category.id}
+                        icon={IconComponent ? <IconComponent className="h-10 w-10" /> : undefined}
+                        label={category.name}
+                        description={category.description}
+                        isSelected={projectData.subcategory_id === category.id}
+                        onClick={() => updateProjectData("subcategory_id", category.id)}
+                      />
+                    );
+                  })}
                 </div>
               </div>
             )}
