@@ -1,10 +1,10 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { Hammer, LogOut, User, MessageSquare } from "lucide-react";
+import { LogOut, User } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import { Badge } from "@/components/ui/badge";
+import logo from "@/assets/bauconnect-logo.png";
 
 export const Navbar = () => {
   const navigate = useNavigate();
@@ -71,8 +71,7 @@ export const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <Hammer className="h-6 w-6 text-primary" />
-            <span className="text-xl font-bold text-foreground">BauConnect24</span>
+            <img src={logo} alt="BauConnect" className="h-10" />
           </Link>
 
           <div className="flex items-center gap-3">
