@@ -29,7 +29,7 @@ export default function CustomerContractorSearch() {
   const navigate = useNavigate();
   const [contractors, setContractors] = useState<Contractor[]>([]);
   const [filters, setFilters] = useState({
-    gewerk: '',
+    gewerk: 'all',
     postalCode: '',
     radius: 50,
     minRating: 0
@@ -46,7 +46,7 @@ export default function CustomerContractorSearch() {
       .eq('verified', true)
       .eq('handwerker_status', 'REGISTERED');
 
-    if (filters.gewerk) {
+    if (filters.gewerk && filters.gewerk !== 'all') {
       query = query.contains('trades', [filters.gewerk]);
     }
 
@@ -88,7 +88,7 @@ export default function CustomerContractorSearch() {
               >
                 <SelectTrigger><SelectValue placeholder="Alle" /></SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">Alle</SelectItem>
+                  <SelectItem value="all">Alle</SelectItem>
                   <SelectItem value="elektriker">Elektriker</SelectItem>
                   <SelectItem value="sanitar-heizung">Sanitär & Heizung</SelectItem>
                   <SelectItem value="maler">Maler</SelectItem>

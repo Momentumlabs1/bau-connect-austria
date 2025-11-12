@@ -399,6 +399,7 @@ export default function CreateProject() {
                   {mainCategories.map((category) => (
                     <SelectionCard
                       key={category.id}
+                      icon={<span className="text-4xl">{category.icon}</span>}
                       label={category.name}
                       description={category.description}
                       isSelected={false}
@@ -437,6 +438,7 @@ export default function CreateProject() {
                   {subCategories.map((category) => (
                     <SelectionCard
                       key={category.id}
+                      icon={<span className="text-4xl">{category.icon}</span>}
                       label={category.name}
                       description={category.description}
                       isSelected={projectData.subcategory_id === category.id}
