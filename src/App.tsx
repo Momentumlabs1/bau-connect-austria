@@ -10,6 +10,7 @@ import CustomerDashboard from "./pages/CustomerDashboard";
 import ContractorDashboard from "./pages/ContractorDashboard";
 import CreateProject from "./pages/CreateProject";
 import ContractorProfile from "./pages/ContractorProfile";
+import ContractorProfileEdit from "./pages/ContractorProfileEdit";
 import ContractorProjects from "./pages/ContractorProjects";
 import ContractorProjectDetail from "./pages/ContractorProjectDetail";
 import CustomerProjectDetail from "./pages/CustomerProjectDetail";
@@ -38,6 +39,7 @@ const App = () => (
           <Route path="/kunde/handwerker-suchen" element={<CustomerContractorSearch />} />
           <Route path="/handwerker/dashboard" element={<ContractorDashboard />} />
           <Route path="/handwerker/profil-erstellen" element={<ContractorProfile />} />
+          <Route path="/handwerker/profil-bearbeiten" element={<ContractorProfileEdit />} />
           <Route path="/handwerker/projekte" element={<ContractorProjects />} />
           <Route path="/handwerker/projekt/:id" element={<ContractorProjectDetail />} />
           <Route path="/handwerker/:id" element={<PublicContractorProfile />} />

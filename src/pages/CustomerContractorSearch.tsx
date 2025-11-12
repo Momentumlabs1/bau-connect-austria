@@ -43,7 +43,6 @@ export default function CustomerContractorSearch() {
     let query = supabase
       .from('contractors')
       .select('*')
-      .eq('verified', true)
       .eq('handwerker_status', 'REGISTERED');
 
     if (filters.gewerk && filters.gewerk !== 'all') {
