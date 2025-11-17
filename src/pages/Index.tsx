@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   Hammer,
   Zap,
@@ -10,136 +10,118 @@ import {
   Paintbrush,
   Construction,
   Wrench,
-  ChevronRight,
   Star,
-  CheckCircle2,
   Users,
+  CheckCircle,
   FolderOpen,
   Shield,
   Clock,
-  ArrowRight,
   TrendingUp,
+  MessageSquare,
+  Award,
 } from "lucide-react";
-import { motion, useScroll, useTransform, useInView } from "framer-motion";
-import { useQuery } from "@tanstack/react-query";
 import { supabase } from "@/integrations/supabase/client";
-import { Navbar } from "@/components/Navbar";
 
-// Animated Counter Component
-const AnimatedCounter = ({
-  end,
-  duration = 2000,
-  decimals = 0,
-  suffix = "",
-}: {
-  end: number;
-  duration?: number;
-  decimals?: number;
-  suffix?: string;
-}) => {
-  const [count, setCount] = useState(0);
-  const ref = useRef<HTMLSpanElement>(null);
-  const isInView = useInView(ref, { once: true });
-
-  useEffect(() => {
-    if (!isInView) return;
-
-    let startTime: number;
-    let animationFrame: number;
-
-    const animate = (timestamp: number) => {
-      if (!startTime) startTime = timestamp;
-      const progress = Math.min((timestamp - startTime) / duration, 1);
-      const easeOutQuart = 1 - Math.pow(1 - progress, 4);
-      setCount(end * easeOutQuart);
-
-      if (progress < 1) {
-        animationFrame = requestAnimationFrame(animate);
-      }
-    };
-
-    animationFrame = requestAnimationFrame(animate);
-    return () => cancelAnimationFrame(animationFrame);
-  }, [end, duration, isInView]);
-
-  return (
-    <span ref={ref} className="tabular-nums">
-      {count.toFixed(decimals)}
-      {suffix}
-    </span>
-  );
-};
-
-export default function Index() {
+const Index = () => {
   const navigate = useNavigate();
-  const { scrollY } = useScroll();
+  const [stats, setStats] = useState({
+    totalProjects: 0,
+    totalContractors: 0,
+    averageRating: 0,
+  });
 
-  // Parallax effects - SLOWER & SMOOTHER
-  const heroY = useTransform(scrollY, [0, 800], [0, 100]);
-  const heroOpacity = useTransform(scrollY, [0, 600], [1, 0.3]);
-
-  // Check auth and redirect
   useEffect(() => {
-    const checkAuth = async () => {
-      const {
-        data: { session },
-      } = await supabase.auth.getSession();
-      if (session) {
-        const { data: profile } = await supabase
-          .from("profiles")
-          .select("role")
-          .eq("id", session.user.id)
-          .maybeSingle();
+    const fetchStats = async () => {
+      try {
+        const { count: projectsCount } = await supabase.from("projects").select("*", { count: "exact", head: true });
 
-        if (profile?.role === "customer") {
-          navigate("/kunde/dashboard");
-        } else if (profile?.role === "contractor") {
-          navigate("/handwerker/dashboard");
-        }
+        const { count: contractorsCount } = await supabase
+          .from("contractors")
+          .select("*", { count: "exact", head: true });
+
+        const { data: reviews } = await supabase.from("reviews").select("rating");
+
+        const avgRating =
+          reviews && reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 4.9;
+
+        setStats({
+          totalProjects: projectsCount || 3,
+          totalContractors: contractorsCount || 0,
+          averageRating: Number(avgRating.toFixed(1)),
+        });
+      } catch (error) {
+        console.error("Error fetching stats:", error);
+        setStats({
+          totalProjects: 3,
+          totalContractors: 0,
+          averageRating: 4.9,
+        });
       }
     };
-    checkAuth();
-  }, [navigate]);
 
-  // Fetch live stats
-  const { data: stats } = useQuery({
-    queryKey: ["platform-stats"],
-    queryFn: async () => {
-      const [projects, contractors] = await Promise.all([
-        supabase.from("projects").select("id", { count: "exact", head: true }),
-        supabase.from("contractors").select("id", { count: "exact", head: true }),
-      ]);
-
-      return {
-        totalProjects: projects.count || 0,
-        totalContractors: contractors.count || 0,
-        avgRating: 4.9,
-      };
-    },
-  });
-
-  // Fetch top contractors
-  const { data: topContractors } = useQuery({
-    queryKey: ["top-contractors"],
-    queryFn: async () => {
-      const { data } = await supabase
-        .from("contractors")
-        .select("id, company_name, rating, total_reviews, trades, profile_image_url, city")
-        .eq("verified", true)
-        .gt("rating", 0)
-        .order("rating", { ascending: false })
-        .limit(3);
-
-      return data || [];
-    },
-  });
+    fetchStats();
+  }, []);
 
   const gewerke = [
-    { id: "elektriker", name: "Elektriker", icon: Zap, color: "from-yellow-500 to-orange-500" },
-    { id: "sanitar-heizung", name: "Sanitär", icon: Droplet, color: "from-blue-500 to-cyan-500" },
-    { id: "maler", name: "Maler", icon: Paintbrush, color: "from-purple-500 to-pink-500" },
-    { id: "dachdecker", name: "Dachdecker", icon: Construction, color: "from-orange-500 to-red-500" },
-    { id: "fassade", name: "Fassade", icon: Hammer, color: "from-amber-600 to-yellow-600" },
+    {
+      id: "elektriker",
+      name: "Elektriker",
+      icon: Zap,
+      description: "Elektroinstallationen, Smart Home, Photovoltaik",
+      color: "text-yellow-500",
+    },
+    {
+      id: "sanitar",
+      name: "Sanitär",
+      icon: Droplet,
+      description: "Heizung, Sanitär, Klima",
+      color: "text-blue-500",
+    },
+    {
+      id: "maler",
+      name: "Maler",
+      icon: Paintbrush,
+      description: "Innen- und Außenarbeiten, Fassaden",
+      color: "text-purple-500",
+    },
+    {
+      id: "dachdecker",
+      name: "Dachdecker",
+      icon: Construction,
+      description: "Dächer, Dachfenster, Reparaturen",
+      color: "text-orange-500",
+    },
+    {
+      id: "fassade",
+      name: "Fassade",
+      icon: Wrench,
+      description: "Fassadenarbeiten, Wärmedämmung",
+      color: "text-green-500",
+    },
+  ];
+
+  const steps = [
+    {
+      number: 1,
+      title: "Projekt beschreiben",
+      description: "Beschreiben Sie Ihr Projekt und legen Sie Ihr Budget fest",
+      icon: FolderOpen,
+      image: "/bc-home1.png",
+    },
+    {
+      number: 2,
+      title: "Angebote erhalten",
+      description: "Qualifizierte Handwerker bewerben sich auf Ihr Projekt",
+      icon: Users,
+      image: "/bc-home2.png",
+    },
+    {
+      number: 3,
+      title: "Handwerker beauftragen",
+      description: "Vergleichen Sie Angebote und wählen Sie den besten",
+      icon: CheckCircle,
+      image: "/bc-home3.png",
+    },
   ];
 
   const features = [
@@ -147,450 +129,238 @@ export default function Index() {
       icon: Shield,
       title: "Verifizierte Profis",
       description: "Alle Handwerker werden geprüft",
-      color: "from-blue-500 to-cyan-500",
     },
     {
       icon: Clock,
       title: "Schnelle Antworten",
       description: "Angebote innerhalb 24h",
-      color: "from-yellow-500 to-orange-500",
     },
     {
-      icon: CheckCircle2,
+      icon: CheckCircle,
       title: "100% Kostenlos",
       description: "Keine versteckten Gebühren",
-      color: "from-green-500 to-emerald-500",
     },
     {
       icon: Star,
       title: "Echte Bewertungen",
       description: "Transparente Kundenmeinungen",
-      color: "from-purple-500 to-pink-500",
     },
     {
-      icon: Users,
+      icon: MessageSquare,
       title: "Direkter Kontakt",
       description: "Ohne Mittelsmann",
-      color: "from-indigo-500 to-blue-500",
     },
     {
       icon: TrendingUp,
       title: "Faire Preise",
       description: "Angebote vergleichen",
-      color: "from-red-500 to-rose-500",
     },
   ];
 
   return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
+    <div className="min-h-screen">
+      {/* Hero Section */}
+      <section className="relative bg-gradient-to-br from-blue-50 via-white to-orange-50 pt-20 pb-32 overflow-hidden">
+        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMwMDAiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItaDJ2LTJoLTJ6bTAtNHYyaDJ2LTJoLTJ6bTAgNHYyaDJ2LTJoLTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-50"></div>
 
-      {/* HERO SECTION */}
-      <section className="relative min-h-screen flex items-center justify-center overflow-hidden">
-        {/* Animated Background */}
-        <div className="absolute inset-0 bg-gradient-to-br from-primary/5 via-background to-secondary/5">
-          <motion.div
-            animate={{ x: [0, 100, 0], y: [0, -100, 0] }}
-            transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-            className="absolute top-1/4 left-1/4 w-96 h-96 bg-primary/20 rounded-full blur-3xl"
-          />
-          <motion.div
-            animate={{ x: [0, -100, 0], y: [0, 100, 0] }}
-            transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
-            className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-secondary/20 rounded-full blur-3xl"
-          />
-        </div>
+        <div className="container mx-auto px-4 relative">
+          <div className="max-w-4xl mx-auto text-center">
+            <Badge className="mb-6 bg-blue-100 text-blue-700 hover:bg-blue-100">
+              🇦🇹 Österreichs #1 Handwerker-Plattform
+            </Badge>
 
-        <motion.div
-          style={{ y: heroY, opacity: heroOpacity }}
-          className="container relative z-10 mx-auto px-4 text-center"
-        >
-          {/* Badge */}
-          <motion.div
-            initial={{ opacity: 0, y: -20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, delay: 0.2 }}
-            className="inline-flex items-center gap-2 mb-8 px-4 py-2 rounded-full bg-primary/10 backdrop-blur-sm border border-primary/20"
-          >
-            <span className="relative flex h-2 w-2">
-              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-primary opacity-75" />
-              <span className="relative inline-flex rounded-full h-2 w-2 bg-primary" />
-            </span>
-            <span className="text-sm font-medium">Österreichs #1 Handwerker-Plattform</span>
-          </motion.div>
-
-          {/* Heading */}
-          <motion.h1
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.3 }}
-            className="text-6xl md:text-7xl lg:text-8xl font-bold mb-6 leading-tight"
-          >
-            <span className="bg-gradient-to-r from-primary via-secondary to-primary bg-clip-text text-transparent animate-gradient bg-300%">
+            <h1 className="text-5xl md:text-6xl font-bold mb-6 bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
               Handwerker finden.
-            </span>
-            <br />
-            <span className="text-foreground">Einfach gemacht.</span>
-          </motion.h1>
+              <br />
+              Einfach gemacht.
+            </h1>
 
-          {/* Subtitle */}
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.4 }}
-            className="text-xl md:text-2xl text-muted-foreground mb-12 max-w-3xl mx-auto"
-          >
-            Verbinden Sie sich mit verifizierten Handwerkern in Ihrer Nähe.
-            <br />
-            <span className="font-semibold text-foreground">Kostenlos. Transparent. Österreichweit.</span>
-          </motion.p>
-
-          {/* CTA Buttons */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.5 }}
-            className="flex flex-col sm:flex-row gap-4 justify-center mb-16"
-          >
-            <Button
-              size="lg"
-              onClick={() => navigate("/kunde/projekt-erstellen")}
-              className="group px-8 py-7 text-lg font-semibold rounded-2xl shadow-xl hover:shadow-2xl transition-all"
-            >
-              <Hammer className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-              Projekt starten
-              <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-            </Button>
-
-            <Button
-              size="lg"
-              variant="outline"
-              onClick={() => navigate("/register?role=contractor")}
-              className="group px-8 py-7 text-lg font-semibold rounded-2xl border-2 backdrop-blur-sm hover:bg-primary/5"
-            >
-              <Wrench className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-              Als Handwerker registrieren
-            </Button>
-          </motion.div>
-
-          {/* Trust Indicators */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, delay: 0.6 }}
-            className="flex flex-wrap justify-center gap-6 text-sm"
-          >
-            {["100% Kostenlos", "Verifizierte Profis", "Schnelle Reaktion"].map((text, i) => (
-              <div
-                key={i}
-                className="flex items-center gap-2 px-4 py-2 rounded-full bg-card/50 backdrop-blur-sm border"
-              >
-                <CheckCircle2 className="h-5 w-5 text-success" />
-                <span className="font-medium">{text}</span>
-              </div>
-            ))}
-          </motion.div>
-        </motion.div>
-
-        <div className="absolute bottom-0 left-0 right-0 h-32 bg-gradient-to-t from-background to-transparent" />
-      </section>
-
-      {/* STATS SECTION */}
-      <section className="py-20 px-4 bg-card border-y">
-        <div className="container mx-auto max-w-6xl">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 text-center">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-            >
-              <div className="flex items-center justify-center gap-2 mb-2">
-                <Star className="h-8 w-8 fill-yellow-400 text-yellow-400" />
-                <span className="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                  <AnimatedCounter end={stats?.avgRating || 4.9} decimals={1} />
-                </span>
-              </div>
-              <p className="text-muted-foreground text-lg">Durchschnittsbewertung</p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.1 }}
-            >
-              <div className="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-                <AnimatedCounter end={stats?.totalProjects || 0} />
-              </div>
-              <p className="text-muted-foreground text-lg">Projekte</p>
-            </motion.div>
-
-            <motion.div
-              initial={{ opacity: 0, scale: 0.9 }}
-              whileInView={{ opacity: 1, scale: 1 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.2 }}
-            >
-              <div className="text-5xl font-bold bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent mb-2">
-                <AnimatedCounter end={stats?.totalContractors || 0} />
-              </div>
-              <p className="text-muted-foreground text-lg">Handwerker</p>
-            </motion.div>
-          </div>
-        </div>
-      </section>
-
-      {/* FEATURES SECTION */}
-      <section className="py-24 px-4 bg-gradient-to-b from-background to-muted/30">
-        <div className="container mx-auto max-w-7xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">
-              Warum{" "}
-              <span className="bg-gradient-to-r from-primary to-secondary bg-clip-text text-transparent">
-                BauConnect24
-              </span>
-              ?
-            </h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">Die moderne Art, Handwerker zu finden</p>
-          </motion.div>
-
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-            {features.map((feature, i) => (
-              <motion.div
-                key={i}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.1 }}
-                whileHover={{ y: -8, scale: 1.02 }}
-                className="group"
-              >
-                <Card className="relative h-full p-8 bg-card/50 backdrop-blur-sm border-2 hover:border-primary/50 transition-all overflow-hidden">
-                  <div
-                    className={`absolute inset-0 bg-gradient-to-br ${feature.color} opacity-0 group-hover:opacity-5 transition-opacity`}
-                  />
-
-                  <div className="relative mb-6">
-                    <div className={`inline-flex p-3 rounded-2xl bg-gradient-to-br ${feature.color} shadow-lg`}>
-                      <feature.icon className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-
-                  <h3 className="text-2xl font-semibold mb-3 group-hover:text-primary transition-colors">
-                    {feature.title}
-                  </h3>
-                  <p className="text-muted-foreground">{feature.description}</p>
-
-                  <div className="absolute top-0 -left-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 group-hover:left-full transition-all duration-1000" />
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* HOW IT WORKS SECTION */}
-      <section className="py-24 px-4 bg-gradient-to-b from-muted/30 to-background">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-16"
-          >
-            <h2 className="text-4xl md:text-5xl font-bold mb-4">So funktioniert's</h2>
-            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-              In nur 3 einfachen Schritten zum perfekten Handwerker
+            <p className="text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
+              Verbinden Sie sich mit verifizierten Handwerkern in Ihrer Nähe.
+              <br />
+              <span className="font-semibold">Kostenlos. Transparent. Österreichweit.</span>
             </p>
-          </motion.div>
 
-          <div className="grid md:grid-cols-3 gap-12">
-            {[
-              {
-                number: 1,
-                title: "Projekt beschreiben",
-                description: "Beschreiben Sie Ihr Projekt und legen Sie Ihr Budget fest",
-                image: "/bc-home1.png",
-              },
-              {
-                number: 2,
-                title: "Angebote erhalten",
-                description: "Qualifizierte Handwerker bewerben sich auf Ihr Projekt",
-                image: "/bc-home2.png",
-              },
-              {
-                number: 3,
-                title: "Handwerker beauftragen",
-                description: "Vergleichen Sie Angebote und wählen Sie den besten",
-                image: "/bc-home3.png",
-              },
-            ].map((step, i) => (
-              <motion.div
-                key={step.number}
-                initial={{ opacity: 0, y: 20 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: i * 0.2 }}
-                className="text-center"
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
+              <Button
+                size="lg"
+                onClick={() => navigate("/projekt-erstellen")}
+                className="bg-blue-600 hover:bg-blue-700 text-white shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-6"
               >
-                <Card className="p-8 bg-card/50 backdrop-blur-sm border-2 hover:border-primary/30 hover:shadow-xl transition-all group">
-                  {/* Image Container */}
-                  <div className="mb-6 flex justify-center">
-                    <div className="relative w-48 h-48 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
-                      <img
-                        src={step.image}
-                        alt={step.title}
-                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
-                      />
-                    </div>
-                  </div>
+                <Hammer className="mr-2 h-5 w-5" />
+                Projekt starten
+              </Button>
 
-                  {/* Step Number */}
-                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-primary to-secondary text-white font-bold text-xl mb-4">
-                    {step.number}
-                  </div>
+              <Button
+                size="lg"
+                variant="outline"
+                onClick={() => navigate("/register")}
+                className="border-2 border-blue-600 text-blue-600 hover:bg-blue-50 text-lg px-8 py-6"
+              >
+                <Wrench className="mr-2 h-5 w-5" />
+                Als Handwerker registrieren
+              </Button>
+            </div>
 
-                  {/* Content */}
-                  <h3 className="text-2xl font-semibold mb-3 group-hover:text-primary transition-colors">
-                    {step.title}
-                  </h3>
-                  <p className="text-muted-foreground leading-relaxed">{step.description}</p>
-                </Card>
-              </motion.div>
-            ))}
-          </div>
-        </div>
-      </section>
-
-      {/* GEWERKE GRID */}
-      <section className="py-24 px-4">
-        <div className="container mx-auto max-w-6xl">
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="text-center mb-12"
-          >
-            <h2 className="text-4xl font-bold mb-4">Unsere Gewerke</h2>
-            <p className="text-xl text-muted-foreground">Spezialisierte Handwerker für Ihre Projekte</p>
-          </motion.div>
-
-          <div className="grid grid-cols-2 md:grid-cols-5 gap-6">
-            {gewerke.map((gewerk, i) => {
-              const Icon = gewerk.icon;
-              return (
-                <motion.div
-                  key={gewerk.id}
-                  initial={{ opacity: 0, scale: 0.9 }}
-                  whileInView={{ opacity: 1, scale: 1 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.1 }}
-                  whileHover={{ scale: 1.05, y: -5 }}
-                  className="cursor-pointer"
-                  onClick={() => navigate(`/kunde/projekt-erstellen?gewerk=${gewerk.id}`)}
-                >
-                  <Card className="relative p-8 text-center bg-card/50 backdrop-blur-sm border-2 hover:border-primary/50 hover:shadow-2xl transition-all group overflow-hidden">
-                    <div
-                      className={`absolute inset-0 bg-gradient-to-br ${gewerk.color} opacity-0 group-hover:opacity-10 transition-opacity`}
-                    />
-                    <div className="relative">
-                      <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-br ${gewerk.color} mb-4 shadow-lg`}>
-                        <Icon className="h-8 w-8 text-white" />
-                      </div>
-                      <h3 className="font-semibold text-lg">{gewerk.name}</h3>
-                    </div>
-                  </Card>
-                </motion.div>
-              );
-            })}
-          </div>
-        </div>
-      </section>
-
-      {/* TOP CONTRACTORS */}
-      {topContractors && topContractors.length > 0 && (
-        <section className="py-24 px-4 bg-muted/30">
-          <div className="container mx-auto max-w-6xl">
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              className="text-center mb-12"
-            >
-              <h2 className="text-4xl font-bold mb-4">Top-bewertete Handwerker</h2>
-              <p className="text-xl text-muted-foreground">Unsere verifizierten Profis</p>
-            </motion.div>
-
-            <div className="grid md:grid-cols-3 gap-8">
-              {topContractors.map((contractor, i) => (
-                <motion.div
-                  key={contractor.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  whileInView={{ opacity: 1, y: 0 }}
-                  viewport={{ once: true }}
-                  transition={{ delay: i * 0.2 }}
-                  whileHover={{ y: -8 }}
-                  onClick={() => navigate(`/handwerker/${contractor.id}`)}
-                  className="cursor-pointer"
-                >
-                  <Card className="p-8 h-full hover:shadow-2xl transition-all bg-card/50 backdrop-blur-sm border-2 hover:border-primary/50">
-                    <div className="flex flex-col items-center text-center">
-                      {contractor.profile_image_url ? (
-                        <img
-                          src={contractor.profile_image_url}
-                          alt={contractor.company_name}
-                          className="w-24 h-24 rounded-full object-cover mb-4 ring-4 ring-primary/20"
-                        />
-                      ) : (
-                        <div className="w-24 h-24 rounded-full bg-gradient-to-br from-primary to-secondary flex items-center justify-center mb-4 ring-4 ring-primary/20">
-                          <Wrench className="h-12 w-12 text-white" />
-                        </div>
-                      )}
-                      <h3 className="font-semibold text-xl mb-1">{contractor.company_name}</h3>
-                      <p className="text-sm text-muted-foreground mb-3">{contractor.city}</p>
-                      <div className="flex items-center gap-1 mb-4">
-                        <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                        <span className="font-semibold text-lg">{contractor.rating?.toFixed(1)}</span>
-                        <span className="text-sm text-muted-foreground">({contractor.total_reviews})</span>
-                      </div>
-                      <div className="flex flex-wrap gap-2 justify-center">
-                        {contractor.trades?.slice(0, 2).map((trade: string) => (
-                          <Badge key={trade} variant="secondary">
-                            {gewerke.find((g) => g.id === trade)?.name || trade}
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
-              ))}
+            <div className="flex items-center justify-center gap-8 text-sm text-gray-500">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span>100% Kostenlos</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span>Verifizierte Profis</span>
+              </div>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-green-500" />
+                <span>Schnelle Reaktion</span>
+              </div>
             </div>
           </div>
-        </section>
-      )}
+        </div>
+      </section>
 
-      {/* FINAL CTA */}
-      <section className="py-24 px-4 bg-gradient-to-r from-primary to-secondary text-primary-foreground">
-        <div className="container mx-auto max-w-4xl text-center">
-          <motion.div initial={{ opacity: 0, y: 20 }} whileInView={{ opacity: 1, y: 0 }} viewport={{ once: true }}>
-            <h2 className="text-5xl font-bold mb-6">Starten Sie jetzt Ihr Projekt</h2>
-            <p className="text-2xl mb-10 opacity-90">Kostenlos, unverbindlich und in nur 2 Minuten</p>
-            <Button
-              size="lg"
-              onClick={() => navigate("/kunde/projekt-erstellen")}
-              className="group bg-background text-primary hover:bg-background/90 px-10 py-8 text-xl shadow-2xl rounded-2xl"
-            >
-              Jetzt Auftrag erstellen
-              <ChevronRight className="ml-2 h-6 w-6 group-hover:translate-x-1 transition-transform" />
-            </Button>
-          </motion.div>
+      {/* Stats Section */}
+      <section className="py-16 bg-white border-b">
+        <div className="container mx-auto px-4">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Star className="h-8 w-8 text-yellow-500 fill-yellow-500" />
+              </div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">{stats.averageRating}</div>
+              <div className="text-gray-600">Durchschnittsbewertung</div>
+            </div>
+
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <FolderOpen className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">{stats.totalProjects}</div>
+              <div className="text-gray-600">Projekte</div>
+            </div>
+
+            <div className="text-center">
+              <div className="flex items-center justify-center mb-2">
+                <Users className="h-8 w-8 text-blue-600" />
+              </div>
+              <div className="text-4xl font-bold text-blue-600 mb-2">{stats.totalContractors}</div>
+              <div className="text-gray-600">Handwerker</div>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Why BauConnect24 */}
+      <section className="py-20 bg-gradient-to-br from-gray-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">
+              Warum <span className="text-blue-600">Bau</span>
+              <span className="text-gray-800">Connect</span>
+              <span className="text-orange-500">24</span>?
+            </h2>
+            <p className="text-xl text-gray-600">Die moderne Art, Handwerker zu finden</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8 max-w-6xl mx-auto">
+            {features.map((feature, index) => (
+              <Card
+                key={index}
+                className="p-6 hover:shadow-lg transition-all duration-300 border-2 hover:border-blue-200 cursor-pointer group"
+              >
+                <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-4 group-hover:bg-blue-600 transition-colors duration-300">
+                  <feature.icon className="h-6 w-6 text-blue-600 group-hover:text-white transition-colors duration-300" />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{feature.title}</h3>
+                <p className="text-gray-600">{feature.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* How It Works */}
+      <section className="py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">In nur 3 einfachen Schritten zum perfekten Handwerker</h2>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-12 max-w-6xl mx-auto">
+            {steps.map((step) => (
+              <div key={step.number} className="text-center">
+                <div className="mb-6 flex justify-center">
+                  {step.image ? (
+                    <div className="w-32 h-32 rounded-full bg-blue-50 flex items-center justify-center overflow-hidden p-4">
+                      <img src={step.image} alt={step.title} className="w-full h-full object-contain" />
+                    </div>
+                  ) : (
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <step.icon className="h-8 w-8 text-primary" />
+                    </div>
+                  )}
+                </div>
+
+                <div className="mb-4 flex justify-center">
+                  <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-600 to-orange-500 flex items-center justify-center text-white font-bold text-xl">
+                    {step.number}
+                  </div>
+                </div>
+
+                <h3 className="text-2xl font-semibold mb-3">{step.title}</h3>
+                <p className="text-gray-600">{step.description}</p>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Gewerke Section */}
+      <section className="py-20 bg-gradient-to-br from-blue-50 via-white to-orange-50">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-16">
+            <h2 className="text-4xl font-bold mb-4">Unsere Gewerke</h2>
+            <p className="text-xl text-gray-600">Spezialisierte Handwerker für Ihre Projekte</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6 max-w-7xl mx-auto">
+            {gewerke.map((gewerk) => (
+              <Card
+                key={gewerk.id}
+                className="p-6 hover:shadow-xl transition-all duration-300 cursor-pointer group border-2 hover:border-blue-600"
+                onClick={() => navigate("/projekt-erstellen")}
+              >
+                <div
+                  className={`w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-4 group-hover:scale-110 transition-transform duration-300`}
+                >
+                  <gewerk.icon className={`h-8 w-8 ${gewerk.color}`} />
+                </div>
+                <h3 className="text-xl font-semibold mb-2">{gewerk.name}</h3>
+                <p className="text-sm text-gray-600">{gewerk.description}</p>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-20 bg-gradient-to-br from-blue-600 to-blue-800 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl font-bold mb-6">Bereit, Ihr Projekt zu starten?</h2>
+          <p className="text-xl mb-8 opacity-90">Finden Sie jetzt den perfekten Handwerker für Ihr Vorhaben</p>
+          <Button
+            size="lg"
+            onClick={() => navigate("/projekt-erstellen")}
+            className="bg-white text-blue-600 hover:bg-gray-100 shadow-lg hover:shadow-xl transition-all duration-300 text-lg px-8 py-6"
+          >
+            <Hammer className="mr-2 h-5 w-5" />
+            Jetzt Projekt erstellen
+          </Button>
         </div>
       </section>
     </div>
   );
-}
+};
+
+export default Index;
