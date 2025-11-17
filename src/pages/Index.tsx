@@ -80,31 +80,51 @@ const Index = () => {
       id: "elektriker",
       name: "Elektriker",
       icon: Zap,
+      emoji: "⚡",
       description: "Elektroinstallationen & Smart Home",
+      bgColor: "bg-yellow-500",
+      hoverBg: "hover:bg-yellow-50",
+      hoverBorder: "hover:border-yellow-500",
     },
     {
       id: "sanitar",
       name: "Sanitär",
       icon: Droplet,
+      emoji: "💧",
       description: "Heizung, Sanitär & Klima",
+      bgColor: "bg-blue-500",
+      hoverBg: "hover:bg-blue-50",
+      hoverBorder: "hover:border-blue-500",
     },
     {
       id: "maler",
       name: "Maler",
       icon: Paintbrush,
+      emoji: "🎨",
       description: "Innen- & Außenarbeiten",
+      bgColor: "bg-purple-500",
+      hoverBg: "hover:bg-purple-50",
+      hoverBorder: "hover:border-purple-500",
     },
     {
       id: "dachdecker",
       name: "Dachdecker",
       icon: Construction,
+      emoji: "🏠",
       description: "Dächer & Dachfenster",
+      bgColor: "bg-orange-500",
+      hoverBg: "hover:bg-orange-50",
+      hoverBorder: "hover:border-orange-500",
     },
     {
       id: "fassade",
       name: "Fassade",
       icon: Wrench,
+      emoji: "🏗️",
       description: "Fassaden & Dämmung",
+      bgColor: "bg-green-500",
+      hoverBg: "hover:bg-green-50",
+      hoverBorder: "hover:border-green-500",
     },
   ];
 
@@ -354,11 +374,13 @@ const Index = () => {
             {gewerke.map((gewerk) => (
               <Card
                 key={gewerk.id}
-                className="p-6 cursor-pointer border-2 border-gray-100 hover:border-blue-600 hover:shadow-xl transition-all group"
+                className={`p-6 cursor-pointer border-2 border-gray-100 ${gewerk.hoverBorder} ${gewerk.hoverBg} hover:shadow-xl transition-all group`}
                 onClick={() => navigate("/projekt-erstellen")}
               >
-                <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform">
-                  <gewerk.icon className="h-7 w-7 text-white" />
+                <div
+                  className={`w-16 h-16 ${gewerk.bgColor} rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform shadow-lg`}
+                >
+                  <span className="text-3xl">{gewerk.emoji}</span>
                 </div>
 
                 <h3 className="text-lg font-bold mb-2 text-gray-900 text-center">{gewerk.name}</h3>
