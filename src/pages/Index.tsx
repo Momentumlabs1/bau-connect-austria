@@ -98,21 +98,18 @@ export default function Index() {
       title: "Projekt beschreiben",
       description: "Beschreiben Sie Ihr Projekt und legen Sie Ihr Budget fest",
       icon: FolderOpen,
-      image: "/bc-home1.png",
     },
     {
       number: 2,
       title: "Angebote erhalten",
       description: "Qualifizierte Handwerker bewerben sich auf Ihr Projekt",
       icon: Users,
-      image: "/bc-home2.png",
     },
     {
       number: 3,
       title: "Handwerker beauftragen",
       description: "Vergleichen Sie Angebote und wählen Sie den besten",
       icon: CheckCircle,
-      image: "/bc-home3.png",
     },
   ];
 
@@ -267,8 +264,8 @@ export default function Index() {
               >
                 <Card className="p-8 text-center hover:shadow-lg transition-shadow h-full">
                   <div className="mb-6 flex justify-center">
-                    <div className="w-32 h-32 rounded-full bg-primary/10 flex items-center justify-center overflow-hidden">
-                      <img src={step.image} alt={step.title} className="w-full h-full object-contain p-2" />
+                    <div className="w-16 h-16 rounded-full bg-primary/10 flex items-center justify-center">
+                      <step.icon className="h-8 w-8 text-primary" />
                     </div>
                   </div>
                   <div className="text-5xl font-bold text-primary/20 mb-4">{step.number}</div>
