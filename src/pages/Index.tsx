@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   Hammer,
   Zap,
@@ -28,6 +28,7 @@ const Index = () => {
   const navigate = useNavigate();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [visibleItems, setVisibleItems] = useState<number[]>([]);
   const [stats, setStats] = useState({
     totalProjects: 0,
     totalContractors: 0,
@@ -41,6 +42,39 @@ const Index = () => {
 
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Intersection Observer for Timeline Items
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: "0px 0px -100px 0px",
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        const index = parseInt(entry.target.getAttribute("data-index") || "0");
+
+        if (entry.isIntersecting) {
+          setVisibleItems((prev) => {
+            if (!prev.includes(index)) {
+              return [...prev, index].sort((a, b) => a - b);
+            }
+            return prev;
+          });
+        } else {
+          // Remove when scrolling up
+          setVisibleItems((prev) => prev.filter((i) => i !== index));
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    const timelineItems = document.querySelectorAll(".timeline-item");
+    timelineItems.forEach((item) => observer.observe(item));
+
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -149,9 +183,48 @@ const Index = () => {
     },
   ];
 
+  const timelineFeatures = [
+    {
+      icon: Shield,
+      title: "Verifizierte Profis",
+      desc: "Alle Handwerker werden von uns persönlich geprüft und verifiziert. Nur qualifizierte Fachkräfte erhalten Zugang zur Plattform.",
+      color: "blue",
+    },
+    {
+      icon: Clock,
+      title: "Schnelle Antworten",
+      desc: "Erhalten Sie innerhalb von 24 Stunden konkrete Angebote von interessierten Handwerkern für Ihr Projekt.",
+      color: "orange",
+    },
+    {
+      icon: CheckCircle,
+      title: "100% Kostenlos",
+      desc: "Keine versteckten Gebühren, keine Abofallen. Die Nutzung der Plattform ist für Kunden komplett kostenlos.",
+      color: "blue",
+    },
+    {
+      icon: Star,
+      title: "Echte Bewertungen",
+      desc: "Transparente Kundenmeinungen helfen Ihnen bei der Auswahl des richtigen Handwerkers. Nur verifizierte Bewertungen werden angezeigt.",
+      color: "orange",
+    },
+    {
+      icon: MessageSquare,
+      title: "Direkter Kontakt",
+      desc: "Kommunizieren Sie direkt mit Handwerkern ohne Mittelsmann. Schneller und persönlicher Austausch garantiert.",
+      color: "blue",
+    },
+    {
+      icon: TrendingUp,
+      title: "Faire Preise",
+      desc: "Vergleichen Sie mehrere Angebote und finden Sie das beste Preis-Leistungs-Verhältnis für Ihr individuelles Projekt.",
+      color: "orange",
+    },
+  ];
+
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar - SIMPLE */}
+      {/* Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
           scrolled ? "bg-white shadow-sm" : "bg-white"
@@ -222,7 +295,7 @@ const Index = () => {
         )}
       </nav>
 
-      {/* Hero Section - CLEAN & SIMPLE */}
+      {/* Hero Section */}
       <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto text-center">
@@ -282,7 +355,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Stats Section - CLEAN WHITE */}
+      {/* Stats Section */}
       <section className="py-16 bg-white border-y border-gray-100">
         <div className="container mx-auto px-4">
           <div className="max-w-5xl mx-auto">
@@ -321,7 +394,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* How It Works - ALTERNATING LAYOUT */}
+      {/* How It Works */}
       <section id="wie-funktionierts" className="py-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
@@ -340,14 +413,12 @@ const Index = () => {
                   index % 2 === 1 ? "lg:grid-flow-dense" : ""
                 }`}
               >
-                {/* Image */}
                 <div className={`${index % 2 === 1 ? "lg:col-start-2" : ""}`}>
                   <div className="bg-white rounded-2xl p-8 shadow-lg">
                     <img src={step.image} alt={step.title} className="w-full h-auto" />
                   </div>
                 </div>
 
-                {/* Content */}
                 <div className={`${index % 2 === 1 ? "lg:col-start-1 lg:row-start-1" : ""}`}>
                   <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-xl mb-6">
                     <span className="text-2xl font-bold text-white">{step.number}</span>
@@ -362,7 +433,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Gewerke Section - ALL BLUE ICONS */}
+      {/* Gewerke Section */}
       <section id="gewerke" className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
@@ -427,39 +498,88 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Section - ALL BLUE ICONS */}
-      <section id="vorteile" className="py-24 bg-white">
+      {/* Features Timeline Section - SCROLL-TRIGGERED */}
+      <section id="vorteile" className="py-24 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
             <h2 className="text-4xl md:text-6xl font-bold mb-4 text-gray-900">Warum BauConnect24?</h2>
             <p className="text-xl text-gray-600">Die moderne Plattform für Ihre Handwerkerprojekte</p>
           </div>
 
-          <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {[
-              { icon: Shield, title: "Verifizierte Profis", desc: "Alle Handwerker werden geprüft" },
-              { icon: Clock, title: "Schnelle Antworten", desc: "Angebote innerhalb 24h" },
-              { icon: CheckCircle, title: "100% Kostenlos", desc: "Keine versteckten Gebühren" },
-              { icon: Star, title: "Echte Bewertungen", desc: "Transparente Kundenmeinungen" },
-              { icon: MessageSquare, title: "Direkter Kontakt", desc: "Ohne Mittelsmann" },
-              { icon: TrendingUp, title: "Faire Preise", desc: "Angebote vergleichen" },
-            ].map((feature, index) => (
-              <Card
-                key={index}
-                className="p-8 border-2 border-gray-100 hover:border-blue-600 hover:shadow-xl transition-all"
-              >
-                <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mb-6">
-                  <feature.icon className="h-7 w-7 text-white" />
+          {/* Vertical Timeline */}
+          <div className="max-w-5xl mx-auto relative">
+            {/* Timeline Line */}
+            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 via-orange-500 to-blue-600"></div>
+
+            {/* Timeline Items */}
+            <div className="space-y-16">
+              {timelineFeatures.map((feature, index) => (
+                <div key={index} className="timeline-item relative" data-index={index}>
+                  <div
+                    className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center transition-all duration-700 ${
+                      index % 2 === 0 ? "" : "md:grid-flow-dense"
+                    } ${visibleItems.includes(index) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"}`}
+                  >
+                    {/* Timeline Dot with Pulse */}
+                    <div className="absolute left-6 md:left-1/2 transform md:-translate-x-1/2">
+                      <div
+                        className={`w-12 h-12 ${
+                          feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
+                        } rounded-full flex items-center justify-center shadow-xl relative z-10 transition-all duration-500 ${
+                          visibleItems.includes(index) ? "scale-100" : "scale-0"
+                        }`}
+                      >
+                        <feature.icon className="h-6 w-6 text-white" />
+                      </div>
+
+                      {/* Animated Pulse Ring */}
+                      {visibleItems.includes(index) && (
+                        <div
+                          className={`absolute inset-0 ${
+                            feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
+                          } rounded-full animate-ping opacity-30`}
+                        ></div>
+                      )}
+                    </div>
+
+                    {/* Content Card */}
+                    <div
+                      className={`${
+                        index % 2 === 0 ? "md:col-start-2 md:pl-16" : "md:col-start-1 md:pr-16 md:text-right"
+                      } pl-16 md:pl-0`}
+                    >
+                      <Card
+                        className={`p-8 border-2 ${
+                          visibleItems.includes(index)
+                            ? feature.color === "blue"
+                              ? "border-blue-500"
+                              : "border-orange-500"
+                            : "border-gray-100"
+                        } hover:shadow-2xl transition-all duration-500 group`}
+                      >
+                        <div
+                          className={`w-14 h-14 ${
+                            feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
+                          } rounded-xl flex items-center justify-center mb-6 ${
+                            index % 2 === 0 ? "" : "md:ml-auto"
+                          } group-hover:scale-110 transition-transform shadow-lg`}
+                        >
+                          <feature.icon className="h-7 w-7 text-white" />
+                        </div>
+
+                        <h3 className="text-2xl font-bold mb-4 text-gray-900">{feature.title}</h3>
+                        <p className="text-gray-600 leading-relaxed text-lg">{feature.desc}</p>
+                      </Card>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
-                <p className="text-gray-600">{feature.desc}</p>
-              </Card>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
 
-      {/* CTA Section - SIMPLE BLUE */}
+      {/* CTA Section */}
       <section className="py-24 bg-blue-600 text-white">
         <div className="container mx-auto px-4 text-center">
           <h2 className="text-4xl md:text-6xl font-bold mb-6">Bereit für Ihr Projekt?</h2>
