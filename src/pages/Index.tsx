@@ -74,9 +74,9 @@ export default function Index() {
   const navigate = useNavigate();
   const { scrollY } = useScroll();
 
-  // Parallax effects
-  const heroY = useTransform(scrollY, [0, 500], [0, 150]);
-  const heroOpacity = useTransform(scrollY, [0, 300], [1, 0]);
+  // Parallax effects - SLOWER & SMOOTHER
+  const heroY = useTransform(scrollY, [0, 800], [0, 100]);
+  const heroOpacity = useTransform(scrollY, [0, 600], [1, 0.3]);
 
   // Check auth and redirect
   useEffect(() => {
@@ -387,6 +387,79 @@ export default function Index() {
                   <p className="text-muted-foreground">{feature.description}</p>
 
                   <div className="absolute top-0 -left-full h-full w-1/2 bg-gradient-to-r from-transparent via-white/10 to-transparent skew-x-12 group-hover:left-full transition-all duration-1000" />
+                </Card>
+              </motion.div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* HOW IT WORKS SECTION */}
+      <section className="py-24 px-4 bg-gradient-to-b from-muted/30 to-background">
+        <div className="container mx-auto max-w-6xl">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            whileInView={{ opacity: 1, y: 0 }}
+            viewport={{ once: true }}
+            className="text-center mb-16"
+          >
+            <h2 className="text-4xl md:text-5xl font-bold mb-4">So funktioniert's</h2>
+            <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
+              In nur 3 einfachen Schritten zum perfekten Handwerker
+            </p>
+          </motion.div>
+
+          <div className="grid md:grid-cols-3 gap-12">
+            {[
+              {
+                number: 1,
+                title: "Projekt beschreiben",
+                description: "Beschreiben Sie Ihr Projekt und legen Sie Ihr Budget fest",
+                image: "/bc-home1.png",
+              },
+              {
+                number: 2,
+                title: "Angebote erhalten",
+                description: "Qualifizierte Handwerker bewerben sich auf Ihr Projekt",
+                image: "/bc-home2.png",
+              },
+              {
+                number: 3,
+                title: "Handwerker beauftragen",
+                description: "Vergleichen Sie Angebote und wählen Sie den besten",
+                image: "/bc-home3.png",
+              },
+            ].map((step, i) => (
+              <motion.div
+                key={step.number}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.2 }}
+                className="text-center"
+              >
+                <Card className="p-8 bg-card/50 backdrop-blur-sm border-2 hover:border-primary/30 hover:shadow-xl transition-all group">
+                  {/* Image Container */}
+                  <div className="mb-6 flex justify-center">
+                    <div className="relative w-48 h-48 rounded-3xl overflow-hidden bg-gradient-to-br from-primary/10 to-secondary/10 p-4">
+                      <img
+                        src={step.image}
+                        alt={step.title}
+                        className="w-full h-full object-contain group-hover:scale-110 transition-transform duration-500"
+                      />
+                    </div>
+                  </div>
+
+                  {/* Step Number */}
+                  <div className="inline-flex items-center justify-center w-12 h-12 rounded-full bg-gradient-to-r from-primary to-secondary text-white font-bold text-xl mb-4">
+                    {step.number}
+                  </div>
+
+                  {/* Content */}
+                  <h3 className="text-2xl font-semibold mb-3 group-hover:text-primary transition-colors">
+                    {step.title}
+                  </h3>
+                  <p className="text-muted-foreground leading-relaxed">{step.description}</p>
                 </Card>
               </motion.div>
             ))}
