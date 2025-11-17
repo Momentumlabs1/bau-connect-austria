@@ -81,35 +81,30 @@ const Index = () => {
       name: "Elektriker",
       icon: Zap,
       description: "Elektroinstallationen & Smart Home",
-      gradient: "from-yellow-400 to-orange-500",
     },
     {
       id: "sanitar",
       name: "Sanitär",
       icon: Droplet,
       description: "Heizung, Sanitär & Klima",
-      gradient: "from-blue-400 to-cyan-500",
     },
     {
       id: "maler",
       name: "Maler",
       icon: Paintbrush,
       description: "Innen- & Außenarbeiten",
-      gradient: "from-purple-400 to-pink-500",
     },
     {
       id: "dachdecker",
       name: "Dachdecker",
       icon: Construction,
       description: "Dächer & Dachfenster",
-      gradient: "from-orange-400 to-red-500",
     },
     {
       id: "fassade",
       name: "Fassade",
       icon: Wrench,
       description: "Fassaden & Dämmung",
-      gradient: "from-green-400 to-emerald-500",
     },
   ];
 
@@ -138,17 +133,17 @@ const Index = () => {
     {
       icon: Shield,
       title: "Verifizierte Profis",
-      description: "Alle Handwerker werden von uns geprüft und verifiziert",
+      description: "Alle Handwerker werden von uns geprüft",
     },
     {
       icon: Clock,
-      title: "Schnelle Reaktion",
+      title: "Schnelle Antworten",
       description: "Angebote innerhalb von 24 Stunden",
     },
     {
       icon: CheckCircle,
       title: "100% Kostenlos",
-      description: "Keine versteckten Gebühren für Kunden",
+      description: "Keine versteckten Gebühren",
     },
     {
       icon: Star,
@@ -158,21 +153,21 @@ const Index = () => {
     {
       icon: MessageSquare,
       title: "Direkter Kontakt",
-      description: "Kommunikation ohne Mittelsmann",
+      description: "Ohne Mittelsmann",
     },
     {
       icon: TrendingUp,
       title: "Faire Preise",
-      description: "Mehrere Angebote vergleichen",
+      description: "Angebote vergleichen",
     },
   ];
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Modern Navbar */}
+      {/* Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-white/80 backdrop-blur-lg shadow-lg" : "bg-transparent"
+          scrolled ? "bg-white/95 backdrop-blur-md shadow-sm" : "bg-white"
         }`}
       >
         <div className="container mx-auto px-4">
@@ -191,26 +186,23 @@ const Index = () => {
 
             {/* Desktop Menu */}
             <div className="hidden md:flex items-center gap-8">
-              <a href="#wie-funktionierts" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+              <a href="#wie-funktionierts" className="text-gray-600 hover:text-blue-600 transition-colors">
                 Wie funktioniert's
               </a>
-              <a href="#gewerke" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+              <a href="#gewerke" className="text-gray-600 hover:text-blue-600 transition-colors">
                 Gewerke
               </a>
-              <a href="#vorteile" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
+              <a href="#vorteile" className="text-gray-600 hover:text-blue-600 transition-colors">
                 Vorteile
               </a>
             </div>
 
             {/* Desktop Auth Buttons */}
             <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" onClick={() => navigate("/login")} className="font-medium">
+              <Button variant="ghost" onClick={() => navigate("/login")}>
                 Anmelden
               </Button>
-              <Button
-                onClick={() => navigate("/register")}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium"
-              >
+              <Button onClick={() => navigate("/register")} className="bg-blue-600 hover:bg-blue-700 text-white">
                 Registrieren
               </Button>
             </div>
@@ -226,26 +218,20 @@ const Index = () => {
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t">
             <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-              <a
-                href="#wie-funktionierts"
-                className="text-gray-600 hover:text-blue-600 transition-colors font-medium py-2"
-              >
+              <a href="#wie-funktionierts" className="text-gray-600 py-2">
                 Wie funktioniert's
               </a>
-              <a href="#gewerke" className="text-gray-600 hover:text-blue-600 transition-colors font-medium py-2">
+              <a href="#gewerke" className="text-gray-600 py-2">
                 Gewerke
               </a>
-              <a href="#vorteile" className="text-gray-600 hover:text-blue-600 transition-colors font-medium py-2">
+              <a href="#vorteile" className="text-gray-600 py-2">
                 Vorteile
               </a>
               <div className="flex flex-col gap-2 pt-4 border-t">
                 <Button variant="outline" onClick={() => navigate("/login")} className="w-full">
                   Anmelden
                 </Button>
-                <Button
-                  onClick={() => navigate("/register")}
-                  className="w-full bg-gradient-to-r from-blue-600 to-blue-700"
-                >
+                <Button onClick={() => navigate("/register")} className="w-full bg-blue-600">
                   Registrieren
                 </Button>
               </div>
@@ -254,45 +240,27 @@ const Index = () => {
         )}
       </nav>
 
-      {/* Hero Section - Ultra Modern */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 overflow-hidden">
-        {/* Animated Background Gradient */}
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-50 via-white to-orange-50 opacity-60"></div>
-
-        {/* Animated Orbs */}
-        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"></div>
-        <div
-          className="absolute top-40 right-10 w-72 h-72 bg-orange-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"
-          style={{ animationDelay: "1s" }}
-        ></div>
-        <div
-          className="absolute -bottom-8 left-1/2 w-72 h-72 bg-purple-400 rounded-full mix-blend-multiply filter blur-xl opacity-20 animate-pulse"
-          style={{ animationDelay: "2s" }}
-        ></div>
-
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-5xl mx-auto text-center">
+      {/* Hero Section */}
+      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 bg-gradient-to-b from-blue-50 to-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-4xl mx-auto text-center">
             {/* Badge */}
-            <div className="inline-flex items-center gap-2 px-4 py-2 bg-blue-100 rounded-full mb-8 animate-fade-in">
-              <span className="text-2xl">🇦🇹</span>
-              <span className="text-sm font-semibold text-blue-700">Österreichs #1 Handwerker-Plattform</span>
-            </div>
+            <Badge className="mb-6 bg-blue-100 text-blue-700 hover:bg-blue-100">
+              🇦🇹 Österreichs #1 Handwerker-Plattform
+            </Badge>
 
             {/* Main Heading */}
             <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              <span className="bg-gradient-to-r from-blue-600 via-purple-600 to-orange-500 bg-clip-text text-transparent animate-gradient bg-300%">
-                Handwerker finden.
-              </span>
+              <span className="text-blue-600">Handwerker finden.</span>
               <br />
               <span className="text-gray-900">Einfach gemacht.</span>
             </h1>
 
             {/* Subheading */}
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto leading-relaxed">
-              Verbinden Sie sich mit <span className="font-semibold text-gray-900">verifizierten Handwerkern</span> in
-              Ihrer Nähe.
+            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto">
+              Verbinden Sie sich mit verifizierten Handwerkern in Ihrer Nähe.
               <br />
-              <span className="text-lg">Kostenlos · Transparent · Österreichweit</span>
+              <span className="font-semibold text-gray-900">Kostenlos · Transparent · Österreichweit</span>
             </p>
 
             {/* CTA Buttons */}
@@ -300,125 +268,102 @@ const Index = () => {
               <Button
                 size="lg"
                 onClick={() => navigate("/projekt-erstellen")}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-2xl shadow-blue-500/50 hover:shadow-blue-600/60 transition-all duration-300 text-lg px-10 py-7 group"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-10 py-7"
               >
-                <Hammer className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                <Hammer className="mr-2 h-5 w-5" />
                 Projekt starten
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                <ArrowRight className="ml-2 h-5 w-5" />
               </Button>
 
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/register")}
-                className="border-2 border-gray-300 hover:border-blue-600 hover:bg-blue-50 text-gray-700 hover:text-blue-600 text-lg px-10 py-7 group transition-all duration-300"
+                className="border-2 text-lg px-10 py-7"
               >
-                <Wrench className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
+                <Wrench className="mr-2 h-5 w-5" />
                 Als Handwerker registrieren
               </Button>
             </div>
 
             {/* Trust Badges */}
-            <div className="flex flex-wrap items-center justify-center gap-6 md:gap-12 text-sm">
-              <div className="flex items-center gap-2 text-gray-600">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <span className="font-medium">100% Kostenlos</span>
+            <div className="flex flex-wrap items-center justify-center gap-8 text-sm text-gray-600">
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+                <span>100% Kostenlos</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <span className="font-medium">Geprüfte Handwerker</span>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+                <span>Geprüfte Handwerker</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-600">
-                <CheckCircle className="h-5 w-5 text-green-500" />
-                <span className="font-medium">Schnelle Antworten</span>
+              <div className="flex items-center gap-2">
+                <CheckCircle className="h-5 w-5 text-blue-600" />
+                <span>Schnelle Antworten</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section - Glassmorphism */}
-      <section className="py-16 relative">
+      {/* Stats Section */}
+      <section className="py-16 bg-white">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="bg-white/70 backdrop-blur-lg rounded-3xl shadow-2xl border border-gray-200 p-8 md:p-12">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-                <div className="text-center group">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-yellow-400 to-orange-500 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      <Star className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-                  <div className="text-5xl font-bold bg-gradient-to-r from-yellow-600 to-orange-600 bg-clip-text text-transparent mb-2">
-                    {stats.averageRating}
-                  </div>
-                  <div className="text-gray-600 font-medium">Durchschnittsbewertung</div>
+          <div className="max-w-4xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-3">
+                  <Star className="h-10 w-10 text-orange-500" />
                 </div>
+                <div className="text-5xl font-bold text-blue-600 mb-2">{stats.averageRating}</div>
+                <div className="text-gray-600">Durchschnittsbewertung</div>
+              </div>
 
-                <div className="text-center group">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-blue-400 to-blue-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      <Hammer className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-                  <div className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-2">
-                    {stats.totalProjects}
-                  </div>
-                  <div className="text-gray-600 font-medium">Aktive Projekte</div>
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-3">
+                  <Hammer className="h-10 w-10 text-blue-600" />
                 </div>
+                <div className="text-5xl font-bold text-blue-600 mb-2">{stats.totalProjects}</div>
+                <div className="text-gray-600">Aktive Projekte</div>
+              </div>
 
-                <div className="text-center group">
-                  <div className="flex items-center justify-center mb-4">
-                    <div className="w-16 h-16 bg-gradient-to-br from-green-400 to-emerald-600 rounded-2xl flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform duration-300">
-                      <Users className="h-8 w-8 text-white" />
-                    </div>
-                  </div>
-                  <div className="text-5xl font-bold bg-gradient-to-r from-green-600 to-emerald-600 bg-clip-text text-transparent mb-2">
-                    {stats.totalContractors}
-                  </div>
-                  <div className="text-gray-600 font-medium">Verifizierte Handwerker</div>
+              <div className="text-center">
+                <div className="flex items-center justify-center mb-3">
+                  <Users className="h-10 w-10 text-blue-600" />
                 </div>
+                <div className="text-5xl font-bold text-blue-600 mb-2">{stats.totalContractors}</div>
+                <div className="text-gray-600">Verifizierte Handwerker</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works - With Images */}
-      <section id="wie-funktionierts" className="py-24 bg-gradient-to-br from-gray-50 to-white">
+      {/* How It Works - ORIGINAL IMAGE SIZE */}
+      <section id="wie-funktionierts" className="py-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
-            <Badge className="mb-4 px-4 py-1 text-sm">So einfach geht's</Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">In nur 3 Schritten zum Handwerker</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Finden Sie den perfekten Handwerker für Ihr Projekt – schnell und unkompliziert
-            </p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">
+              In nur 3 einfachen Schritten zum perfekten Handwerker
+            </h2>
           </div>
 
-          <div className="max-w-7xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-12">
-              {steps.map((step, index) => (
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+              {steps.map((step) => (
                 <div key={step.number} className="relative">
-                  {/* Connecting Line */}
-                  {index < steps.length - 1 && (
-                    <div className="hidden md:block absolute top-1/4 left-full w-full h-1 bg-gradient-to-r from-blue-300 to-transparent -translate-x-1/2 z-0"></div>
-                  )}
-
-                  <Card className="relative z-10 p-8 hover:shadow-2xl transition-all duration-300 group border-2 border-transparent hover:border-blue-200 bg-white">
+                  <Card className="p-8 bg-white border-2 border-gray-200 hover:border-blue-600 hover:shadow-lg transition-all">
                     {/* Number Badge */}
-                    <div className="absolute -top-4 -left-4 w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg group-hover:scale-110 transition-transform duration-300">
+                    <div className="absolute -top-5 -left-5 w-12 h-12 bg-blue-600 rounded-full flex items-center justify-center text-white font-bold text-xl shadow-lg">
                       {step.number}
                     </div>
 
-                    {/* Image */}
-                    <div className="mb-6 flex justify-center">
-                      <div className="w-48 h-48 rounded-2xl bg-gradient-to-br from-blue-50 to-orange-50 p-6 flex items-center justify-center group-hover:scale-105 transition-transform duration-300">
-                        <img src={step.image} alt={step.title} className="w-full h-full object-contain" />
-                      </div>
+                    {/* Image - ORIGINAL SIZE */}
+                    <div className="mb-6 bg-gray-50 rounded-lg p-6 flex items-center justify-center">
+                      <img src={step.image} alt={step.title} className="max-w-full h-auto" />
                     </div>
 
                     <h3 className="text-2xl font-bold mb-3 text-gray-900">{step.title}</h3>
-                    <p className="text-gray-600 leading-relaxed">{step.description}</p>
+                    <p className="text-gray-600">{step.description}</p>
                   </Card>
                 </div>
               ))}
@@ -427,107 +372,82 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Gewerke Section - Modern Cards */}
+      {/* Gewerke Section - SIMPLE CARDS */}
       <section id="gewerke" className="py-24 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
-            <Badge className="mb-4 px-4 py-1 text-sm">Unsere Gewerke</Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Handwerker für jeden Bedarf</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Von Elektrik bis Fassade – finden Sie spezialisierte Profis für Ihr Projekt
-            </p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Unsere Gewerke</h2>
+            <p className="text-xl text-gray-600">Spezialisierte Handwerker für Ihre Projekte</p>
           </div>
 
-          <div className="max-w-6xl mx-auto grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-6">
+          <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
             {gewerke.map((gewerk) => (
               <Card
                 key={gewerk.id}
-                className="group cursor-pointer overflow-hidden border-2 border-transparent hover:border-blue-200 transition-all duration-300 hover:shadow-2xl"
+                className="p-6 cursor-pointer border-2 border-gray-200 hover:border-blue-600 hover:shadow-lg transition-all bg-white"
                 onClick={() => navigate("/projekt-erstellen")}
               >
-                <div className="p-6">
-                  {/* Icon with Gradient */}
-                  <div
-                    className={`w-16 h-16 bg-gradient-to-br ${gewerk.gradient} rounded-2xl flex items-center justify-center mb-4 group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-lg`}
-                  >
-                    <gewerk.icon className="h-8 w-8 text-white" />
-                  </div>
-
-                  <h3 className="text-xl font-bold mb-2 text-gray-900 group-hover:text-blue-600 transition-colors">
-                    {gewerk.name}
-                  </h3>
-                  <p className="text-sm text-gray-600 leading-relaxed">{gewerk.description}</p>
+                <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mb-4 mx-auto">
+                  <gewerk.icon className="h-7 w-7 text-white" />
                 </div>
 
-                {/* Hover Effect Bar */}
-                <div
-                  className={`h-1 w-full bg-gradient-to-r ${gewerk.gradient} transform scale-x-0 group-hover:scale-x-100 transition-transform duration-300 origin-left`}
-                ></div>
+                <h3 className="text-lg font-bold mb-2 text-gray-900 text-center">{gewerk.name}</h3>
+                <p className="text-sm text-gray-600 text-center">{gewerk.description}</p>
               </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* Features Section */}
-      <section id="vorteile" className="py-24 bg-gradient-to-br from-blue-50 via-white to-orange-50">
+      {/* Features Section - SIMPLE CARDS */}
+      <section id="vorteile" className="py-24 bg-gray-50">
         <div className="container mx-auto px-4">
           <div className="text-center mb-20">
-            <Badge className="mb-4 px-4 py-1 text-sm">Ihre Vorteile</Badge>
-            <h2 className="text-4xl md:text-5xl font-bold mb-6">Warum BauConnect24?</h2>
-            <p className="text-xl text-gray-600 max-w-2xl mx-auto">
-              Die moderne und sichere Plattform für Ihre Handwerkerprojekte
-            </p>
+            <h2 className="text-4xl md:text-5xl font-bold mb-4 text-gray-900">Warum BauConnect24?</h2>
+            <p className="text-xl text-gray-600">Die moderne Plattform für Ihre Handwerkerprojekte</p>
           </div>
 
           <div className="max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <Card
                 key={index}
-                className="p-8 hover:shadow-2xl transition-all duration-300 group border-2 border-transparent hover:border-blue-200 bg-white/80 backdrop-blur-sm"
+                className="p-8 bg-white border-2 border-gray-200 hover:border-blue-600 hover:shadow-lg transition-all"
               >
-                <div className="w-14 h-14 bg-gradient-to-br from-blue-500 to-purple-600 rounded-2xl flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300 shadow-lg">
+                <div className="w-14 h-14 bg-blue-600 rounded-xl flex items-center justify-center mb-6">
                   <feature.icon className="h-7 w-7 text-white" />
                 </div>
                 <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.description}</p>
+                <p className="text-gray-600">{feature.description}</p>
               </Card>
             ))}
           </div>
         </div>
       </section>
 
-      {/* CTA Section - Bold */}
-      <section className="py-24 relative overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-blue-600 via-purple-600 to-orange-600"></div>
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItaDJ2LTJoLTJ6bTAtNHYyaDJ2LTJoLTJ6bTAgNHYyaDJ2LTJoLTJ6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-50"></div>
+      {/* CTA Section */}
+      <section className="py-24 bg-gradient-to-r from-blue-600 to-blue-700 text-white">
+        <div className="container mx-auto px-4 text-center">
+          <h2 className="text-4xl md:text-6xl font-bold mb-6">Bereit für Ihr Projekt?</h2>
+          <p className="text-xl md:text-2xl mb-12 opacity-90">Finden Sie jetzt den perfekten Handwerker</p>
+          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <Button
+              size="lg"
+              onClick={() => navigate("/projekt-erstellen")}
+              className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-10 py-7"
+            >
+              <Hammer className="mr-2 h-5 w-5" />
+              Jetzt Projekt erstellen
+              <ArrowRight className="ml-2 h-5 w-5" />
+            </Button>
 
-        <div className="container mx-auto px-4 relative z-10">
-          <div className="max-w-4xl mx-auto text-center text-white">
-            <h2 className="text-4xl md:text-6xl font-bold mb-6">Bereit für Ihr Projekt?</h2>
-            <p className="text-xl md:text-2xl mb-12 opacity-90">
-              Finden Sie jetzt den perfekten Handwerker und starten Sie noch heute
-            </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
-              <Button
-                size="lg"
-                onClick={() => navigate("/projekt-erstellen")}
-                className="bg-white text-blue-600 hover:bg-gray-100 shadow-2xl hover:shadow-white/30 transition-all duration-300 text-lg px-10 py-7 group"
-              >
-                <Hammer className="mr-2 h-5 w-5 group-hover:rotate-12 transition-transform" />
-                Jetzt Projekt erstellen
-                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-              </Button>
-
-              <Button
-                size="lg"
-                variant="outline"
-                onClick={() => navigate("/register")}
-                className="border-2 border-white text-white hover:bg-white/10 text-lg px-10 py-7"
-              >
-                Als Handwerker registrieren
-              </Button>
-            </div>
+            <Button
+              size="lg"
+              variant="outline"
+              onClick={() => navigate("/register")}
+              className="border-2 border-white text-white hover:bg-white/10 text-lg px-10 py-7"
+            >
+              Als Handwerker registrieren
+            </Button>
           </div>
         </div>
       </section>
