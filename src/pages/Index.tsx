@@ -2,7 +2,7 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { useNavigate } from "react-router-dom";
-import { useEffect, useState, useRef } from "react";
+import { useEffect, useState } from "react";
 import {
   Hammer,
   Zap,
@@ -21,6 +21,7 @@ import {
   ArrowRight,
   Menu,
   X,
+  Sparkles,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -44,11 +45,11 @@ const Index = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Intersection Observer for Timeline Items
+  // Intersection Observer for Timeline
   useEffect(() => {
     const observerOptions = {
-      threshold: 0.2,
-      rootMargin: "0px 0px -100px 0px",
+      threshold: 0.3,
+      rootMargin: "0px 0px -50px 0px",
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
@@ -63,7 +64,6 @@ const Index = () => {
             return prev;
           });
         } else {
-          // Remove when scrolling up
           setVisibleItems((prev) => prev.filter((i) => i !== index));
         }
       });
@@ -113,52 +113,62 @@ const Index = () => {
     {
       id: "elektriker",
       name: "Elektriker",
-      icon: Zap,
       emoji: "⚡",
       description: "Elektroinstallationen & Smart Home",
       bgColor: "bg-yellow-500",
+      shadowColor: "shadow-yellow-500/50",
       hoverBg: "hover:bg-yellow-50",
       hoverBorder: "hover:border-yellow-500",
     },
     {
       id: "sanitar",
       name: "Sanitär",
-      icon: Droplet,
       emoji: "💧",
       description: "Heizung, Sanitär & Klima",
       bgColor: "bg-blue-500",
+      shadowColor: "shadow-blue-500/50",
       hoverBg: "hover:bg-blue-50",
       hoverBorder: "hover:border-blue-500",
     },
     {
       id: "maler",
       name: "Maler",
-      icon: Paintbrush,
       emoji: "🎨",
       description: "Innen- & Außenarbeiten",
       bgColor: "bg-purple-500",
+      shadowColor: "shadow-purple-500/50",
       hoverBg: "hover:bg-purple-50",
       hoverBorder: "hover:border-purple-500",
     },
     {
       id: "dachdecker",
       name: "Dachdecker",
-      icon: Construction,
       emoji: "🏠",
       description: "Dächer & Dachfenster",
       bgColor: "bg-orange-500",
+      shadowColor: "shadow-orange-500/50",
       hoverBg: "hover:bg-orange-50",
       hoverBorder: "hover:border-orange-500",
     },
     {
       id: "fassade",
       name: "Fassade",
-      icon: Wrench,
       emoji: "🏗️",
       description: "Fassaden & Dämmung",
       bgColor: "bg-green-500",
+      shadowColor: "shadow-green-500/50",
       hoverBg: "hover:bg-green-50",
       hoverBorder: "hover:border-green-500",
+    },
+    {
+      id: "rohbau",
+      name: "Rohbau",
+      emoji: "🧱",
+      description: "Maurer- & Betonarbeiten",
+      bgColor: "bg-red-500",
+      shadowColor: "shadow-red-500/50",
+      hoverBg: "hover:bg-red-50",
+      hoverBorder: "hover:border-red-500",
     },
   ];
 
@@ -187,37 +197,37 @@ const Index = () => {
     {
       icon: Shield,
       title: "Verifizierte Profis",
-      desc: "Alle Handwerker werden von uns persönlich geprüft und verifiziert. Nur qualifizierte Fachkräfte erhalten Zugang zur Plattform.",
+      desc: "Alle Handwerker werden von uns persönlich geprüft und verifiziert. Nur qualifizierte Fachkräfte mit nachgewiesener Erfahrung erhalten Zugang zur Plattform.",
       color: "blue",
     },
     {
       icon: Clock,
-      title: "Schnelle Antworten",
-      desc: "Erhalten Sie innerhalb von 24 Stunden konkrete Angebote von interessierten Handwerkern für Ihr Projekt.",
+      title: "Blitzschnelle Antworten",
+      desc: "Erhalten Sie innerhalb von 24 Stunden konkrete Angebote von interessierten, qualifizierten Handwerkern für Ihr spezifisches Projekt.",
       color: "orange",
     },
     {
       icon: CheckCircle,
       title: "100% Kostenlos",
-      desc: "Keine versteckten Gebühren, keine Abofallen. Die Nutzung der Plattform ist für Kunden komplett kostenlos.",
+      desc: "Keine versteckten Gebühren, keine Abofallen, keine Überraschungen. Die Nutzung der Plattform ist für Kunden komplett kostenlos - garantiert.",
       color: "blue",
     },
     {
       icon: Star,
       title: "Echte Bewertungen",
-      desc: "Transparente Kundenmeinungen helfen Ihnen bei der Auswahl des richtigen Handwerkers. Nur verifizierte Bewertungen werden angezeigt.",
+      desc: "Transparente, authentische Kundenmeinungen helfen Ihnen bei der Auswahl des richtigen Handwerkers. Nur verifizierte Bewertungen werden angezeigt.",
       color: "orange",
     },
     {
       icon: MessageSquare,
       title: "Direkter Kontakt",
-      desc: "Kommunizieren Sie direkt mit Handwerkern ohne Mittelsmann. Schneller und persönlicher Austausch garantiert.",
+      desc: "Kommunizieren Sie direkt mit Handwerkern ohne Mittelsmann. Schneller, persönlicher Austausch für beste Ergebnisse garantiert.",
       color: "blue",
     },
     {
       icon: TrendingUp,
       title: "Faire Preise",
-      desc: "Vergleichen Sie mehrere Angebote und finden Sie das beste Preis-Leistungs-Verhältnis für Ihr individuelles Projekt.",
+      desc: "Vergleichen Sie mehrere qualifizierte Angebote und finden Sie das beste Preis-Leistungs-Verhältnis für Ihr individuelles Projekt.",
       color: "orange",
     },
   ];
@@ -227,13 +237,13 @@ const Index = () => {
       {/* Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
-          scrolled ? "bg-white shadow-sm" : "bg-white"
+          scrolled ? "bg-white/95 backdrop-blur-md shadow-lg" : "bg-white"
         }`}
       >
         <div className="container mx-auto px-4">
           <div className="flex items-center justify-between h-20">
-            <div className="flex items-center gap-2 cursor-pointer" onClick={() => navigate("/")}>
-              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
+            <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate("/")}>
+              <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform duration-300">
                 <Hammer className="h-6 w-6 text-white" />
               </div>
               <span className="text-xl font-bold">
@@ -244,22 +254,25 @@ const Index = () => {
             </div>
 
             <div className="hidden md:flex items-center gap-8">
-              <a href="#wie-funktionierts" className="text-gray-600 hover:text-blue-600 transition-colors">
+              <a href="#wie-funktionierts" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
                 Wie funktioniert's
               </a>
-              <a href="#gewerke" className="text-gray-600 hover:text-blue-600 transition-colors">
+              <a href="#gewerke" className="text-gray-600 hover:text-orange-600 transition-colors font-medium">
                 Gewerke
               </a>
-              <a href="#vorteile" className="text-gray-600 hover:text-blue-600 transition-colors">
+              <a href="#vorteile" className="text-gray-600 hover:text-blue-600 transition-colors font-medium">
                 Vorteile
               </a>
             </div>
 
             <div className="hidden md:flex items-center gap-4">
-              <Button variant="ghost" onClick={() => navigate("/login")}>
+              <Button variant="ghost" onClick={() => navigate("/login")} className="hover:text-blue-600 font-medium">
                 Anmelden
               </Button>
-              <Button onClick={() => navigate("/register")} className="bg-blue-600 hover:bg-blue-700 text-white">
+              <Button
+                onClick={() => navigate("/register")}
+                className="bg-blue-600 hover:bg-blue-700 text-white font-semibold shadow-lg hover:shadow-xl transition-all"
+              >
                 Registrieren
               </Button>
             </div>
@@ -271,22 +284,25 @@ const Index = () => {
         </div>
 
         {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-t">
-            <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-              <a href="#wie-funktionierts" className="text-gray-600 py-2">
+          <div className="md:hidden bg-white border-t shadow-xl">
+            <div className="container mx-auto px-4 py-6 flex flex-col gap-4">
+              <a
+                href="#wie-funktionierts"
+                className="text-gray-600 py-2 font-medium hover:text-blue-600 transition-colors"
+              >
                 Wie funktioniert's
               </a>
-              <a href="#gewerke" className="text-gray-600 py-2">
+              <a href="#gewerke" className="text-gray-600 py-2 font-medium hover:text-orange-600 transition-colors">
                 Gewerke
               </a>
-              <a href="#vorteile" className="text-gray-600 py-2">
+              <a href="#vorteile" className="text-gray-600 py-2 font-medium hover:text-blue-600 transition-colors">
                 Vorteile
               </a>
-              <div className="flex flex-col gap-2 pt-4 border-t">
-                <Button variant="outline" onClick={() => navigate("/login")} className="w-full">
+              <div className="flex flex-col gap-3 pt-4 border-t">
+                <Button variant="outline" onClick={() => navigate("/login")} className="w-full font-semibold">
                   Anmelden
                 </Button>
-                <Button onClick={() => navigate("/register")} className="w-full bg-blue-600">
+                <Button onClick={() => navigate("/register")} className="w-full bg-blue-600 font-semibold">
                   Registrieren
                 </Button>
               </div>
@@ -295,137 +311,168 @@ const Index = () => {
         )}
       </nav>
 
-      {/* Hero Section */}
-      <section className="relative pt-32 pb-20 md:pt-40 md:pb-32 bg-gray-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto text-center">
-            <Badge className="mb-6 bg-blue-600 text-white hover:bg-blue-700">
+      {/* Hero Section - BOLD & MODERN */}
+      <section className="relative pt-32 pb-24 md:pt-44 md:pb-32 bg-gradient-to-br from-blue-50 via-white to-orange-50 overflow-hidden">
+        {/* Animated Background Elements */}
+        <div className="absolute top-20 left-10 w-72 h-72 bg-blue-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"></div>
+        <div
+          className="absolute bottom-20 right-10 w-72 h-72 bg-orange-500 rounded-full mix-blend-multiply filter blur-3xl opacity-20 animate-pulse"
+          style={{ animationDelay: "1s" }}
+        ></div>
+
+        <div className="container mx-auto px-4 relative z-10">
+          <div className="max-w-6xl mx-auto text-center">
+            <Badge className="mb-8 bg-gradient-to-r from-blue-600 to-orange-500 text-white hover:from-blue-700 hover:to-orange-600 border-0 px-6 py-2 text-base font-semibold shadow-lg animate-fade-in">
               🇦🇹 Österreichs #1 Handwerker-Plattform
             </Badge>
 
-            <h1 className="text-5xl md:text-7xl font-bold mb-6 leading-tight">
-              <span className="text-blue-600">Handwerker finden.</span>
+            {/* BOLD TYPOGRAPHY */}
+            <h1 className="text-6xl md:text-8xl font-extrabold mb-8 leading-tight tracking-tight">
+              <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
+                Handwerker finden.
+              </span>
               <br />
               <span className="text-gray-900">Einfach gemacht.</span>
             </h1>
 
-            <p className="text-xl md:text-2xl text-gray-600 mb-12 max-w-3xl mx-auto">
-              Verbinden Sie sich mit verifizierten Handwerkern in Ihrer Nähe.
+            <p className="text-2xl md:text-3xl text-gray-600 mb-12 max-w-4xl mx-auto font-medium leading-relaxed">
+              Verbinden Sie sich mit <span className="font-bold text-blue-600">verifizierten Handwerkern</span> in Ihrer
+              Nähe.
               <br />
               <span className="font-semibold text-gray-900">Kostenlos · Transparent · Österreichweit</span>
             </p>
 
-            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-16">
+            {/* CTAs with Micro-Animations */}
+            <div className="flex flex-col sm:flex-row gap-6 justify-center mb-16">
               <Button
                 size="lg"
                 onClick={() => navigate("/projekt-erstellen")}
-                className="bg-blue-600 hover:bg-blue-700 text-white text-lg px-10 py-7"
+                className="bg-blue-600 hover:bg-blue-700 text-white text-xl px-12 py-8 shadow-2xl shadow-blue-600/40 hover:shadow-blue-700/60 hover:scale-105 transition-all duration-300 font-bold group"
               >
-                <Hammer className="mr-2 h-5 w-5" />
+                <Hammer className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform" />
                 Projekt starten
-                <ArrowRight className="ml-2 h-5 w-5" />
+                <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
               </Button>
 
               <Button
                 size="lg"
                 variant="outline"
                 onClick={() => navigate("/register")}
-                className="border-2 border-gray-300 hover:border-blue-600 hover:bg-blue-50 text-lg px-10 py-7"
+                className="border-3 border-orange-500 text-orange-600 hover:bg-orange-50 text-xl px-12 py-8 shadow-xl hover:shadow-2xl hover:scale-105 transition-all duration-300 font-bold group"
               >
-                <Wrench className="mr-2 h-5 w-5" />
+                <Wrench className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform" />
                 Als Handwerker registrieren
               </Button>
             </div>
 
-            <div className="flex flex-wrap items-center justify-center gap-8 text-gray-600">
-              <div className="flex items-center gap-2">
-                <CheckCircle className="h-5 w-5 text-blue-600" />
-                <span>100% Kostenlos</span>
+            {/* Trust Badges with Animations */}
+            <div className="flex flex-wrap items-center justify-center gap-12 text-gray-700">
+              <div className="flex items-center gap-3 group">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                  <CheckCircle className="h-6 w-6 text-white" />
+                </div>
+                <span className="font-semibold text-lg">100% Kostenlos</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Shield className="h-5 w-5 text-blue-600" />
-                <span>Geprüfte Handwerker</span>
+              <div className="flex items-center gap-3 group">
+                <div className="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                  <Shield className="h-6 w-6 text-white" />
+                </div>
+                <span className="font-semibold text-lg">Geprüfte Handwerker</span>
               </div>
-              <div className="flex items-center gap-2">
-                <Clock className="h-5 w-5 text-blue-600" />
-                <span>Schnelle Antworten</span>
+              <div className="flex items-center gap-3 group">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform shadow-lg">
+                  <Clock className="h-6 w-6 text-white" />
+                </div>
+                <span className="font-semibold text-lg">Schnelle Antworten</span>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Stats Section */}
-      <section className="py-16 bg-white border-y border-gray-100">
+      {/* Stats Section - BOLD NUMBERS */}
+      <section className="py-20 bg-white">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-12">
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-12 h-12 bg-orange-100 rounded-xl flex items-center justify-center">
-                    <Star className="h-6 w-6 text-orange-600" />
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-16">
+              <div className="text-center group">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-orange-500 to-orange-600 rounded-2xl flex items-center justify-center shadow-xl shadow-orange-500/40 group-hover:scale-110 transition-transform duration-300">
+                    <Star className="h-10 w-10 text-white" />
                   </div>
                 </div>
-                <div className="text-5xl font-bold text-gray-900 mb-2">{stats.averageRating}</div>
-                <div className="text-gray-600">Durchschnittsbewertung</div>
+                <div className="text-7xl font-extrabold bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent mb-3">
+                  {stats.averageRating}
+                </div>
+                <div className="text-gray-600 font-semibold text-lg">Durchschnittsbewertung</div>
               </div>
 
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <Hammer className="h-6 w-6 text-blue-600" />
+              <div className="text-center group">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/40 group-hover:scale-110 transition-transform duration-300">
+                    <Hammer className="h-10 w-10 text-white" />
                   </div>
                 </div>
-                <div className="text-5xl font-bold text-gray-900 mb-2">{stats.totalProjects}</div>
-                <div className="text-gray-600">Aktive Projekte</div>
+                <div className="text-7xl font-extrabold bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent mb-3">
+                  {stats.totalProjects}
+                </div>
+                <div className="text-gray-600 font-semibold text-lg">Aktive Projekte</div>
               </div>
 
-              <div className="text-center">
-                <div className="flex items-center justify-center mb-3">
-                  <div className="w-12 h-12 bg-blue-100 rounded-xl flex items-center justify-center">
-                    <Users className="h-6 w-6 text-blue-600" />
+              <div className="text-center group">
+                <div className="flex items-center justify-center mb-4">
+                  <div className="w-20 h-20 bg-gradient-to-br from-blue-600 to-orange-500 rounded-2xl flex items-center justify-center shadow-xl shadow-blue-600/30 group-hover:scale-110 transition-transform duration-300">
+                    <Users className="h-10 w-10 text-white" />
                   </div>
                 </div>
-                <div className="text-5xl font-bold text-gray-900 mb-2">{stats.totalContractors}+</div>
-                <div className="text-gray-600">Verifizierte Handwerker</div>
+                <div className="text-7xl font-extrabold bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent mb-3">
+                  {stats.totalContractors}+
+                </div>
+                <div className="text-gray-600 font-semibold text-lg">Verifizierte Handwerker</div>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* How It Works */}
-      <section id="wie-funktionierts" className="py-24 bg-gray-50">
+      {/* How It Works - ALTERNATING WITH SHADOWS */}
+      <section id="wie-funktionierts" className="py-32 bg-gray-50">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-4 text-gray-900">
-              In nur 3 einfachen Schritten
+          <div className="text-center mb-24">
+            <h2 className="text-5xl md:text-7xl font-extrabold mb-6">
+              <span className="text-gray-900">In nur</span>{" "}
+              <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
+                3 Schritten
+              </span>
               <br />
-              zum perfekten Handwerker
+              <span className="text-gray-900">zum perfekten Handwerker</span>
             </h2>
           </div>
 
-          <div className="max-w-6xl mx-auto space-y-20">
+          <div className="max-w-7xl mx-auto space-y-32">
             {steps.map((step, index) => (
               <div
                 key={step.number}
-                className={`grid grid-cols-1 lg:grid-cols-2 gap-12 items-center ${
+                className={`grid grid-cols-1 lg:grid-cols-2 gap-16 items-center ${
                   index % 2 === 1 ? "lg:grid-flow-dense" : ""
                 }`}
               >
                 <div className={`${index % 2 === 1 ? "lg:col-start-2" : ""}`}>
-                  <div className="bg-white rounded-2xl p-8 shadow-lg">
-                    <img src={step.image} alt={step.title} className="w-full h-auto" />
+                  <div className="relative group">
+                    <div className="absolute -inset-4 bg-gradient-to-r from-blue-600 to-orange-500 rounded-3xl opacity-20 group-hover:opacity-30 blur-2xl transition-all duration-500"></div>
+                    <div className="relative bg-white rounded-3xl p-10 shadow-2xl group-hover:shadow-3xl transition-all duration-500">
+                      <img src={step.image} alt={step.title} className="w-full h-auto" />
+                    </div>
                   </div>
                 </div>
 
                 <div className={`${index % 2 === 1 ? "lg:col-start-1 lg:row-start-1" : ""}`}>
-                  <div className="inline-flex items-center justify-center w-14 h-14 bg-blue-600 rounded-xl mb-6">
-                    <span className="text-2xl font-bold text-white">{step.number}</span>
+                  <div className="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-br from-blue-600 to-orange-500 rounded-2xl mb-8 shadow-xl">
+                    <span className="text-4xl font-extrabold text-white">{step.number}</span>
                   </div>
 
-                  <h3 className="text-3xl md:text-4xl font-bold mb-4 text-gray-900">{step.title}</h3>
-                  <p className="text-lg md:text-xl text-gray-600 leading-relaxed">{step.description}</p>
+                  <h3 className="text-5xl md:text-6xl font-extrabold mb-6 text-gray-900 leading-tight">{step.title}</h3>
+                  <p className="text-2xl text-gray-600 leading-relaxed font-medium">{step.description}</p>
                 </div>
               </div>
             ))}
@@ -433,29 +480,34 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Gewerke Section */}
-      <section id="gewerke" className="py-24 bg-white">
+      {/* Gewerke Section - 6 GEWERKE WITH EMOJIS & SHADOWS */}
+      <section id="gewerke" className="py-32 bg-white">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-4 text-gray-900">Unsere Gewerke</h2>
-            <p className="text-xl text-gray-600">Spezialisierte Handwerker für Ihre Projekte</p>
+          <div className="text-center mb-24">
+            <h2 className="text-5xl md:text-7xl font-extrabold mb-6">
+              <span className="text-gray-900">Unsere</span>{" "}
+              <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
+                Gewerke
+              </span>
+            </h2>
+            <p className="text-2xl text-gray-600 font-medium">Spezialisierte Handwerker für jedes Projekt</p>
           </div>
 
-          <div className="max-w-6xl mx-auto grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-6">
+          <div className="max-w-7xl mx-auto grid grid-cols-2 md:grid-cols-3 gap-8">
             {gewerke.map((gewerk) => (
               <Card
                 key={gewerk.id}
-                className={`p-6 cursor-pointer border-2 border-gray-100 ${gewerk.hoverBorder} ${gewerk.hoverBg} hover:shadow-xl transition-all group`}
+                className={`p-8 cursor-pointer border-2 border-gray-100 ${gewerk.hoverBorder} ${gewerk.hoverBg} hover:shadow-2xl transition-all duration-300 group`}
                 onClick={() => navigate("/projekt-erstellen")}
               >
                 <div
-                  className={`w-16 h-16 ${gewerk.bgColor} rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform shadow-lg`}
+                  className={`w-20 h-20 ${gewerk.bgColor} rounded-3xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl ${gewerk.shadowColor}`}
                 >
-                  <span className="text-3xl">{gewerk.emoji}</span>
+                  <span className="text-5xl">{gewerk.emoji}</span>
                 </div>
 
-                <h3 className="text-lg font-bold mb-2 text-gray-900 text-center">{gewerk.name}</h3>
-                <p className="text-sm text-gray-600 text-center leading-relaxed">{gewerk.description}</p>
+                <h3 className="text-2xl font-bold mb-3 text-gray-900 text-center">{gewerk.name}</h3>
+                <p className="text-base text-gray-600 text-center leading-relaxed">{gewerk.description}</p>
               </Card>
             ))}
           </div>
@@ -463,34 +515,41 @@ const Index = () => {
       </section>
 
       {/* Contractor Registration Section */}
-      <section className="py-24 bg-gray-50">
+      <section className="py-32 bg-gradient-to-br from-gray-50 to-white">
         <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-12 items-center">
-              <div className="rounded-2xl overflow-hidden shadow-xl">
-                <img
-                  src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=80"
-                  alt="Handwerker bei der Arbeit"
-                  className="w-full h-auto"
-                />
+          <div className="max-w-7xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-16 items-center">
+              <div className="relative group">
+                <div className="absolute -inset-4 bg-gradient-to-r from-orange-500 to-blue-600 rounded-3xl opacity-30 blur-2xl group-hover:opacity-40 transition-opacity"></div>
+                <div className="relative rounded-3xl overflow-hidden shadow-2xl">
+                  <img
+                    src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=80"
+                    alt="Handwerker bei der Arbeit"
+                    className="w-full h-auto"
+                  />
+                </div>
               </div>
 
               <div>
-                <h2 className="text-4xl md:text-5xl font-bold mb-6 text-gray-900">Auf der Suche nach Aufträgen?</h2>
-                <p className="text-xl font-semibold text-gray-900 mb-4">
-                  Vergrößern Sie Ihren Betrieb mit BauConnect24
-                </p>
-                <p className="text-lg text-gray-600 mb-8 leading-relaxed">
+                <h2 className="text-5xl md:text-6xl font-extrabold mb-8 leading-tight">
+                  <span className="text-gray-900">Auf der Suche nach</span>{" "}
+                  <span className="bg-gradient-to-r from-orange-500 to-orange-600 bg-clip-text text-transparent">
+                    Aufträgen?
+                  </span>
+                </h2>
+                <p className="text-3xl font-bold text-gray-900 mb-6">Vergrößern Sie Ihren Betrieb mit BauConnect24</p>
+                <p className="text-xl text-gray-600 mb-10 leading-relaxed">
                   BauConnect24 ist der zuverlässige Weg, mehr Wunschaufträge zu erhalten. Registrieren Sie sich
                   kostenlos, um täglich Benachrichtigungen mit potenziellen Aufträgen zu erhalten.
                 </p>
                 <Button
                   size="lg"
                   onClick={() => navigate("/register")}
-                  className="bg-orange-500 hover:bg-orange-600 text-white text-lg px-8 py-6"
+                  className="bg-gradient-to-r from-orange-500 to-orange-600 hover:from-orange-600 hover:to-orange-700 text-white text-xl px-10 py-8 shadow-2xl shadow-orange-500/50 hover:scale-105 transition-all duration-300 font-bold group"
                 >
+                  <Sparkles className="mr-3 h-6 w-6" />
                   Kostenlose Registrierung für Handwerker
-                  <ArrowRight className="ml-2 h-5 w-5" />
+                  <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
                 </Button>
               </div>
             </div>
@@ -498,78 +557,103 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features Timeline Section - SCROLL-TRIGGERED */}
-      <section id="vorteile" className="py-24 bg-white overflow-hidden">
+      {/* Features Timeline - SCROLL-TRIGGERED WITH BETTER VISIBILITY */}
+      <section id="vorteile" className="py-32 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-20">
-            <h2 className="text-4xl md:text-6xl font-bold mb-4 text-gray-900">Warum BauConnect24?</h2>
-            <p className="text-xl text-gray-600">Die moderne Plattform für Ihre Handwerkerprojekte</p>
+          <div className="text-center mb-24">
+            <h2 className="text-5xl md:text-7xl font-extrabold mb-6">
+              <span className="text-gray-900">Warum</span>{" "}
+              <span className="bg-gradient-to-r from-blue-600 to-orange-500 bg-clip-text text-transparent">
+                BauConnect24?
+              </span>
+            </h2>
+            <p className="text-2xl text-gray-600 font-medium">Die moderne Plattform für Ihre Handwerkerprojekte</p>
           </div>
 
           {/* Vertical Timeline */}
-          <div className="max-w-5xl mx-auto relative">
-            {/* Timeline Line */}
-            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-1 bg-gradient-to-b from-blue-600 via-orange-500 to-blue-600"></div>
+          <div className="max-w-6xl mx-auto relative">
+            {/* Thick Gradient Line */}
+            <div className="absolute left-8 md:left-1/2 top-0 bottom-0 w-2 bg-gradient-to-b from-blue-600 via-orange-500 to-blue-600 shadow-lg"></div>
 
             {/* Timeline Items */}
-            <div className="space-y-16">
+            <div className="space-y-24">
               {timelineFeatures.map((feature, index) => (
                 <div key={index} className="timeline-item relative" data-index={index}>
                   <div
-                    className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center transition-all duration-700 ${
+                    className={`grid grid-cols-1 md:grid-cols-2 gap-12 items-center transition-all duration-700 ${
                       index % 2 === 0 ? "" : "md:grid-flow-dense"
                     } ${visibleItems.includes(index) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-20"}`}
                   >
-                    {/* Timeline Dot with Pulse */}
-                    <div className="absolute left-6 md:left-1/2 transform md:-translate-x-1/2">
+                    {/* Large Timeline Dot with Multiple Pulse Rings */}
+                    <div className="absolute left-8 md:left-1/2 transform md:-translate-x-1/2">
                       <div
-                        className={`w-12 h-12 ${
+                        className={`w-16 h-16 ${
                           feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
-                        } rounded-full flex items-center justify-center shadow-xl relative z-10 transition-all duration-500 ${
+                        } rounded-full flex items-center justify-center shadow-2xl ${
+                          feature.color === "blue" ? "shadow-blue-600/60" : "shadow-orange-500/60"
+                        } relative z-10 transition-all duration-500 ${
                           visibleItems.includes(index) ? "scale-100" : "scale-0"
                         }`}
                       >
-                        <feature.icon className="h-6 w-6 text-white" />
+                        <feature.icon className="h-8 w-8 text-white" />
                       </div>
 
-                      {/* Animated Pulse Ring */}
+                      {/* Multiple Animated Pulse Rings */}
                       {visibleItems.includes(index) && (
-                        <div
-                          className={`absolute inset-0 ${
-                            feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
-                          } rounded-full animate-ping opacity-30`}
-                        ></div>
+                        <>
+                          <div
+                            className={`absolute inset-0 ${
+                              feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
+                            } rounded-full animate-ping opacity-40`}
+                          ></div>
+                          <div
+                            className={`absolute inset-0 ${
+                              feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
+                            } rounded-full animate-ping opacity-20`}
+                            style={{ animationDelay: "0.5s" }}
+                          ></div>
+                        </>
                       )}
                     </div>
 
-                    {/* Content Card */}
+                    {/* Content Card with Strong Border */}
                     <div
                       className={`${
-                        index % 2 === 0 ? "md:col-start-2 md:pl-16" : "md:col-start-1 md:pr-16 md:text-right"
-                      } pl-16 md:pl-0`}
+                        index % 2 === 0 ? "md:col-start-2 md:pl-20" : "md:col-start-1 md:pr-20 md:text-right"
+                      } pl-24 md:pl-0`}
                     >
-                      <Card
-                        className={`p-8 border-2 ${
-                          visibleItems.includes(index)
-                            ? feature.color === "blue"
-                              ? "border-blue-500"
-                              : "border-orange-500"
-                            : "border-gray-100"
-                        } hover:shadow-2xl transition-all duration-500 group`}
-                      >
+                      <div className="relative group">
                         <div
-                          className={`w-14 h-14 ${
-                            feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
-                          } rounded-xl flex items-center justify-center mb-6 ${
-                            index % 2 === 0 ? "" : "md:ml-auto"
-                          } group-hover:scale-110 transition-transform shadow-lg`}
-                        >
-                          <feature.icon className="h-7 w-7 text-white" />
-                        </div>
+                          className={`absolute -inset-2 bg-gradient-to-r ${
+                            feature.color === "blue" ? "from-blue-600 to-blue-700" : "from-orange-500 to-orange-600"
+                          } rounded-3xl opacity-0 group-hover:opacity-20 blur-xl transition-all duration-500`}
+                        ></div>
 
-                        <h3 className="text-2xl font-bold mb-4 text-gray-900">{feature.title}</h3>
-                        <p className="text-gray-600 leading-relaxed text-lg">{feature.desc}</p>
-                      </Card>
+                        <Card
+                          className={`relative p-10 border-4 ${
+                            visibleItems.includes(index)
+                              ? feature.color === "blue"
+                                ? "border-blue-600 shadow-2xl shadow-blue-600/30"
+                                : "border-orange-500 shadow-2xl shadow-orange-500/30"
+                              : "border-gray-100"
+                          } hover:shadow-3xl transition-all duration-500 group bg-white`}
+                        >
+                          <div
+                            className={`w-16 h-16 ${
+                              feature.color === "blue" ? "bg-blue-600" : "bg-orange-500"
+                            } rounded-2xl flex items-center justify-center mb-8 ${
+                              index % 2 === 0 ? "" : "md:ml-auto"
+                            } group-hover:scale-110 group-hover:rotate-3 transition-all duration-300 shadow-xl ${
+                              feature.color === "blue" ? "shadow-blue-600/50" : "shadow-orange-500/50"
+                            }`}
+                          >
+                            <feature.icon className="h-8 w-8 text-white" />
+                          </div>
+
+                          <h3 className="text-3xl font-bold mb-5 text-gray-900">{feature.title}</h3>
+                          <p className="text-gray-600 leading-relaxed text-xl">{feature.desc}</p>
+                        </Card>
+                      </div>
                     </div>
                   </div>
                 </div>
@@ -579,26 +663,32 @@ const Index = () => {
         </div>
       </section>
 
-      {/* CTA Section */}
-      <section className="py-24 bg-blue-600 text-white">
-        <div className="container mx-auto px-4 text-center">
-          <h2 className="text-4xl md:text-6xl font-bold mb-6">Bereit für Ihr Projekt?</h2>
-          <p className="text-xl md:text-2xl mb-12 opacity-90">Finden Sie jetzt den perfekten Handwerker</p>
-          <div className="flex flex-col sm:flex-row gap-4 justify-center">
+      {/* CTA Section - BOLD */}
+      <section className="py-32 bg-gradient-to-r from-blue-600 via-blue-700 to-orange-500 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10">
+          <div className="absolute top-10 left-10 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+          <div className="absolute bottom-10 right-10 w-96 h-96 bg-white rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="container mx-auto px-4 text-center relative z-10">
+          <Sparkles className="h-20 w-20 mx-auto mb-8 animate-pulse" />
+          <h2 className="text-5xl md:text-7xl font-extrabold mb-8">Bereit für Ihr Projekt?</h2>
+          <p className="text-2xl md:text-3xl mb-16 opacity-95 font-medium">Finden Sie jetzt den perfekten Handwerker</p>
+          <div className="flex flex-col sm:flex-row gap-6 justify-center">
             <Button
               size="lg"
               onClick={() => navigate("/projekt-erstellen")}
-              className="bg-white text-blue-600 hover:bg-gray-100 text-lg px-10 py-7"
+              className="bg-white text-blue-600 hover:bg-gray-100 text-xl px-12 py-8 shadow-2xl hover:scale-105 transition-all duration-300 font-bold group"
             >
-              <Hammer className="mr-2 h-5 w-5" />
+              <Hammer className="mr-3 h-6 w-6 group-hover:rotate-12 transition-transform" />
               Jetzt Projekt erstellen
-              <ArrowRight className="ml-2 h-5 w-5" />
+              <ArrowRight className="ml-3 h-6 w-6 group-hover:translate-x-1 transition-transform" />
             </Button>
 
             <Button
               size="lg"
               onClick={() => navigate("/register")}
-              className="bg-orange-500 hover:bg-orange-600 text-white text-lg px-10 py-7"
+              className="bg-orange-500 hover:bg-orange-600 text-white text-xl px-12 py-8 shadow-2xl hover:scale-105 transition-all duration-300 font-bold"
             >
               Als Handwerker registrieren
             </Button>
@@ -607,32 +697,50 @@ const Index = () => {
       </section>
 
       {/* Footer */}
-      <footer className="bg-gray-900 text-gray-300 py-12">
+      <footer className="bg-gray-900 text-gray-300 py-16">
         <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                <Hammer className="h-5 w-5 text-white" />
+          <div className="flex flex-col md:flex-row justify-between items-center gap-8">
+            <div className="flex items-center gap-3 group cursor-pointer">
+              <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-orange-500 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform">
+                <Hammer className="h-6 w-6 text-white" />
               </div>
-              <span className="text-lg font-bold text-white">BauConnect24</span>
+              <span className="text-xl font-bold text-white">BauConnect24</span>
             </div>
 
-            <div className="text-sm text-center">© 2024 BauConnect24. Alle Rechte vorbehalten.</div>
+            <div className="text-center">© 2024 BauConnect24. Alle Rechte vorbehalten.</div>
 
-            <div className="flex gap-6 text-sm">
-              <a href="#" className="hover:text-white transition-colors">
+            <div className="flex gap-8 text-base">
+              <a href="#" className="hover:text-white transition-colors font-medium">
                 Impressum
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-white transition-colors font-medium">
                 Datenschutz
               </a>
-              <a href="#" className="hover:text-white transition-colors">
+              <a href="#" className="hover:text-white transition-colors font-medium">
                 AGB
               </a>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Add CSS for fade-in animation */}
+      <style jsx>{`
+        @keyframes fadeIn {
+          from {
+            opacity: 0;
+            transform: translateY(20px);
+          }
+          to {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        
+        .animate-fade-in {
+          animation: fadeIn 0.6s ease-out;
+        }
+      `}</style>
     </div>
   );
 };
