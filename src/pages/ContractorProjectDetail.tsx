@@ -123,70 +123,100 @@ export default function ContractorProjectDetail() {
   const handlePurchaseLead = async () => {
     if (!project || !userId) return;
 
-    // Check balance before attempting purchase
-    if (insufficientBalance) {
+    // Pre-check balance before attempting purchase
+    if (insufficientBalance || walletBalance < project.final_price) {
       toast({
         title: "Guthaben zu niedrig",
-        description: "Bitte laden Sie Ihr Wallet auf, um diesen Lead zu kaufen.",
+        description: `Sie benötigen €${project.final_price}. Ihr aktuelles Guthaben: €${walletBalance.toFixed(2)}`,
         variant: "destructive",
         action: (
-          <Button
-            size="sm"
-            onClick={() => navigate("/handwerker/dashboard")}
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={() => navigate('/handwerker/dashboard')}
           >
             Jetzt aufladen
           </Button>
-        ),
+        )
       });
       return;
     }
 
     setPurchasing(true);
     try {
-      const { data, error } = await supabase.functions.invoke('purchase-lead', {
-        body: {
-          leadId: project.id,
-          contractorId: userId
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.error === 'Insufficient balance') {
-        toast({
-          title: "Guthaben zu niedrig",
-          description: data.message || "Ihr Wallet-Guthaben reicht nicht aus.",
-          variant: "destructive",
-          action: (
-            <Button
-              size="sm"
-              onClick={() => navigate("/handwerker/dashboard")}
-            >
-              Jetzt aufladen
-            </Button>
-          ),
-        });
-        setInsufficientBalance(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        navigate("/login");
         return;
       }
 
-      if (data.success) {
-        toast({
-          title: "Lead erfolgreich gekauft!",
-          description: `Sie haben €${project.final_price.toFixed(2)} bezahlt.`
-        });
+      const { data, error } = await supabase.functions.invoke("purchase-lead", {
+        body: { leadId: project.id },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
+      });
 
-        setHasPurchasedLead(true);
-        setPurchasedAt(new Date().toISOString());
-        loadProject();
-      } else {
-        throw new Error(data.error || "Lead-Kauf fehlgeschlagen");
+      if (error) {
+        // Handle specific error cases
+        if (error.message.includes("Insufficient balance") || error.message.includes("Guthaben")) {
+          setInsufficientBalance(true);
+          toast({
+            title: "Guthaben zu niedrig",
+            description: `Lead-Preis: €${project.final_price}. Ihr Guthaben: €${walletBalance.toFixed(2)}`,
+            variant: "destructive",
+            action: (
+              <Button 
+                variant="outline" 
+                size="sm" 
+                onClick={() => navigate('/handwerker/dashboard')}
+              >
+                Jetzt aufladen
+              </Button>
+            )
+          });
+          return;
+        }
+        
+        if (error.message.includes("Already purchased") || error.message.includes("bereits gekauft")) {
+          toast({
+            title: "Lead bereits gekauft",
+            description: "Sie haben diesen Lead bereits erworben.",
+            variant: "destructive"
+          });
+          setHasPurchasedLead(true);
+          loadProject();
+          return;
+        }
+        
+        if (error.message.includes("sold out") || error.message.includes("verkauft")) {
+          toast({
+            title: "Lead nicht mehr verfügbar",
+            description: "Dieser Lead wurde bereits an 3 Handwerker verkauft.",
+            variant: "destructive"
+          });
+          return;
+        }
+        
+        throw error;
       }
-    } catch (error: any) {
+
+      // Success
       toast({
-        title: "Fehler beim Lead-Kauf",
-        description: error.message || "Lead konnte nicht gekauft werden.",
-        variant: "destructive"
+        title: "Lead erfolgreich gekauft! 🎉",
+        description: `Neues Guthaben: €${data.newBalance.toFixed(2)}. Sie können jetzt den Kunden kontaktieren.`,
+      });
+
+      setHasPurchasedLead(true);
+      setPurchasedAt(new Date().toISOString());
+      setWalletBalance(data.newBalance);
+      loadProject();
+    } catch (error: any) {
+      console.error("Purchase error:", error);
+      toast({
+        title: "Fehler beim Kauf",
+        description: error.message || "Lead konnte nicht gekauft werden. Bitte versuchen Sie es erneut.",
+        variant: "destructive",
       });
     } finally {
       setPurchasing(false);

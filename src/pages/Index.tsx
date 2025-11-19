@@ -26,6 +26,8 @@ const Index = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
+  const [showSuggestions, setShowSuggestions] = useState(false);
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
   const [stats, setStats] = useState({
     totalProjects: 0,
@@ -102,7 +104,36 @@ const Index = () => {
     fetchStats();
   }, []);
 
+  // Live search for subcategories
+  useEffect(() => {
+    const searchSubcategories = async () => {
+      if (searchQuery.trim().length < 2) {
+        setSearchSuggestions([]);
+        setShowSuggestions(false);
+        return;
+      }
+
+      try {
+        const { data } = await supabase
+          .from('service_categories')
+          .select('*')
+          .eq('level', 2)
+          .ilike('name', `%${searchQuery}%`)
+          .limit(5);
+
+        setSearchSuggestions(data || []);
+        setShowSuggestions(true);
+      } catch (error) {
+        console.error('Search error:', error);
+      }
+    };
+
+    const debounce = setTimeout(searchSubcategories, 300);
+    return () => clearTimeout(debounce);
+  }, [searchQuery]);
+
   const handleSearch = () => {
+    setShowSuggestions(false);
     if (searchQuery.trim()) {
       navigate("/kunde/projekt-erstellen", { state: { initialQuery: searchQuery } });
     } else {
@@ -110,9 +141,22 @@ const Index = () => {
     }
   };
 
+  const handleSuggestionClick = (suggestion: any) => {
+    setShowSuggestions(false);
+    navigate("/kunde/projekt-erstellen", { 
+      state: { 
+        selectedGewerk: suggestion.parent_id,
+        selectedSubcategoryId: suggestion.id 
+      } 
+    });
+  };
+
   const handleKeyPress = (e: React.KeyboardEvent) => {
     if (e.key === "Enter") {
       handleSearch();
+    }
+    if (e.key === "Escape") {
+      setShowSuggestions(false);
     }
   };
 
@@ -234,15 +278,39 @@ const Index = () => {
 
                 <div className="flex flex-col sm:flex-row gap-3">
                   <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400" />
+                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
                     <Input
                       type="text"
                       placeholder="z.B.: Malerarbeiten"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
                       onKeyPress={handleKeyPress}
+                      onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
+                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                       className="pl-12 h-14 text-base md:text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
                     />
+                    
+                    {/* Live Search Suggestions */}
+                    {showSuggestions && searchSuggestions.length > 0 && (
+                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                        <div className="p-2 bg-gray-50 border-b border-gray-200">
+                          <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
+                        </div>
+                        {searchSuggestions.map((suggestion) => (
+                          <button
+                            key={suggestion.id}
+                            onClick={() => handleSuggestionClick(suggestion)}
+                            className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                          >
+                            <span className="text-2xl">{suggestion.icon}</span>
+                            <div>
+                              <p className="font-semibold text-sm">{suggestion.name}</p>
+                              <p className="text-xs text-muted-foreground">{suggestion.description}</p>
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                   <Button
                     size="lg"
