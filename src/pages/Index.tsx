@@ -38,10 +38,11 @@ const Index = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Intersection Observer for Timeline
   useEffect(() => {
     const observerOptions = {
-      threshold: 0.3,
-      rootMargin: "0px 0px -50px 0px",
+      threshold: 0.2,
+      rootMargin: "0px 0px -100px 0px",
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
@@ -55,8 +56,6 @@ const Index = () => {
             }
             return prev;
           });
-        } else {
-          setVisibleItems((prev) => prev.filter((i) => i !== index));
         }
       });
     };
@@ -105,48 +104,48 @@ const Index = () => {
       name: "Elektriker",
       emoji: "⚡",
       description: "Elektroinstallationen & Smart Home",
-      bgColor: "bg-yellow-500",
-      hoverBorder: "hover:border-yellow-500",
+      borderColor: "border-yellow-500",
+      hoverBorder: "hover:border-yellow-600",
     },
     {
       id: "sanitar",
       name: "Sanitär",
       emoji: "💧",
       description: "Heizung, Sanitär & Klima",
-      bgColor: "bg-blue-600",
-      hoverBorder: "hover:border-blue-600",
+      borderColor: "border-blue-600",
+      hoverBorder: "hover:border-blue-700",
     },
     {
       id: "maler",
       name: "Maler",
       emoji: "🎨",
       description: "Innen- & Außenarbeiten",
-      bgColor: "bg-purple-500",
-      hoverBorder: "hover:border-purple-500",
+      borderColor: "border-purple-500",
+      hoverBorder: "hover:border-purple-600",
     },
     {
       id: "dachdecker",
       name: "Dachdecker",
       emoji: "🏠",
       description: "Dächer & Dachfenster",
-      bgColor: "bg-yellow-600",
-      hoverBorder: "hover:border-yellow-600",
+      borderColor: "border-yellow-600",
+      hoverBorder: "hover:border-yellow-700",
     },
     {
       id: "fassade",
       name: "Fassade",
       emoji: "🏗️",
       description: "Fassaden & Dämmung",
-      bgColor: "bg-green-500",
-      hoverBorder: "hover:border-green-500",
+      borderColor: "border-green-500",
+      hoverBorder: "hover:border-green-600",
     },
     {
       id: "rohbau",
       name: "Rohbau",
       emoji: "🧱",
       description: "Maurer- & Betonarbeiten",
-      bgColor: "bg-red-500",
-      hoverBorder: "hover:border-red-500",
+      borderColor: "border-red-500",
+      hoverBorder: "hover:border-red-600",
     },
   ];
 
@@ -176,31 +175,37 @@ const Index = () => {
       icon: Shield,
       title: "Verifizierte Profis",
       desc: "Alle Handwerker werden persönlich geprüft und verifiziert.",
+      color: "blue",
     },
     {
       icon: Clock,
       title: "Blitzschnelle Antworten",
       desc: "Erhalten Sie innerhalb von 24 Stunden konkrete Angebote.",
+      color: "yellow",
     },
     {
       icon: CheckCircle,
       title: "100% Kostenlos",
       desc: "Keine versteckten Gebühren, keine Abofallen.",
+      color: "blue",
     },
     {
       icon: Star,
       title: "Echte Bewertungen",
       desc: "Transparente Kundenmeinungen helfen bei der Auswahl.",
+      color: "yellow",
     },
     {
       icon: MessageSquare,
       title: "Direkter Kontakt",
       desc: "Kommunizieren Sie direkt mit Handwerkern.",
+      color: "blue",
     },
     {
       icon: TrendingUp,
       title: "Faire Preise",
       desc: "Vergleichen Sie Angebote und finden Sie das beste Preis-Leistungs-Verhältnis.",
+      color: "yellow",
     },
   ];
 
@@ -292,7 +297,7 @@ const Index = () => {
         )}
       </nav>
 
-      {/* Hero Section - BLAU-GELB Theme */}
+      {/* Hero Section - BLAU-GELB */}
       <section className="relative pt-28 pb-16 md:pt-36 md:pb-24 bg-gradient-to-br from-blue-50 via-white to-yellow-50 overflow-hidden">
         <div className="absolute top-20 left-10 w-64 h-64 bg-blue-400 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-pulse"></div>
         <div
@@ -336,7 +341,7 @@ const Index = () => {
               </Button>
             </div>
 
-            {/* Trust Elements - VIEL KLEINER & MINIMALISTISCH */}
+            {/* Trust Elements - MINIMALISTISCH */}
             <div className="flex flex-wrap items-center justify-center gap-4 md:gap-6 text-gray-600 text-sm">
               <div className="flex items-center gap-1.5">
                 <CheckCircle className="h-4 w-4 text-blue-600" />
@@ -407,15 +412,15 @@ const Index = () => {
                   index % 2 === 1 ? "lg:grid-flow-dense" : ""
                 }`}
               >
-                {/* Clean Image Display */}
+                {/* Clean Image Display - KEIN weißer Container */}
                 <div className={`${index % 2 === 1 ? "lg:col-start-2" : ""}`}>
                   <div className="relative">
                     {/* Subtle glow effect */}
                     <div className="absolute -inset-4 bg-gradient-to-r from-blue-600/20 to-yellow-500/20 rounded-3xl blur-2xl"></div>
 
-                    {/* Image container - minimal, clean */}
-                    <div className="relative bg-white rounded-2xl p-8 shadow-xl">
-                      <img src={step.image} alt={step.title} className="w-full h-auto rounded-lg" />
+                    {/* Bild direkt mit Schatten, KEIN weißer Container */}
+                    <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                      <img src={step.image} alt={step.title} className="w-full h-auto" />
                     </div>
                   </div>
                 </div>
@@ -434,7 +439,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Gewerke Section */}
+      {/* Gewerke Section - NUR FARBIGER RAHMEN */}
       <section id="gewerke" className="py-20 md:py-28 bg-white">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
@@ -452,8 +457,9 @@ const Index = () => {
                 className={`p-6 cursor-pointer border-2 border-gray-100 ${gewerk.hoverBorder} hover:shadow-xl transition-all group`}
                 onClick={() => navigate("/projekt-erstellen")}
               >
+                {/* Nur farbiger RAHMEN, weißer Hintergrund - Emojis viel besser sichtbar! */}
                 <div
-                  className={`w-16 h-16 ${gewerk.bgColor} rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 transition-transform shadow-lg`}
+                  className={`w-16 h-16 bg-white border-4 ${gewerk.borderColor} rounded-2xl flex items-center justify-center mb-4 mx-auto group-hover:scale-110 group-hover:rotate-3 transition-transform shadow-md`}
                 >
                   <span className="text-4xl">{gewerk.emoji}</span>
                 </div>
@@ -507,29 +513,84 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Features - KOMPAKTER */}
-      <section id="vorteile" className="py-20 md:py-28 bg-white">
+      {/* COOLER INTERAKTIVER SCROLL-TIMELINE - Mobile optimiert */}
+      <section id="vorteile" className="py-20 md:py-28 bg-white overflow-hidden">
         <div className="container mx-auto px-4">
           <div className="text-center mb-16">
             <h2 className="text-4xl md:text-5xl lg:text-6xl font-extrabold mb-4">
               <span className="text-gray-900">Warum </span>
               <span className="text-blue-600">BauConnect24?</span>
             </h2>
+            <p className="text-xl text-gray-600">Die moderne Plattform für Ihre Handwerkerprojekte</p>
           </div>
 
-          <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-            {timelineFeatures.map((feature, index) => (
-              <Card
-                key={index}
-                className="p-6 border-2 border-gray-100 hover:border-blue-200 hover:shadow-xl transition-all"
-              >
-                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-4 shadow-lg">
-                  <feature.icon className="h-6 w-6 text-white" />
+          {/* Vertical Timeline - Mobile optimiert & SICHTBARER */}
+          <div className="max-w-5xl mx-auto relative">
+            {/* Gradient Timeline Line - DICKER & SICHTBARER */}
+            <div className="absolute left-6 md:left-1/2 top-0 bottom-0 w-2 md:w-3 bg-gradient-to-b from-blue-600 via-yellow-500 to-blue-600 rounded-full shadow-lg"></div>
+
+            {/* Timeline Items */}
+            <div className="space-y-12 md:space-y-16">
+              {timelineFeatures.map((feature, index) => (
+                <div key={index} className="timeline-item relative" data-index={index}>
+                  <div
+                    className={`grid grid-cols-1 md:grid-cols-2 gap-8 items-center transition-all duration-700 ${
+                      index % 2 === 0 ? "" : "md:grid-flow-dense"
+                    } ${visibleItems.includes(index) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-10"}`}
+                  >
+                    {/* Timeline Dot - GRÖSSER & Animated */}
+                    <div className="absolute left-6 md:left-1/2 transform md:-translate-x-1/2 z-10">
+                      <div
+                        className={`w-14 h-14 md:w-16 md:h-16 ${
+                          feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
+                        } rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 ${
+                          visibleItems.includes(index) ? "scale-100" : "scale-0"
+                        }`}
+                      >
+                        <feature.icon className="h-7 w-7 md:h-8 md:w-8 text-white" />
+                      </div>
+
+                      {/* Pulse Effect - STÄRKER */}
+                      {visibleItems.includes(index) && (
+                        <>
+                          <div
+                            className={`absolute inset-0 ${
+                              feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
+                            } rounded-full animate-ping opacity-40`}
+                          ></div>
+                          <div
+                            className={`absolute inset-0 ${
+                              feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
+                            } rounded-full animate-ping opacity-20`}
+                            style={{ animationDelay: "0.3s" }}
+                          ></div>
+                        </>
+                      )}
+                    </div>
+
+                    {/* Content Card */}
+                    <div
+                      className={`${
+                        index % 2 === 0 ? "md:col-start-2 md:pl-12" : "md:col-start-1 md:pr-12 md:text-right"
+                      } pl-20 md:pl-0`}
+                    >
+                      <Card
+                        className={`p-6 md:p-8 border-3 transition-all duration-500 ${
+                          visibleItems.includes(index)
+                            ? feature.color === "blue"
+                              ? "border-blue-600 shadow-xl shadow-blue-600/30"
+                              : "border-yellow-500 shadow-xl shadow-yellow-500/30"
+                            : "border-gray-100"
+                        } hover:shadow-2xl bg-white`}
+                      >
+                        <h3 className="text-2xl md:text-3xl font-bold mb-3 text-gray-900">{feature.title}</h3>
+                        <p className="text-base md:text-lg text-gray-600 leading-relaxed">{feature.desc}</p>
+                      </Card>
+                    </div>
+                  </div>
                 </div>
-                <h3 className="text-xl font-bold mb-3 text-gray-900">{feature.title}</h3>
-                <p className="text-gray-600 leading-relaxed">{feature.desc}</p>
-              </Card>
-            ))}
+              ))}
+            </div>
           </div>
         </div>
       </section>
