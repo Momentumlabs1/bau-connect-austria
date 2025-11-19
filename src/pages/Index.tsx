@@ -16,8 +16,6 @@ import {
   Sparkles,
   Search,
   Zap,
-  Award,
-  ThumbsUp,
   MessageSquare,
   TrendingUp,
 } from "lucide-react";
@@ -125,33 +123,6 @@ const Index = () => {
     { id: "dachdecker", name: "Dachdecker", emoji: "🏠", color: "bg-orange-500" },
     { id: "fassade", name: "Fassade", emoji: "🏗️", color: "bg-green-500" },
     { id: "rohbau", name: "Rohbau", emoji: "🧱", color: "bg-red-500" },
-  ];
-
-  const benefits = [
-    {
-      icon: Shield,
-      title: "Geprüfte Handwerker",
-      desc: "Alle Profis werden persönlich verifiziert",
-      gradient: "from-blue-500 to-blue-600",
-    },
-    {
-      icon: Clock,
-      title: "Schnelle Angebote",
-      desc: "Antworten innerhalb von 24 Stunden",
-      gradient: "from-yellow-500 to-yellow-600",
-    },
-    {
-      icon: CheckCircle,
-      title: "100% Kostenlos",
-      desc: "Keine versteckten Gebühren",
-      gradient: "from-green-500 to-green-600",
-    },
-    {
-      icon: Star,
-      title: "Echte Bewertungen",
-      desc: "Transparente Kundenmeinungen",
-      gradient: "from-purple-500 to-purple-600",
-    },
   ];
 
   const trustSignals = [
@@ -364,27 +335,25 @@ const Index = () => {
                     idx % 2 === 1 ? "lg:grid-flow-dense" : ""
                   }`}
                 >
-                  {/* Bild */}
+                  {/* Bild - OHNE Container, nur Bild direkt */}
                   <div className={`${idx % 2 === 1 ? "lg:col-start-2" : ""}`}>
                     <div className="relative max-w-lg mx-auto">
-                      {/* Gradient Glow */}
-                      <div className="absolute -inset-3 bg-gradient-to-r from-blue-600/20 to-yellow-500/20 rounded-3xl blur-2xl"></div>
-
-                      {/* Bild Container */}
-                      <div className="relative rounded-2xl overflow-hidden shadow-2xl">
-                        <img src={step.image} alt={step.title} className="w-full h-auto" />
-                      </div>
+                      {/* Nur noch das Bild, KEIN Container */}
+                      <img src={step.image} alt={step.title} className="w-full h-auto" />
                     </div>
                   </div>
 
-                  {/* Text */}
+                  {/* Text mit Nummer NEBEN Titel */}
                   <div className={`text-center lg:text-left ${idx % 2 === 1 ? "lg:col-start-1" : ""}`}>
-                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl mb-6 shadow-2xl shadow-blue-600/30">
-                      <span className="text-3xl font-extrabold text-white">{step.num}</span>
+                    {/* Nummer und Titel in einer Zeile */}
+                    <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
+                      <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                        <span className="text-xl md:text-2xl font-extrabold text-white">{step.num}</span>
+                      </div>
+                      <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900">{step.title}</h3>
                     </div>
 
-                    <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-4 text-gray-900">{step.title}</h3>
-                    <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-md lg:max-w-none mx-auto">
+                    <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-md lg:max-w-none mx-auto lg:mx-0">
                       {step.desc}
                     </p>
                   </div>
@@ -516,33 +485,6 @@ const Index = () => {
                       </div>
                     </div>
                   </div>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Benefits - Clean Cards */}
-      <section className="py-12 md:py-16 lg:py-20 bg-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
-              {benefits.map((benefit, idx) => {
-                const Icon = benefit.icon;
-                return (
-                  <Card
-                    key={idx}
-                    className="p-6 hover:shadow-xl transition-all border-2 border-gray-50 hover:border-blue-100"
-                  >
-                    <div
-                      className={`w-14 h-14 bg-gradient-to-br ${benefit.gradient} rounded-2xl flex items-center justify-center mb-4 shadow-lg`}
-                    >
-                      <Icon className="h-7 w-7 text-white" />
-                    </div>
-                    <h3 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h3>
-                    <p className="text-sm text-gray-600">{benefit.desc}</p>
-                  </Card>
                 );
               })}
             </div>
