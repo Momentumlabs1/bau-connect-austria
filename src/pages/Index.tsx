@@ -308,7 +308,7 @@ const Index = () => {
               <p className="text-base md:text-lg text-gray-600">In nur 3 Schritten zum perfekten Handwerker</p>
             </div>
 
-            <div className="space-y-16 md:space-y-20">
+            <div className="space-y-12 md:space-y-16 lg:space-y-20">
               {[
                 {
                   num: 1,
@@ -331,29 +331,30 @@ const Index = () => {
               ].map((step, idx) => (
                 <div
                   key={idx}
-                  className={`grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center ${
+                  className={`grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-10 items-center ${
                     idx % 2 === 1 ? "lg:grid-flow-dense" : ""
                   }`}
                 >
-                  {/* Bild - OHNE Container, nur Bild direkt */}
+                  {/* Bild - KLEINER */}
                   <div className={`${idx % 2 === 1 ? "lg:col-start-2" : ""}`}>
-                    <div className="relative max-w-lg mx-auto">
-                      {/* Nur noch das Bild, KEIN Container */}
+                    <div className="relative max-w-xs sm:max-w-sm md:max-w-md mx-auto">
                       <img src={step.image} alt={step.title} className="w-full h-auto" />
                     </div>
                   </div>
 
-                  {/* Text mit Nummer NEBEN Titel */}
+                  {/* Text mit Nummer NEBEN Titel - KEINE UMBRÜCHE */}
                   <div className={`text-center lg:text-left ${idx % 2 === 1 ? "lg:col-start-1" : ""}`}>
                     {/* Nummer und Titel in einer Zeile */}
-                    <div className="flex items-center justify-center lg:justify-start gap-3 mb-4">
-                      <div className="flex-shrink-0 w-10 h-10 md:w-12 md:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <div className="flex items-center justify-center lg:justify-start gap-3 mb-3 md:mb-4">
+                      <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
                         <span className="text-xl md:text-2xl font-extrabold text-white">{step.num}</span>
                       </div>
-                      <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold text-gray-900">{step.title}</h3>
+                      <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-extrabold text-gray-900 whitespace-nowrap">
+                        {step.title}
+                      </h3>
                     </div>
 
-                    <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-md lg:max-w-none mx-auto lg:mx-0">
+                    <p className="text-sm md:text-base lg:text-lg text-gray-600 leading-relaxed max-w-md mx-auto lg:mx-0">
                       {step.desc}
                     </p>
                   </div>
@@ -365,27 +366,27 @@ const Index = () => {
       </section>
 
       {/* INNOVATIVE SCROLL-TIMELINE - Warum BauConnect24 */}
-      <section className="py-12 md:py-20 lg:py-28 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+      <section className="py-16 md:py-20 lg:py-24 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
         <div className="container mx-auto px-4">
-          <div className="text-center mb-12 md:mb-16 lg:mb-20">
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold mb-3 md:mb-4">
+          <div className="text-center mb-12 md:mb-16">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">
               <span className="text-gray-900">Warum </span>
               <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
                 BauConnect24
               </span>
               <span className="text-gray-900">?</span>
             </h2>
-            <p className="text-sm md:text-base lg:text-xl text-gray-600">
+            <p className="text-sm md:text-base lg:text-lg text-gray-600">
               Die moderne Plattform für Ihre Handwerkerprojekte
             </p>
           </div>
 
-          <div className="max-w-4xl lg:max-w-5xl mx-auto relative">
+          <div className="max-w-4xl mx-auto relative">
             {/* Gradient Timeline Line */}
-            <div className="absolute left-4 md:left-6 lg:left-1/2 top-0 bottom-0 w-1 md:w-1.5 lg:w-2 bg-gradient-to-b from-blue-600 via-yellow-500 to-blue-600 rounded-full shadow-lg lg:shadow-xl opacity-40 lg:opacity-100"></div>
+            <div className="absolute left-4 md:left-6 lg:left-1/2 top-0 bottom-0 w-1 md:w-1.5 lg:w-2 bg-gradient-to-b from-blue-600 via-yellow-500 to-blue-600 rounded-full shadow-lg opacity-40 lg:opacity-100"></div>
 
             {/* Timeline Items */}
-            <div className="space-y-8 md:space-y-12 lg:space-y-16">
+            <div className="space-y-6 md:space-y-10 lg:space-y-12">
               {[
                 {
                   icon: Shield,
@@ -428,20 +429,20 @@ const Index = () => {
                 return (
                   <div key={index} className="timeline-item relative" data-index={index}>
                     <div
-                      className={`grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-center transition-all duration-700 ease-out ${
+                      className={`grid grid-cols-1 lg:grid-cols-2 gap-5 md:gap-6 lg:gap-8 items-center transition-all duration-700 ease-out ${
                         index % 2 === 0 ? "" : "lg:grid-flow-dense"
                       } ${visibleItems.includes(index) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
                     >
                       {/* Animated Dot */}
                       <div className="absolute left-4 md:left-6 lg:left-1/2 transform lg:-translate-x-1/2 z-10">
                         <div
-                          className={`w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 ${
+                          className={`w-10 h-10 md:w-12 md:h-12 lg:w-14 lg:h-14 ${
                             feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
                           } rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 ${
                             visibleItems.includes(index) ? "scale-100 rotate-0" : "scale-0 rotate-180"
                           }`}
                         >
-                          <Icon className="h-5 w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-white" />
+                          <Icon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 text-white" />
                         </div>
 
                         {/* Pulse Effect */}
@@ -465,11 +466,11 @@ const Index = () => {
                       {/* Content Card */}
                       <div
                         className={`${
-                          index % 2 === 0 ? "lg:col-start-2 lg:pl-8" : "lg:col-start-1 lg:pr-8 lg:text-right"
-                        } pl-16 md:pl-20 lg:pl-0 pr-4`}
+                          index % 2 === 0 ? "lg:col-start-2 lg:pl-6" : "lg:col-start-1 lg:pr-6 lg:text-right"
+                        } pl-16 md:pl-20 lg:pl-0 pr-3`}
                       >
                         <Card
-                          className={`p-5 md:p-6 lg:p-8 border-2 transition-all duration-500 ${
+                          className={`p-5 md:p-6 border-2 transition-all duration-500 ${
                             visibleItems.includes(index)
                               ? feature.color === "blue"
                                 ? "border-blue-600 shadow-xl shadow-blue-600/20 scale-100"
@@ -477,9 +478,7 @@ const Index = () => {
                               : "border-gray-100 scale-95"
                           } hover:shadow-2xl bg-white`}
                         >
-                          <h3 className="text-lg md:text-xl lg:text-2xl font-bold mb-2 md:mb-3 text-gray-900">
-                            {feature.title}
-                          </h3>
+                          <h3 className="text-lg md:text-xl font-bold mb-2 text-gray-900">{feature.title}</h3>
                           <p className="text-sm md:text-base text-gray-600 leading-relaxed">{feature.desc}</p>
                         </Card>
                       </div>
@@ -492,78 +491,105 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Social Proof / Reviews Section */}
-      <section className="py-12 md:py-16 lg:py-20 bg-white">
+      {/* Contractor CTA - AUSGEBAUT mit mehr Infos */}
+      <section className="py-16 md:py-20 lg:py-24 bg-gradient-to-br from-yellow-50 via-white to-blue-50">
         <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12">
-              <div className="flex items-center justify-center gap-2 mb-4">
-                <Star className="h-8 w-8 text-yellow-500 fill-yellow-500" />
-                <span className="text-4xl md:text-5xl font-extrabold text-gray-900">4.9</span>
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-10 md:gap-12 lg:gap-16 items-center">
+              {/* Bild */}
+              <div className="relative order-2 lg:order-1">
+                <div className="absolute -inset-3 bg-gradient-to-r from-yellow-400/20 to-blue-600/20 rounded-3xl blur-2xl"></div>
+                <div className="relative rounded-2xl overflow-hidden shadow-2xl max-w-lg mx-auto">
+                  <img
+                    src="https://images.unsplash.com/photo-1504328345606-18bbc8c9d7d1?auto=format&fit=crop&w=800&q=80"
+                    alt="Handwerker bei der Arbeit"
+                    className="w-full h-auto"
+                  />
+                </div>
               </div>
-              <p className="text-lg text-gray-600 mb-2">Hervorragend bewertet</p>
-              <div className="flex items-center justify-center gap-1">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="h-5 w-5 text-yellow-500 fill-yellow-500" />
-                ))}
+
+              {/* Content */}
+              <div className="order-1 lg:order-2">
+                <div className="inline-flex items-center gap-2 bg-yellow-100 px-4 py-2 rounded-full mb-6">
+                  <Sparkles className="h-5 w-5 text-yellow-600" />
+                  <span className="text-sm font-bold text-yellow-700">Für Handwerker</span>
+                </div>
+
+                <h2 className="text-3xl sm:text-4xl md:text-5xl font-extrabold mb-4 leading-tight">
+                  <span className="text-gray-900">Sind Sie </span>
+                  <span className="text-yellow-600">Handwerker?</span>
+                </h2>
+
+                <p className="text-lg md:text-xl font-semibold text-gray-900 mb-4">
+                  Erweitern Sie Ihr Geschäft mit BauConnect24
+                </p>
+
+                <p className="text-base md:text-lg text-gray-600 mb-8 leading-relaxed">
+                  Registrieren Sie sich kostenlos und erhalten Sie täglich qualifizierte Aufträge in Ihrer Region. Bauen
+                  Sie Ihren Kundenstamm auf und steigern Sie Ihren Umsatz.
+                </p>
+
+                {/* Benefits für Handwerker */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-8">
+                  {[
+                    {
+                      icon: Zap,
+                      title: "Direkte Leads",
+                      desc: "Qualifizierte Anfragen direkt auf Ihr Handy",
+                    },
+                    {
+                      icon: Users,
+                      title: "Mehr Kunden",
+                      desc: "Erreichen Sie neue Auftraggeber",
+                    },
+                    {
+                      icon: CheckCircle,
+                      title: "100% Kostenlos",
+                      desc: "Keine Gebühren für Registrierung",
+                    },
+                    {
+                      icon: Clock,
+                      title: "Flexibel",
+                      desc: "Sie entscheiden, welche Aufträge",
+                    },
+                  ].map((benefit, idx) => {
+                    const Icon = benefit.icon;
+                    return (
+                      <div key={idx} className="flex items-start gap-3">
+                        <div className="flex-shrink-0 w-10 h-10 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-lg flex items-center justify-center">
+                          <Icon className="h-5 w-5 text-white" />
+                        </div>
+                        <div>
+                          <h4 className="font-bold text-gray-900 mb-1">{benefit.title}</h4>
+                          <p className="text-sm text-gray-600">{benefit.desc}</p>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+
+                <div className="flex flex-col sm:flex-row gap-3">
+                  <Button
+                    size="lg"
+                    onClick={() => navigate("/register")}
+                    className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold text-base md:text-lg px-8 py-6 shadow-2xl shadow-yellow-500/30 hover:shadow-yellow-500/40 transition-all group"
+                  >
+                    <Sparkles className="mr-2 h-5 w-5" />
+                    Kostenlos registrieren
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+
+                  <Button
+                    size="lg"
+                    variant="outline"
+                    onClick={() => navigate("/login")}
+                    className="border-2 border-gray-300 hover:border-yellow-500 hover:bg-yellow-50 font-semibold text-base md:text-lg px-8 py-6"
+                  >
+                    Login
+                  </Button>
+                </div>
               </div>
             </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
-              {[
-                {
-                  text: "Schnelle Reaktion und professionelle Arbeit. Sehr zufrieden!",
-                  author: "Michael S.",
-                  rating: 5,
-                },
-                {
-                  text: "Einfacher Prozess, faire Preise. Würde ich wieder nutzen.",
-                  author: "Sarah K.",
-                  rating: 5,
-                },
-                {
-                  text: "Toller Service, kompetente Handwerker. Top!",
-                  author: "Thomas M.",
-                  rating: 5,
-                },
-              ].map((review, idx) => (
-                <Card key={idx} className="p-6 border-2 border-gray-50">
-                  <div className="flex gap-1 mb-3">
-                    {[...Array(review.rating)].map((_, i) => (
-                      <Star key={i} className="h-4 w-4 text-yellow-500 fill-yellow-500" />
-                    ))}
-                  </div>
-                  <p className="text-gray-700 mb-4 italic">"{review.text}"</p>
-                  <p className="text-sm font-semibold text-gray-900">{review.author}</p>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* Contractor CTA */}
-      <section className="py-12 md:py-16 lg:py-20 bg-gradient-to-br from-yellow-50 to-blue-50">
-        <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto text-center">
-            <div className="w-16 h-16 mx-auto mb-6 bg-gradient-to-br from-yellow-500 to-yellow-600 rounded-3xl flex items-center justify-center shadow-2xl shadow-yellow-500/30">
-              <Sparkles className="h-8 w-8 text-white" />
-            </div>
-            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-4">
-              <span className="text-gray-900">Sind Sie Handwerker?</span>
-            </h2>
-            <p className="text-lg md:text-xl text-gray-600 mb-8 max-w-2xl mx-auto">
-              Erhalten Sie täglich qualifizierte Aufträge und bauen Sie Ihr Geschäft aus. Kostenlose Registrierung in
-              unter 5 Minuten.
-            </p>
-            <Button
-              size="lg"
-              onClick={() => navigate("/register")}
-              className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold text-lg px-10 py-6 shadow-2xl shadow-yellow-500/30 hover:shadow-yellow-500/40 transition-all"
-            >
-              <Zap className="mr-2 h-6 w-6" />
-              Jetzt kostenlos registrieren
-            </Button>
           </div>
         </div>
       </section>
