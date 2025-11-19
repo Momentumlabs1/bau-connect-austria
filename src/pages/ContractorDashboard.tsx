@@ -277,43 +277,54 @@ export default function HandwerkerDashboard() {
   };
 
   const handleRechargeWallet = async () => {
+    if (!userId || rechargeAmount <= 0) return;
+    
     setRecharging(true);
     try {
-      // Insert wallet recharge transaction
-      const newBalance = (profile?.wallet_balance || 0) + rechargeAmount;
+      const { data: contractor } = await supabase
+        .from('contractors')
+        .select('wallet_balance')
+        .eq('id', userId)
+        .single();
       
+      if (!contractor) throw new Error('Contractor not found');
+      
+      const currentBalance = Number(contractor.wallet_balance) || 0;
+      const newBalance = currentBalance + rechargeAmount;
+      
+      // Update wallet balance
+      const { error: updateError } = await supabase
+        .from('contractors')
+        .update({ wallet_balance: newBalance })
+        .eq('id', userId);
+      
+      if (updateError) throw updateError;
+      
+      // Create transaction record
       const { error: transactionError } = await supabase
-        .from("transactions")
+        .from('transactions')
         .insert({
           handwerker_id: userId,
-          type: "WALLET_RECHARGE",
+          type: 'WALLET_RECHARGE',
           amount: rechargeAmount,
           balance_after: newBalance,
-          description: `Wallet-Aufladung €${rechargeAmount.toFixed(2)}`
+          description: `Test-Aufladung: €${rechargeAmount}`
         });
-
+      
       if (transactionError) throw transactionError;
-
-      // Update contractor wallet balance
-      const { error: updateError } = await supabase
-        .from("contractors")
-        .update({ wallet_balance: newBalance })
-        .eq("id", userId);
-
-      if (updateError) throw updateError;
-
+      
       toast({
-        title: "Wallet erfolgreich aufgeladen!",
-        description: `€${rechargeAmount.toFixed(2)} wurden Ihrem Guthaben hinzugefügt.`
+        title: "✅ Test-Guthaben hinzugefügt!",
+        description: `€${rechargeAmount} wurden Ihrem Wallet hinzugefügt. (Test-Modus ohne echte Zahlung)`
       });
-
+      
       setRechargeDialogOpen(false);
+      setRechargeAmount(100);
       loadDashboardData();
     } catch (error: any) {
-      console.error("Error recharging wallet:", error);
       toast({
         title: "Fehler beim Aufladen",
-        description: "Wallet konnte nicht aufgeladen werden.",
+        description: error.message,
         variant: "destructive"
       });
     } finally {
@@ -403,7 +414,40 @@ export default function HandwerkerDashboard() {
         </motion.div>
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          {/* Wallet Balance Card */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+          >
+            <Card className={cn(
+              "p-6",
+              profile.wallet_balance < 50 && "border-2 border-destructive/50"
+            )}>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-sm text-muted-foreground">Wallet-Guthaben</p>
+                  <p className="text-3xl font-bold">
+                    €{profile.wallet_balance.toFixed(2)}
+                  </p>
+                </div>
+                <div className="p-3 bg-primary/10 rounded-full">
+                  <Wallet className="h-6 w-6 text-primary" />
+                </div>
+              </div>
+              <Button 
+                variant="outline" 
+                size="sm" 
+                className="w-full mt-4"
+                onClick={() => setRechargeDialogOpen(true)}
+              >
+                <Plus className="h-4 w-4 mr-2" />
+                Aufladen
+              </Button>
+            </Card>
+          </motion.div>
+
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -472,6 +516,31 @@ export default function HandwerkerDashboard() {
             </Card>
           </motion.div>
         </div>
+
+        {/* Low Balance Warning */}
+        {profile.wallet_balance < 50 && (
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+          >
+            <Card className="p-6 border-2 border-destructive/50 bg-destructive/5">
+              <div className="flex items-start gap-4">
+                <AlertCircle className="h-6 w-6 text-destructive flex-shrink-0 mt-1" />
+                <div className="flex-1">
+                  <h3 className="font-semibold text-lg mb-2">Guthaben zu niedrig</h3>
+                  <p className="text-sm text-muted-foreground mb-4">
+                    Ihr Wallet-Guthaben beträgt nur noch €{profile.wallet_balance.toFixed(2)}. 
+                    Laden Sie jetzt auf, um keine Leads zu verpassen!
+                  </p>
+                  <Button onClick={() => setRechargeDialogOpen(true)}>
+                    <Plus className="h-4 w-4 mr-2" />
+                    Jetzt aufladen
+                  </Button>
+                </div>
+              </div>
+            </Card>
+          </motion.div>
+        )}
 
         {/* Main Content */}
         <Tabs defaultValue="leads" className="space-y-6">
@@ -611,6 +680,76 @@ export default function HandwerkerDashboard() {
             )}
           </TabsContent>
         </Tabs>
+
+        {/* Recharge Dialog */}
+        <Dialog open={rechargeDialogOpen} onOpenChange={setRechargeDialogOpen}>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Test-Wallet aufladen</DialogTitle>
+              <DialogDescription>
+                Fügen Sie Test-Guthaben hinzu (ohne echte Zahlung). Stripe-Integration folgt später.
+              </DialogDescription>
+            </DialogHeader>
+            
+            <div className="space-y-4 py-4">
+              <div>
+                <Label htmlFor="amount">Betrag wählen</Label>
+                <div className="grid grid-cols-3 gap-2 mt-2">
+                  <Button
+                    variant={rechargeAmount === 100 ? "default" : "outline"}
+                    onClick={() => setRechargeAmount(100)}
+                  >
+                    €100
+                  </Button>
+                  <Button
+                    variant={rechargeAmount === 250 ? "default" : "outline"}
+                    onClick={() => setRechargeAmount(250)}
+                  >
+                    €250
+                  </Button>
+                  <Button
+                    variant={rechargeAmount === 500 ? "default" : "outline"}
+                    onClick={() => setRechargeAmount(500)}
+                  >
+                    €500
+                  </Button>
+                </div>
+              </div>
+              
+              <div>
+                <Label htmlFor="custom-amount">Oder eigenen Betrag eingeben</Label>
+                <Input
+                  id="custom-amount"
+                  type="number"
+                  min="10"
+                  value={rechargeAmount}
+                  onChange={(e) => setRechargeAmount(Number(e.target.value))}
+                  className="mt-2"
+                />
+              </div>
+            </div>
+
+            <DialogFooter className="flex-col gap-2">
+              <Button 
+                className="w-full" 
+                onClick={handleRechargeWallet}
+                disabled={recharging || rechargeAmount <= 0}
+              >
+                {recharging ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Wird hinzugefügt...
+                  </>
+                ) : (
+                  `Test-Guthaben €${rechargeAmount} hinzufügen`
+                )}
+              </Button>
+              <p className="text-xs text-muted-foreground text-center">
+                Dies ist ein Test-Modus. Keine echte Zahlung erforderlich.
+              </p>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
       </div>
     </div>
   );

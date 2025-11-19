@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { Loader2 } from "lucide-react";
 import { LeadPreviewCard } from "@/components/LeadPreviewCard";
@@ -35,6 +36,8 @@ export default function ContractorProjectDetail() {
   const [hasPurchasedLead, setHasPurchasedLead] = useState(false);
   const [purchasedAt, setPurchasedAt] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [insufficientBalance, setInsufficientBalance] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -81,6 +84,19 @@ export default function ContractorProjectDetail() {
       setProject(projectData);
       setCustomerData(projectData.profiles);
 
+      // Load contractor wallet balance
+      const { data: contractorData } = await supabase
+        .from("contractors")
+        .select("wallet_balance")
+        .eq("id", userId)
+        .maybeSingle();
+      
+      if (contractorData) {
+        const balance = Number(contractorData.wallet_balance) || 0;
+        setWalletBalance(balance);
+        setInsufficientBalance(balance < projectData.final_price);
+      }
+
       const { data: matchData } = await supabase
         .from("matches")
         .select("lead_purchased, purchased_at")
@@ -107,6 +123,24 @@ export default function ContractorProjectDetail() {
   const handlePurchaseLead = async () => {
     if (!project || !userId) return;
 
+    // Check balance before attempting purchase
+    if (insufficientBalance) {
+      toast({
+        title: "Guthaben zu niedrig",
+        description: "Bitte laden Sie Ihr Wallet auf, um diesen Lead zu kaufen.",
+        variant: "destructive",
+        action: (
+          <Button
+            size="sm"
+            onClick={() => navigate("/handwerker/dashboard")}
+          >
+            Jetzt aufladen
+          </Button>
+        ),
+      });
+      return;
+    }
+
     setPurchasing(true);
     try {
       const { data, error } = await supabase.functions.invoke('purchase-lead', {
@@ -117,6 +151,24 @@ export default function ContractorProjectDetail() {
       });
 
       if (error) throw error;
+
+      if (data.error === 'Insufficient balance') {
+        toast({
+          title: "Guthaben zu niedrig",
+          description: data.message || "Ihr Wallet-Guthaben reicht nicht aus.",
+          variant: "destructive",
+          action: (
+            <Button
+              size="sm"
+              onClick={() => navigate("/handwerker/dashboard")}
+            >
+              Jetzt aufladen
+            </Button>
+          ),
+        });
+        setInsufficientBalance(true);
+        return;
+      }
 
       if (data.success) {
         toast({
@@ -212,6 +264,8 @@ export default function ContractorProjectDetail() {
             leadPrice={project.final_price}
             onPurchase={handlePurchaseLead}
             purchasing={purchasing}
+            insufficientBalance={insufficientBalance}
+            currentBalance={walletBalance}
           />
         ) : (
           <FullProjectDetails
