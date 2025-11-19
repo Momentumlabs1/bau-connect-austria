@@ -104,9 +104,9 @@ const Index = () => {
 
   const handleSearch = () => {
     if (searchQuery.trim()) {
-      navigate("/projekt-erstellen", { state: { initialQuery: searchQuery } });
+      navigate("/kunde/projekt-erstellen", { state: { initialQuery: searchQuery } });
     } else {
-      navigate("/projekt-erstellen");
+      navigate("/kunde/projekt-erstellen");
     }
   };
 
@@ -164,7 +164,7 @@ const Index = () => {
                 Anmelden
               </Button>
               <Button
-                onClick={() => navigate("/register")}
+                onClick={() => navigate("/register?role=contractor")}
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg shadow-blue-600/30"
               >
                 Als Handwerker registrieren
@@ -194,7 +194,7 @@ const Index = () => {
               </Button>
               <Button
                 onClick={() => {
-                  navigate("/register");
+                  navigate("/register?role=contractor");
                   setMobileMenuOpen(false);
                 }}
                 className="w-full bg-gradient-to-r from-blue-600 to-blue-700 font-semibold"
@@ -265,7 +265,7 @@ const Index = () => {
                 {quickCategories.map((cat) => (
                   <button
                     key={cat.id}
-                    onClick={() => navigate("/projekt-erstellen")}
+                    onClick={() => navigate("/kunde/projekt-erstellen", { state: { selectedGewerk: cat.id } })}
                     className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-blue-600 hover:shadow-lg transition-all group"
                   >
                     <div
@@ -571,7 +571,7 @@ const Index = () => {
                 <div className="flex flex-col sm:flex-row gap-3">
                   <Button
                     size="lg"
-                    onClick={() => navigate("/register")}
+                    onClick={() => navigate("/register?role=contractor")}
                     className="bg-gradient-to-r from-yellow-500 to-yellow-600 hover:from-yellow-600 hover:to-yellow-700 text-white font-bold text-base md:text-lg px-8 py-6 shadow-2xl shadow-yellow-500/30 hover:shadow-yellow-500/40 transition-all group"
                   >
                     <Sparkles className="mr-2 h-5 w-5" />
@@ -608,7 +608,7 @@ const Index = () => {
           </p>
           <Button
             size="lg"
-            onClick={() => navigate("/projekt-erstellen")}
+            onClick={() => navigate("/kunde/projekt-erstellen")}
             className="bg-white text-blue-600 hover:bg-gray-100 font-bold text-lg px-10 py-6 shadow-2xl hover:scale-105 transition-all"
           >
             <Hammer className="mr-2 h-6 w-6" />
