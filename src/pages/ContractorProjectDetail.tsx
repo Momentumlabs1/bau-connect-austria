@@ -1,16 +1,11 @@
-import { useEffect, useState } from "react";
+import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
-import { MapPin, Calendar, Euro, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { format } from "date-fns";
-import { de } from "date-fns/locale";
+import { Loader2 } from "lucide-react";
+import { LeadPreviewCard } from "@/components/LeadPreviewCard";
+import { FullProjectDetails } from "@/components/FullProjectDetails";
 
 interface Project {
   id: string;
@@ -26,135 +21,162 @@ interface Project {
   preferred_start_date: string | null;
   images: string[];
   created_at: string;
+  customer_id: string;
+  final_price: number;
 }
 
 export default function ContractorProjectDetail() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { toast } = useToast();
   const [project, setProject] = useState<Project | null>(null);
+  const [customerData, setCustomerData] = useState<any>(null);
   const [loading, setLoading] = useState(true);
-  const [applying, setApplying] = useState(false);
-  const [message, setMessage] = useState("");
-  const [hasMatch, setHasMatch] = useState(false);
+  const [purchasing, setPurchasing] = useState(false);
+  const [hasPurchasedLead, setHasPurchasedLead] = useState(false);
+  const [purchasedAt, setPurchasedAt] = useState<string>("");
   const [userId, setUserId] = useState<string>("");
+  const { toast } = useToast();
 
   useEffect(() => {
-    loadProject();
     checkAuth();
-  }, [id]);
+  }, []);
+
+  useEffect(() => {
+    if (userId && id) {
+      loadProject();
+    }
+  }, [userId, id]);
 
   const checkAuth = async () => {
-    const { data } = await supabase.auth.getUser();
-    if (data.user) {
-      setUserId(data.user.id);
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate("/login");
+      return;
     }
+    setUserId(user.id);
   };
 
   const loadProject = async () => {
-    setLoading(true);
     try {
       const { data: projectData, error: projectError } = await supabase
         .from("projects")
-        .select("*")
+        .select(`
+          *,
+          profiles!projects_customer_id_fkey(
+            first_name,
+            last_name,
+            email,
+            phone
+          )
+        `)
         .eq("id", id)
-        .single();
+        .maybeSingle();
 
       if (projectError) throw projectError;
-      setProject(projectData);
-
-      // Check if already applied
-      const { data: userData } = await supabase.auth.getUser();
-      if (userData.user) {
-        const { data: matchData } = await supabase
-          .from("matches")
-          .select("*")
-          .eq("project_id", id)
-          .eq("contractor_id", userData.user.id)
-          .maybeSingle();
-
-        setHasMatch(!!matchData);
+      if (!projectData) {
+        setLoading(false);
+        return;
       }
-    } catch (error: any) {
+
+      setProject(projectData);
+      setCustomerData(projectData.profiles);
+
+      const { data: matchData } = await supabase
+        .from("matches")
+        .select("lead_purchased, purchased_at")
+        .eq("project_id", id)
+        .eq("contractor_id", userId)
+        .maybeSingle();
+
+      if (matchData) {
+        setHasPurchasedLead(matchData.lead_purchased || false);
+        setPurchasedAt(matchData.purchased_at || "");
+      }
+    } catch (error) {
+      console.error("Error loading project:", error);
       toast({
-        title: "Fehler beim Laden",
-        description: error.message,
-        variant: "destructive",
+        title: "Fehler",
+        description: "Projekt konnte nicht geladen werden.",
+        variant: "destructive"
       });
     } finally {
       setLoading(false);
     }
   };
 
-  const handleApply = async () => {
-    if (!message.trim()) {
-      toast({
-        title: "Nachricht erforderlich",
-        description: "Bitte geben Sie eine Nachricht ein",
-        variant: "destructive",
-      });
-      return;
-    }
+  const handlePurchaseLead = async () => {
+    if (!project || !userId) return;
 
-    setApplying(true);
+    setPurchasing(true);
     try {
-      const { data: userData } = await supabase.auth.getUser();
-      if (!userData.user) throw new Error("Nicht angemeldet");
-
-      // Check free leads
-      const { data: contractor } = await supabase
-        .from("contractors")
-        .select("free_leads_remaining")
-        .eq("id", userData.user.id)
-        .single();
-
-      if (!contractor || contractor.free_leads_remaining <= 0) {
-        toast({
-          title: "Keine kostenlosen Leads mehr",
-          description: "Sie haben keine kostenlosen Leads mehr verfügbar",
-          variant: "destructive",
-        });
-        return;
-      }
-
-      // Create match
-      const { error: matchError } = await supabase
-        .from("matches")
-        .insert({
-          project_id: id,
-          contractor_id: userData.user.id,
-          match_type: "applied",
-          status: "pending",
-          message: message,
-          lead_purchased: true,
-          purchased_at: new Date().toISOString(),
-          score: 80
-        });
-
-      if (matchError) throw matchError;
-
-      // Decrease free leads
-      const { error: updateError } = await supabase
-        .from("contractors")
-        .update({ free_leads_remaining: contractor.free_leads_remaining - 1 })
-        .eq("id", userData.user.id);
-
-      if (updateError) throw updateError;
-
-      toast({
-        title: "Bewerbung gesendet!",
-        description: "Der Kunde wird Ihre Bewerbung prüfen",
+      const { data, error } = await supabase.functions.invoke('purchase-lead', {
+        body: {
+          leadId: project.id,
+          contractorId: userId
+        }
       });
 
-      navigate("/handwerker/dashboard");
+      if (error) throw error;
+
+      if (data.success) {
+        toast({
+          title: "Lead erfolgreich gekauft!",
+          description: `Sie haben €${project.final_price.toFixed(2)} bezahlt.`
+        });
+
+        setHasPurchasedLead(true);
+        setPurchasedAt(new Date().toISOString());
+        loadProject();
+      } else {
+        throw new Error(data.error || "Lead-Kauf fehlgeschlagen");
+      }
     } catch (error: any) {
       toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
+        title: "Fehler beim Lead-Kauf",
+        description: error.message || "Lead konnte nicht gekauft werden.",
+        variant: "destructive"
       });
     } finally {
-      setApplying(false);
+      setPurchasing(false);
+    }
+  };
+
+  const handleStartChat = async () => {
+    if (!project || !userId) return;
+
+    try {
+      const { data: existingConv } = await supabase
+        .from("conversations")
+        .select("id")
+        .eq("contractor_id", userId)
+        .eq("customer_id", project.customer_id)
+        .eq("project_id", project.id)
+        .maybeSingle();
+
+      let conversationId = existingConv?.id;
+
+      if (!conversationId) {
+        const { data: newConv, error } = await supabase
+          .from("conversations")
+          .insert({
+            contractor_id: userId,
+            customer_id: project.customer_id,
+            project_id: project.id
+          })
+          .select("id")
+          .single();
+
+        if (error) throw error;
+        conversationId = newConv.id;
+      }
+
+      navigate("/nachrichten");
+    } catch (error) {
+      toast({
+        title: "Fehler",
+        description: "Chat konnte nicht gestartet werden.",
+        variant: "destructive"
+      });
     }
   };
 
@@ -162,8 +184,8 @@ export default function ContractorProjectDetail() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <p className="text-muted-foreground">Projekt wird geladen...</p>
+        <div className="flex items-center justify-center h-[80vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
@@ -173,8 +195,8 @@ export default function ContractorProjectDetail() {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 py-12 text-center">
-          <p className="text-muted-foreground">Projekt nicht gefunden</p>
+        <div className="container mx-auto px-4 py-8 text-center">
+          <h2 className="text-2xl font-bold mb-4">Projekt nicht gefunden</h2>
         </div>
       </div>
     );
@@ -183,140 +205,22 @@ export default function ContractorProjectDetail() {
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
-      <div className="container mx-auto px-4 py-12">
-        <Button
-          variant="ghost"
-          onClick={() => navigate("/handwerker/projekte")}
-          className="mb-6"
-        >
-          <ArrowLeft className="h-4 w-4 mr-2" />
-          Zurück zu Projekten
-        </Button>
-
-        <div className="grid gap-6 md:grid-cols-3">
-          <div className="md:col-span-2 space-y-6">
-            <Card>
-              <CardHeader>
-                <div className="flex items-start justify-between mb-2">
-                  <Badge>{project.gewerk_id}</Badge>
-                  <Badge variant={project.urgency === "high" ? "destructive" : "default"}>
-                    {project.urgency === "high" ? "Dringend" : project.urgency === "medium" ? "Normal" : "Niedrig"}
-                  </Badge>
-                </div>
-                <CardTitle className="text-2xl">{project.title}</CardTitle>
-                <CardDescription>
-                  Erstellt am {format(new Date(project.created_at), "PPP", { locale: de })}
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-6">
-                <div>
-                  <h3 className="font-semibold mb-2">Beschreibung</h3>
-                  <p className="text-muted-foreground whitespace-pre-wrap">{project.description}</p>
-                </div>
-
-                {project.images && project.images.length > 0 && (
-                  <div>
-                    <h3 className="font-semibold mb-2">Bilder</h3>
-                    <div className="grid grid-cols-2 gap-4">
-                      {project.images.map((img, idx) => (
-                        <img
-                          key={idx}
-                          src={img}
-                          alt={`Projekt ${idx + 1}`}
-                          className="w-full h-48 object-cover rounded-lg"
-                        />
-                      ))}
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-
-            {!hasMatch && (
-              <Card>
-                <CardHeader>
-                  <CardTitle>Jetzt bewerben</CardTitle>
-                  <CardDescription>
-                    Senden Sie eine Nachricht an den Kunden
-                  </CardDescription>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="message">Ihre Nachricht</Label>
-                    <Textarea
-                      id="message"
-                      rows={5}
-                      placeholder="Stellen Sie sich vor und beschreiben Sie, warum Sie der richtige Handwerker für dieses Projekt sind..."
-                      value={message}
-                      onChange={(e) => setMessage(e.target.value)}
-                    />
-                  </div>
-                  <Button onClick={handleApply} disabled={applying} className="w-full">
-                    {applying ? "Wird gesendet..." : "Bewerbung senden (1 kostenloser Lead)"}
-                  </Button>
-                </CardContent>
-              </Card>
-            )}
-
-            {hasMatch && (
-              <Card>
-                <CardContent className="py-6 text-center">
-                  <p className="text-muted-foreground">
-                    Sie haben sich bereits für dieses Projekt beworben
-                  </p>
-                </CardContent>
-              </Card>
-            )}
-          </div>
-
-          <div className="space-y-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Projektdetails</CardTitle>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="flex items-start">
-                  <MapPin className="h-5 w-5 mr-3 mt-0.5 text-muted-foreground" />
-                  <div>
-                    <p className="font-medium">Standort</p>
-                    <p className="text-sm text-muted-foreground">
-                      {project.postal_code} {project.city}
-                      {project.address && <><br />{project.address}</>}
-                    </p>
-                  </div>
-                </div>
-
-                {(project.budget_min || project.budget_max) && (
-                  <div className="flex items-start">
-                    <Euro className="h-5 w-5 mr-3 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Budget</p>
-                      <p className="text-sm text-muted-foreground">
-                        {project.budget_min && project.budget_max
-                          ? `€${project.budget_min} - €${project.budget_max}`
-                          : project.budget_min
-                          ? `ab €${project.budget_min}`
-                          : `bis €${project.budget_max}`}
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                {project.preferred_start_date && (
-                  <div className="flex items-start">
-                    <Calendar className="h-5 w-5 mr-3 mt-0.5 text-muted-foreground" />
-                    <div>
-                      <p className="font-medium">Starttermin</p>
-                      <p className="text-sm text-muted-foreground">
-                        {format(new Date(project.preferred_start_date), "PPP", { locale: de })}
-                      </p>
-                    </div>
-                  </div>
-                )}
-              </CardContent>
-            </Card>
-          </div>
-        </div>
+      <div className="container mx-auto px-4 py-8 max-w-4xl">
+        {!hasPurchasedLead ? (
+          <LeadPreviewCard
+            project={project}
+            leadPrice={project.final_price}
+            onPurchase={handlePurchaseLead}
+            purchasing={purchasing}
+          />
+        ) : (
+          <FullProjectDetails
+            project={project}
+            customer={customerData}
+            purchasedAt={purchasedAt}
+            onStartChat={handleStartChat}
+          />
+        )}
       </div>
     </div>
   );

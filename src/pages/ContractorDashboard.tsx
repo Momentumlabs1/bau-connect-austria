@@ -21,8 +21,11 @@ import {
   XCircle,
   AlertCircle,
   Loader2,
-  Image as ImageIcon
+  Image as ImageIcon,
+  Plus
 } from "lucide-react";
+import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import { motion } from "framer-motion";
 import { cn } from "@/lib/utils";
 
@@ -71,6 +74,9 @@ export default function HandwerkerDashboard() {
   const [selectedLead, setSelectedLead] = useState<AvailableLead | null>(null);
   const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
   const [purchasing, setPurchasing] = useState(false);
+  const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState(100);
+  const [recharging, setRecharging] = useState(false);
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>("");
   const { toast } = useToast();
@@ -92,6 +98,47 @@ export default function HandwerkerDashboard() {
       checkProfileCompleteness();
     }
   }, [profile, userId]);
+
+  // Real-time notification subscription for new leads
+  useEffect(() => {
+    if (!userId) return;
+
+    const channel = supabase
+      .channel('new-lead-notifications')
+      .on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'notifications',
+          filter: `handwerker_id=eq.${userId}`
+        },
+        (payload: any) => {
+          if (payload.new.type === 'NEW_LEAD') {
+            toast({
+              title: "🎯 Neuer Lead verfügbar!",
+              description: payload.new.title,
+              action: (
+                <Button
+                  size="sm"
+                  onClick={() => navigate(`/handwerker/projekt/${payload.new.data?.lead_id}`)}
+                >
+                  Ansehen
+                </Button>
+              ),
+            });
+            
+            // Reload available leads
+            loadDashboardData();
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId]);
 
   const checkProfileCompleteness = async () => {
     if (!userId) return;
@@ -197,60 +244,80 @@ export default function HandwerkerDashboard() {
   const purchaseLead = async (lead: AvailableLead) => {
     setPurchasing(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) throw new Error('Not authenticated');
-
       const { data, error } = await supabase.functions.invoke('purchase-lead', {
-        body: { leadId: lead.id },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`
+        body: {
+          leadId: lead.id,
+          contractorId: userId
         }
       });
 
       if (error) throw error;
 
-      if (data.error) {
+      if (data.success) {
         toast({
-          title: "Kauf fehlgeschlagen",
-          description: data.message || data.error,
-          variant: "destructive"
+          title: "Lead erfolgreich gekauft!",
+          description: `Sie haben €${lead.final_price.toFixed(2)} bezahlt.`
         });
-        return;
+
+        setPurchaseDialogOpen(false);
+        navigate(`/handwerker/projekt/${lead.id}`);
+      } else {
+        throw new Error(data.error || "Lead-Kauf fehlgeschlagen");
       }
-
-      toast({
-        title: "✅ Lead erfolgreich gekauft!",
-        description: `Neuer Kontostand: €${data.newBalance.toFixed(2)}`,
-      });
-
-      // Update local state
-      setProfile(prev => prev ? {
-        ...prev,
-        wallet_balance: data.newBalance,
-        leads_bought: prev.leads_bought + 1
-      } : null);
-
-      // Remove lead from available leads
-      setAvailableLeads(prev => prev.filter(l => l.id !== lead.id));
-      
-      setPurchaseDialogOpen(false);
-      
-      // Show lead details
-      console.log('Lead details:', data.leadDetails);
-      toast({
-        title: "Lead-Details freigeschaltet",
-        description: "Kontaktdaten und volle Informationen sind nun verfügbar",
-      });
-
     } catch (error: any) {
-      console.error('Purchase error:', error);
+      console.error("Error purchasing lead:", error);
       toast({
-        title: "Fehler beim Kauf",
-        description: error.message,
+        title: "Fehler beim Lead-Kauf",
+        description: error.message || "Lead konnte nicht gekauft werden.",
         variant: "destructive"
       });
     } finally {
       setPurchasing(false);
+    }
+  };
+
+  const handleRechargeWallet = async () => {
+    setRecharging(true);
+    try {
+      // Insert wallet recharge transaction
+      const newBalance = (profile?.wallet_balance || 0) + rechargeAmount;
+      
+      const { error: transactionError } = await supabase
+        .from("transactions")
+        .insert({
+          handwerker_id: userId,
+          type: "WALLET_RECHARGE",
+          amount: rechargeAmount,
+          balance_after: newBalance,
+          description: `Wallet-Aufladung €${rechargeAmount.toFixed(2)}`
+        });
+
+      if (transactionError) throw transactionError;
+
+      // Update contractor wallet balance
+      const { error: updateError } = await supabase
+        .from("contractors")
+        .update({ wallet_balance: newBalance })
+        .eq("id", userId);
+
+      if (updateError) throw updateError;
+
+      toast({
+        title: "Wallet erfolgreich aufgeladen!",
+        description: `€${rechargeAmount.toFixed(2)} wurden Ihrem Guthaben hinzugefügt.`
+      });
+
+      setRechargeDialogOpen(false);
+      loadDashboardData();
+    } catch (error: any) {
+      console.error("Error recharging wallet:", error);
+      toast({
+        title: "Fehler beim Aufladen",
+        description: "Wallet konnte nicht aufgeladen werden.",
+        variant: "destructive"
+      });
+    } finally {
+      setRecharging(false);
     }
   };
 

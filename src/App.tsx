@@ -16,6 +16,8 @@ import ContractorProjects from "./pages/ContractorProjects";
 import ContractorProjectDetail from "./pages/ContractorProjectDetail";
 import CustomerProjectDetail from "./pages/CustomerProjectDetail";
 import CustomerContractorSearch from "./pages/CustomerContractorSearch";
+import CustomerMyProjects from "./pages/CustomerMyProjects";
+import ContractorTransactions from "./pages/ContractorTransactions";
 import Messages from "./pages/Messages";
 import PublicContractorProfile from "./pages/PublicContractorProfile";
 import Notifications from "./pages/Notifications";
@@ -37,11 +39,13 @@ const App = () => (
           <Route path="/kunde/dashboard" element={<CustomerDashboard />} />
           <Route path="/kunde/projekt-erstellen" element={<CreateProject />} />
           <Route path="/kunde/projekt/:id" element={<CustomerProjectDetail />} />
+          <Route path="/kunde/meine-auftraege" element={<CustomerMyProjects />} />
           <Route path="/kunde/handwerker-suchen" element={<CustomerContractorSearch />} />
           <Route path="/handwerker/dashboard" element={<ContractorDashboard />} />
           <Route path="/handwerker/onboarding" element={<ContractorOnboarding />} />
           <Route path="/handwerker/profil-erstellen" element={<ContractorProfile />} />
           <Route path="/handwerker/profil-bearbeiten" element={<ContractorProfileEdit />} />
+          <Route path="/handwerker/transaktionen" element={<ContractorTransactions />} />
           <Route path="/handwerker/projekte" element={<ContractorProjects />} />
           <Route path="/handwerker/projekt/:id" element={<ContractorProjectDetail />} />
           <Route path="/handwerker/:id" element={<PublicContractorProfile />} />
