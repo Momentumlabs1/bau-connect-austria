@@ -43,7 +43,7 @@ export default function CustomerContractorSearch() {
     let query = supabase
       .from('contractors')
       .select('*')
-      .eq('handwerker_status', 'REGISTERED');
+      .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW']);
 
     if (filters.gewerk && filters.gewerk !== 'all') {
       query = query.contains('trades', [filters.gewerk]);

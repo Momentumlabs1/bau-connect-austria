@@ -328,7 +328,7 @@ export default function CreateProject() {
         .from('contractors')
         .select('*')
         .contains('trades', [projectData.gewerk_id])
-        .eq('verified', true)
+        .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
         .order('rating', { ascending: false })
         .limit(5);
 
@@ -1040,18 +1040,25 @@ export default function CreateProject() {
             )}
           </div>
           
-          <DialogFooter className="flex gap-2">
-            <Button variant="outline" onClick={() => {
-              setShowSuccessDialog(false);
-              navigate('/kunde/dashboard');
-            }}>
-              Überspringen
+          <DialogFooter className="flex flex-col sm:flex-row gap-2">
+            <Button 
+              onClick={() => {
+                setShowSuccessDialog(false);
+                navigate(`/kunde/projekte/${createdProjectId}`);
+              }}
+              className="w-full sm:w-auto"
+            >
+              Projekt ansehen & Handwerker kontaktieren
             </Button>
-            <Button onClick={() => {
-              setShowSuccessDialog(false);
-              navigate('/kunde/handwerker-suchen');
-            }}>
-              Alle Handwerker durchsuchen
+            <Button 
+              variant="outline" 
+              onClick={() => {
+                setShowSuccessDialog(false);
+                navigate('/kunde/dashboard');
+              }}
+              className="w-full sm:w-auto"
+            >
+              Zu meinen Projekten
             </Button>
           </DialogFooter>
         </DialogContent>
