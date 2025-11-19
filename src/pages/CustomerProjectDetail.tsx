@@ -85,38 +85,63 @@ export default function CustomerProjectDetail() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        toast({
+          title: "Anmeldung erforderlich",
+          description: "Bitte melden Sie sich an, um Nachrichten zu senden.",
+          variant: "destructive"
+        });
         navigate('/login');
         return;
       }
 
       // Check if conversation exists
-      const { data: existing } = await supabase
+      const { data: existing, error: fetchError } = await supabase
         .from('conversations')
         .select('id')
         .eq('project_id', id)
         .eq('contractor_id', contractorId)
         .maybeSingle();
 
+      if (fetchError) {
+        console.error('Error checking conversation:', fetchError);
+        throw fetchError;
+      }
+
       if (existing) {
+        toast({
+          title: "Chat geöffnet",
+          description: "Sie werden zur bestehenden Unterhaltung weitergeleitet."
+        });
         navigate(`/nachrichten?conversation=${existing.id}`);
       } else {
         // Create new conversation
-        const { data: newConv } = await supabase
+        const { data: newConv, error: createError } = await supabase
           .from('conversations')
           .insert({
             project_id: id,
             customer_id: session.user.id,
-            contractor_id: contractorId
+            contractor_id: contractorId,
+            last_message_at: new Date().toISOString()
           })
           .select()
           .single();
 
+        if (createError) {
+          console.error('Error creating conversation:', createError);
+          throw createError;
+        }
+
+        toast({
+          title: "Chat erstellt",
+          description: "Sie können jetzt mit dem Handwerker chatten."
+        });
         navigate(`/nachrichten?conversation=${newConv.id}`);
       }
     } catch (error: any) {
+      console.error('Start conversation error:', error);
       toast({
-        title: "Fehler",
-        description: error.message,
+        title: "Fehler beim Chat-Start",
+        description: error.message || "Chat konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
         variant: "destructive"
       });
     }

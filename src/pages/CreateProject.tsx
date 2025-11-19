@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -106,19 +106,41 @@ export default function CreateProject() {
 
   const navigate = useNavigate();
   const { toast } = useToast();
+  const location = useLocation();
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) setUserId(data.user.id);
     });
     loadCategories();
-  }, []);
+    
+    // Check for pre-selected category from search
+    const state = location.state as any;
+    if (state?.selectedGewerk && state?.selectedSubcategoryId) {
+      setProjectData(prev => ({
+        ...prev,
+        gewerk_id: state.selectedGewerk,
+        subcategory_id: state.selectedSubcategoryId
+      }));
+      setSelectedMainCategory(state.selectedGewerk);
+      setCurrentStep(1); // Skip to details step
+    } else if (state?.selectedGewerk) {
+      setProjectData(prev => ({ ...prev, gewerk_id: state.selectedGewerk }));
+      setSelectedMainCategory(state.selectedGewerk);
+    }
+  }, [location]);
 
   useEffect(() => {
     if (selectedMainCategory) {
       loadSubCategories(selectedMainCategory);
     }
   }, [selectedMainCategory]);
+
+  useEffect(() => {
+    if (projectData.subcategory_id) {
+      loadCategoryQuestions(projectData.subcategory_id);
+    }
+  }, [projectData.subcategory_id]);
 
   useEffect(() => {
     if (projectData.subcategory_id) {
