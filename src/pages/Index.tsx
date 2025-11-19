@@ -18,6 +18,8 @@ import {
   Zap,
   Award,
   ThumbsUp,
+  MessageSquare,
+  TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -26,6 +28,7 @@ const Index = () => {
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [visibleItems, setVisibleItems] = useState<number[]>([]);
   const [stats, setStats] = useState({
     totalProjects: 0,
     totalContractors: 0,
@@ -38,6 +41,38 @@ const Index = () => {
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
+
+  // Intersection Observer für Timeline
+  useEffect(() => {
+    const observerOptions = {
+      threshold: 0.2,
+      rootMargin: "0px 0px -100px 0px",
+    };
+
+    const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      entries.forEach((entry) => {
+        const index = parseInt(entry.target.getAttribute("data-index") || "0");
+
+        if (entry.isIntersecting) {
+          setVisibleItems((prev) => {
+            if (!prev.includes(index)) {
+              return [...prev, index].sort((a, b) => a - b);
+            }
+            return prev;
+          });
+        } else {
+          setVisibleItems((prev) => prev.filter((i) => i !== index));
+        }
+      });
+    };
+
+    const observer = new IntersectionObserver(observerCallback, observerOptions);
+
+    const timelineItems = document.querySelectorAll(".timeline-item");
+    timelineItems.forEach((item) => observer.observe(item));
+
+    return () => observer.disconnect();
   }, []);
 
   useEffect(() => {
@@ -214,9 +249,6 @@ const Index = () => {
                   einen Handwerker zu beauftragen
                 </span>
               </h1>
-              <p className="text-base md:text-lg lg:text-xl text-gray-600 max-w-2xl mx-auto">
-                Beschreiben Sie Ihren Auftrag und erhalten Sie kostenlose Angebote von geprüften Handwerkern
-              </p>
             </div>
 
             {/* Main Search Box - Prominent wie MyHammer */}
@@ -293,20 +325,208 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Benefits Section - Clean Cards */}
+      {/* How It Works - DIREKT NACH HERO */}
       <section className="py-12 md:py-16 lg:py-20 bg-white">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="text-center mb-10 md:mb-14">
+            <div className="text-center mb-12 md:mb-16">
               <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">
-                <span className="text-gray-900">Warum </span>
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                  BauConnect24
-                </span>
-                <span className="text-gray-900">?</span>
+                <span className="text-gray-900">So einfach </span>
+                <span className="text-blue-600">funktioniert's</span>
               </h2>
+              <p className="text-base md:text-lg text-gray-600">In nur 3 Schritten zum perfekten Handwerker</p>
             </div>
 
+            <div className="space-y-16 md:space-y-20">
+              {[
+                {
+                  num: 1,
+                  title: "Auftrag beschreiben",
+                  desc: "Beschreiben Sie Ihr Projekt in wenigen Minuten mit unserem einfachen Formular",
+                  image: "/bc-home1.png",
+                },
+                {
+                  num: 2,
+                  title: "Angebote vergleichen",
+                  desc: "Erhalten Sie kostenlose Angebote von qualifizierten Handwerkern in Ihrer Nähe",
+                  image: "/bc-home2.png",
+                },
+                {
+                  num: 3,
+                  title: "Handwerker beauftragen",
+                  desc: "Wählen Sie den besten Handwerker basierend auf Bewertungen und Preis",
+                  image: "/bc-home3.png",
+                },
+              ].map((step, idx) => (
+                <div
+                  key={idx}
+                  className={`grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center ${
+                    idx % 2 === 1 ? "lg:grid-flow-dense" : ""
+                  }`}
+                >
+                  {/* Bild */}
+                  <div className={`${idx % 2 === 1 ? "lg:col-start-2" : ""}`}>
+                    <div className="relative max-w-lg mx-auto">
+                      {/* Gradient Glow */}
+                      <div className="absolute -inset-3 bg-gradient-to-r from-blue-600/20 to-yellow-500/20 rounded-3xl blur-2xl"></div>
+
+                      {/* Bild Container */}
+                      <div className="relative rounded-2xl overflow-hidden shadow-2xl">
+                        <img src={step.image} alt={step.title} className="w-full h-auto" />
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Text */}
+                  <div className={`text-center lg:text-left ${idx % 2 === 1 ? "lg:col-start-1" : ""}`}>
+                    <div className="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-br from-blue-600 to-blue-700 rounded-2xl mb-6 shadow-2xl shadow-blue-600/30">
+                      <span className="text-3xl font-extrabold text-white">{step.num}</span>
+                    </div>
+
+                    <h3 className="text-2xl md:text-3xl lg:text-4xl font-extrabold mb-4 text-gray-900">{step.title}</h3>
+                    <p className="text-base md:text-lg text-gray-600 leading-relaxed max-w-md lg:max-w-none mx-auto">
+                      {step.desc}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* INNOVATIVE SCROLL-TIMELINE - Warum BauConnect24 */}
+      <section className="py-12 md:py-20 lg:py-28 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
+        <div className="container mx-auto px-4">
+          <div className="text-center mb-12 md:mb-16 lg:mb-20">
+            <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl xl:text-6xl font-extrabold mb-3 md:mb-4">
+              <span className="text-gray-900">Warum </span>
+              <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                BauConnect24
+              </span>
+              <span className="text-gray-900">?</span>
+            </h2>
+            <p className="text-sm md:text-base lg:text-xl text-gray-600">
+              Die moderne Plattform für Ihre Handwerkerprojekte
+            </p>
+          </div>
+
+          <div className="max-w-4xl lg:max-w-5xl mx-auto relative">
+            {/* Gradient Timeline Line */}
+            <div className="absolute left-4 md:left-6 lg:left-1/2 top-0 bottom-0 w-1 md:w-1.5 lg:w-2 bg-gradient-to-b from-blue-600 via-yellow-500 to-blue-600 rounded-full shadow-lg lg:shadow-xl opacity-40 lg:opacity-100"></div>
+
+            {/* Timeline Items */}
+            <div className="space-y-8 md:space-y-12 lg:space-y-16">
+              {[
+                {
+                  icon: Shield,
+                  title: "Verifizierte Profis",
+                  desc: "Alle Handwerker werden persönlich geprüft und verifiziert.",
+                  color: "blue",
+                },
+                {
+                  icon: Clock,
+                  title: "24h Antworten",
+                  desc: "Schnelle Angebote von qualifizierten Profis in Ihrer Nähe.",
+                  color: "yellow",
+                },
+                {
+                  icon: CheckCircle,
+                  title: "100% Kostenlos",
+                  desc: "Keine versteckten Gebühren oder Abofallen für Auftraggeber.",
+                  color: "blue",
+                },
+                {
+                  icon: Star,
+                  title: "Echte Bewertungen",
+                  desc: "Transparente, verifizierte Kundenmeinungen und Ratings.",
+                  color: "yellow",
+                },
+                {
+                  icon: MessageSquare,
+                  title: "Direkter Kontakt",
+                  desc: "Kommunizieren Sie direkt mit Handwerkern ohne Umwege.",
+                  color: "blue",
+                },
+                {
+                  icon: TrendingUp,
+                  title: "Faire Preise",
+                  desc: "Vergleichen Sie Angebote für den besten Preis-Leistung.",
+                  color: "yellow",
+                },
+              ].map((feature, index) => {
+                const Icon = feature.icon;
+                return (
+                  <div key={index} className="timeline-item relative" data-index={index}>
+                    <div
+                      className={`grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 items-center transition-all duration-700 ease-out ${
+                        index % 2 === 0 ? "" : "lg:grid-flow-dense"
+                      } ${visibleItems.includes(index) ? "opacity-100 translate-y-0" : "opacity-0 translate-y-8"}`}
+                    >
+                      {/* Animated Dot */}
+                      <div className="absolute left-4 md:left-6 lg:left-1/2 transform lg:-translate-x-1/2 z-10">
+                        <div
+                          className={`w-10 h-10 md:w-12 md:h-12 lg:w-16 lg:h-16 ${
+                            feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
+                          } rounded-full flex items-center justify-center shadow-2xl transition-all duration-500 ${
+                            visibleItems.includes(index) ? "scale-100 rotate-0" : "scale-0 rotate-180"
+                          }`}
+                        >
+                          <Icon className="h-5 w-5 md:h-6 md:w-6 lg:h-8 lg:w-8 text-white" />
+                        </div>
+
+                        {/* Pulse Effect */}
+                        {visibleItems.includes(index) && (
+                          <>
+                            <div
+                              className={`absolute inset-0 ${
+                                feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
+                              } rounded-full animate-ping opacity-40`}
+                            ></div>
+                            <div
+                              className={`absolute inset-0 ${
+                                feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
+                              } rounded-full animate-ping opacity-20`}
+                              style={{ animationDelay: "0.3s" }}
+                            ></div>
+                          </>
+                        )}
+                      </div>
+
+                      {/* Content Card */}
+                      <div
+                        className={`${
+                          index % 2 === 0 ? "lg:col-start-2 lg:pl-8" : "lg:col-start-1 lg:pr-8 lg:text-right"
+                        } pl-16 md:pl-20 lg:pl-0 pr-4`}
+                      >
+                        <Card
+                          className={`p-5 md:p-6 lg:p-8 border-2 transition-all duration-500 ${
+                            visibleItems.includes(index)
+                              ? feature.color === "blue"
+                                ? "border-blue-600 shadow-xl shadow-blue-600/20 scale-100"
+                                : "border-yellow-500 shadow-xl shadow-yellow-500/20 scale-100"
+                              : "border-gray-100 scale-95"
+                          } hover:shadow-2xl bg-white`}
+                        >
+                          <h3 className="text-lg md:text-xl lg:text-2xl font-bold mb-2 md:mb-3 text-gray-900">
+                            {feature.title}
+                          </h3>
+                          <p className="text-sm md:text-base text-gray-600 leading-relaxed">{feature.desc}</p>
+                        </Card>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Benefits - Clean Cards */}
+      <section className="py-12 md:py-16 lg:py-20 bg-white">
+        <div className="container mx-auto px-4">
+          <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
               {benefits.map((benefit, idx) => {
                 const Icon = benefit.icon;
@@ -323,59 +543,6 @@ const Index = () => {
                     <h3 className="text-lg font-bold text-gray-900 mb-2">{benefit.title}</h3>
                     <p className="text-sm text-gray-600">{benefit.desc}</p>
                   </Card>
-                );
-              })}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      {/* How It Works - Simple 3 Steps */}
-      <section className="py-12 md:py-16 lg:py-20 bg-gradient-to-b from-gray-50 to-white">
-        <div className="container mx-auto px-4">
-          <div className="max-w-5xl mx-auto">
-            <div className="text-center mb-12 md:mb-16">
-              <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-extrabold mb-3">
-                <span className="text-gray-900">So einfach </span>
-                <span className="text-blue-600">funktioniert's</span>
-              </h2>
-            </div>
-
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 md:gap-6">
-              {[
-                {
-                  num: "1",
-                  title: "Auftrag beschreiben",
-                  desc: "Beschreiben Sie Ihr Projekt in wenigen Minuten",
-                  icon: Search,
-                },
-                {
-                  num: "2",
-                  title: "Angebote vergleichen",
-                  desc: "Erhalten Sie kostenlose Angebote von Profis",
-                  icon: Users,
-                },
-                {
-                  num: "3",
-                  title: "Handwerker beauftragen",
-                  desc: "Wählen Sie den besten Handwerker für Ihr Projekt",
-                  icon: CheckCircle,
-                },
-              ].map((step, idx) => {
-                const Icon = step.icon;
-                return (
-                  <div key={idx} className="text-center">
-                    <div className="relative mb-6">
-                      <div className="w-20 h-20 mx-auto bg-gradient-to-br from-blue-600 to-blue-700 rounded-3xl flex items-center justify-center shadow-2xl shadow-blue-600/30">
-                        <Icon className="h-10 w-10 text-white" />
-                      </div>
-                      <div className="absolute -top-2 -right-2 w-8 h-8 bg-yellow-500 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
-                        {step.num}
-                      </div>
-                    </div>
-                    <h3 className="text-xl font-bold text-gray-900 mb-3">{step.title}</h3>
-                    <p className="text-gray-600">{step.desc}</p>
-                  </div>
                 );
               })}
             </div>
