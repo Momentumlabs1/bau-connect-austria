@@ -23,9 +23,11 @@ interface LeadPreviewCardProps {
   leadPrice: number;
   onPurchase: () => void;
   purchasing?: boolean;
+  insufficientBalance?: boolean;
+  currentBalance?: number;
 }
 
-export function LeadPreviewCard({ project, leadPrice, onPurchase, purchasing = false }: LeadPreviewCardProps) {
+export function LeadPreviewCard({ project, leadPrice, onPurchase, purchasing = false, insufficientBalance = false, currentBalance = 0 }: LeadPreviewCardProps) {
   const getUrgencyColor = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
       case 'high': return 'destructive';
@@ -42,6 +44,17 @@ export function LeadPreviewCard({ project, leadPrice, onPurchase, purchasing = f
       case 'low': return 'Flexibel';
       default: return urgency;
     }
+  };
+
+  const getGewerkLabel = (gewerkId: string) => {
+    const labels: Record<string, string> = {
+      'elektriker': 'Elektriker',
+      'sanitar-heizung': 'Sanitär / Heizung',
+      'dachdecker': 'Dachdecker',
+      'fassade': 'Fassade',
+      'maler': 'Maler'
+    };
+    return labels[gewerkId] || gewerkId;
   };
 
   return (
@@ -63,7 +76,10 @@ export function LeadPreviewCard({ project, leadPrice, onPurchase, purchasing = f
 
         <div className="space-y-4">
           <div>
-            <h4 className="font-semibold text-xl mb-2">{project.title}</h4>
+            <div className="flex items-center gap-2 mb-2">
+              <h4 className="font-semibold text-xl">{project.title}</h4>
+              <Badge variant="outline">{getGewerkLabel(project.gewerk_id)}</Badge>
+            </div>
             <div className="flex items-center gap-2 text-muted-foreground mb-3">
               <MapPin className="h-4 w-4" />
               <span>{project.city} (PLZ: {project.postal_code.substring(0, 2)}**)</span>
@@ -111,6 +127,22 @@ export function LeadPreviewCard({ project, leadPrice, onPurchase, purchasing = f
               <p className="text-3xl font-bold text-primary">€{leadPrice.toFixed(2)}</p>
             </div>
 
+            {insufficientBalance && (
+              <div className="bg-destructive/10 border border-destructive/20 rounded-lg p-4">
+                <p className="text-sm font-medium text-destructive mb-2 flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4" />
+                  Guthaben zu niedrig
+                </p>
+                <p className="text-sm text-muted-foreground">
+                  Ihr aktuelles Guthaben: €{currentBalance.toFixed(2)}
+                  <br />
+                  Benötigt: €{leadPrice.toFixed(2)}
+                  <br />
+                  Fehlbetrag: €{(leadPrice - currentBalance).toFixed(2)}
+                </p>
+              </div>
+            )}
+
             <div className="bg-muted/30 p-3 rounded-lg space-y-2">
               <p className="text-sm font-medium flex items-center gap-2">
                 <AlertCircle className="h-4 w-4" />
@@ -128,10 +160,12 @@ export function LeadPreviewCard({ project, leadPrice, onPurchase, purchasing = f
               className="w-full text-lg py-6" 
               size="lg"
               onClick={onPurchase}
-              disabled={purchasing}
+              disabled={purchasing || insufficientBalance}
             >
               {purchasing ? (
                 <>Wird gekauft...</>
+              ) : insufficientBalance ? (
+                <>Guthaben aufladen erforderlich</>
               ) : (
                 <>Lead jetzt kaufen für €{leadPrice.toFixed(2)}</>
               )}
