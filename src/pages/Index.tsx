@@ -248,7 +248,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {/* Hero Section with Background Image Overlay */}
-            <div className="relative rounded-3xl overflow-hidden mb-8 md:mb-10 min-h-[500px] md:min-h-[600px] flex items-center">
+            <div className="relative rounded-3xl overflow-hidden mb-8 md:mb-10 min-h-[700px] md:min-h-[800px] lg:min-h-[900px] flex items-center">
               {/* Background Image with Opacity */}
               <div className="absolute inset-0">
                 <img 
@@ -259,75 +259,72 @@ const Index = () => {
               </div>
 
               {/* Content Overlay */}
-              <div className="relative z-10 w-full px-6 md:px-12 py-12 md:py-16">
-                <div className="max-w-3xl">
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 md:mb-5 leading-tight">
-                    <span className="text-gray-900">Der zuverlässige Weg,</span>
-                    <br />
-                    <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent">qualifizierte Handwerker</span>
-                    <br />
-                    <span className="text-gray-900">zu finden.</span>
+              <div className="relative z-10 w-full px-6 md:px-12 py-12 md:py-16 lg:py-20">
+                <div className="max-w-4xl">
+                  {/* Headline - 3 Zeilen auf Mobile */}
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-8 md:mb-12 leading-tight">
+                    <span className="block text-gray-900">Der zuverlässige Weg,</span>
+                    <span className="block bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent">qualifizierte Handwerker</span>
+                    <span className="block text-orange-600">zu finden.</span>
                   </h1>
+
+                  {/* Project Creation Box */}
+                  <div className="max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 border-2 border-gray-100">
+                    <div className="mb-4 md:mb-6">
+                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Beschreiben Sie Ihren Auftrag</h2>
+                      <p className="text-sm md:text-base text-gray-600">
+                        z.B.: Malerarbeiten, Badezimmer renovieren, Elektroinstallation
+                      </p>
+                    </div>
+
+                    <div className="flex flex-col sm:flex-row gap-3">
+                      <div className="flex-1 relative">
+                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+                        <Input
+                          type="text"
+                          placeholder="z.B.: Malerarbeiten"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                          onKeyPress={handleKeyPress}
+                          onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
+                          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                          className="pl-12 h-12 md:h-14 text-base md:text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
+                        />
+                        
+                        {/* Live Search Suggestions */}
+                        {showSuggestions && searchSuggestions.length > 0 && (
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                            <div className="p-2 bg-gray-50 border-b border-gray-200">
+                              <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
+                            </div>
+                            {searchSuggestions.map((suggestion) => (
+                              <button
+                                key={suggestion.id}
+                                onClick={() => handleSuggestionClick(suggestion)}
+                                className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                              >
+                                <span className="text-2xl">{suggestion.icon}</span>
+                                <div>
+                                  <p className="font-semibold text-sm">{suggestion.name}</p>
+                                  <p className="text-xs text-muted-foreground">{suggestion.description}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                      <Button
+                        size="lg"
+                        onClick={handleSearch}
+                        className="h-12 md:h-14 px-6 md:px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-base md:text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 transition-all"
+                      >
+                        <ArrowRight className="mr-2 h-5 w-5" />
+                        Auftrag erstellen
+                      </Button>
+                    </div>
+                  </div>
                 </div>
               </div>
-            </div>
-
-            {/* Main Search Box - Prominent wie MyHammer */}
-            <div className="mb-8 md:mb-10">
-              <Card className="p-6 md:p-8 shadow-2xl border-2 border-gray-100 bg-white">
-                <div className="mb-4">
-                  <h2 className="text-lg md:text-xl font-bold text-gray-900 mb-2">Beschreiben Sie Ihren Auftrag</h2>
-                  <p className="text-sm text-gray-600">
-                    z.B.: Malerarbeiten, Badezimmer renovieren, Elektroinstallation
-                  </p>
-                </div>
-
-                <div className="flex flex-col sm:flex-row gap-3">
-                  <div className="flex-1 relative">
-                    <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
-                    <Input
-                      type="text"
-                      placeholder="z.B.: Malerarbeiten"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                      onKeyPress={handleKeyPress}
-                      onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
-                      onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                      className="pl-12 h-14 text-base md:text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
-                    />
-                    
-                    {/* Live Search Suggestions */}
-                    {showSuggestions && searchSuggestions.length > 0 && (
-                      <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-                        <div className="p-2 bg-gray-50 border-b border-gray-200">
-                          <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
-                        </div>
-                        {searchSuggestions.map((suggestion) => (
-                          <button
-                            key={suggestion.id}
-                            onClick={() => handleSuggestionClick(suggestion)}
-                            className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                          >
-                            <span className="text-2xl">{suggestion.icon}</span>
-                            <div>
-                              <p className="font-semibold text-sm">{suggestion.name}</p>
-                              <p className="text-xs text-muted-foreground">{suggestion.description}</p>
-                            </div>
-                          </button>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                  <Button
-                    size="lg"
-                    onClick={handleSearch}
-                    className="h-14 px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-base md:text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 transition-all"
-                  >
-                    <ArrowRight className="mr-2 h-5 w-5" />
-                    Auftrag erstellen
-                  </Button>
-                </div>
-              </Card>
             </div>
 
             {/* Quick Category Selection */}
