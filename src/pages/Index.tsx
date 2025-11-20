@@ -116,12 +116,20 @@ const Index = () => {
       }
 
       try {
-        const { data } = await supabase
+        console.log('🔍 Searching for:', searchQuery);
+        const { data, error } = await supabase
           .from('service_categories')
           .select('*')
           .eq('level', 2)
           .ilike('name', `%${searchQuery}%`)
           .limit(5);
+
+        console.log('📊 Search results:', data?.length || 0, 'items');
+        console.log('📝 Results:', data);
+        
+        if (error) {
+          console.error('❌ Search error:', error);
+        }
 
         setSearchSuggestions(data || []);
         setShowSuggestions(true);
@@ -303,10 +311,12 @@ const Index = () => {
                                 onClick={() => handleSuggestionClick(suggestion)}
                                 className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
                               >
-                                <span className="text-2xl">{suggestion.icon}</span>
-                                <div>
+                                {suggestion.icon && <span className="text-2xl">{suggestion.icon}</span>}
+                                <div className="flex-1">
                                   <p className="font-semibold text-sm">{suggestion.name}</p>
-                                  <p className="text-xs text-muted-foreground">{suggestion.description}</p>
+                                  {suggestion.description && (
+                                    <p className="text-xs text-muted-foreground">{suggestion.description}</p>
+                                  )}
                                 </div>
                               </button>
                             ))}
