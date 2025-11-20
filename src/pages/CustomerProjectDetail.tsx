@@ -51,6 +51,8 @@ export default function CustomerProjectDetail() {
 
   const loadProjectDetails = async () => {
     try {
+      console.log('🔍 Loading project details for ID:', id);
+      
       const { data: projectData, error: projectError } = await supabase
         .from('projects')
         .select('*')
@@ -59,18 +61,42 @@ export default function CustomerProjectDetail() {
 
       if (projectError) throw projectError;
       setProject(projectData);
+      console.log('✅ Project loaded:', projectData.title);
 
-      // Find matching contractors
-      const { data: contractors } = await supabase
-        .from('contractors')
-        .select('*')
-        .contains('trades', [projectData.gewerk_id])
-        .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
-        .order('rating', { ascending: false })
-        .limit(10);
+      // Load MATCHED contractors from matches table
+      console.log('🎯 Loading matched contractors...');
+      const { data: matchesData, error: matchesError } = await supabase
+        .from('matches')
+        .select(`
+          *,
+          contractor:contractors(*)
+        `)
+        .eq('project_id', id)
+        .order('score', { ascending: false });
 
-      setMatchedContractors(contractors || []);
+      if (matchesError) {
+        console.warn('⚠️ No matches found, loading contractors with matching trade');
+        // Fallback: Load all contractors with matching trade
+        const { data: contractors } = await supabase
+          .from('contractors')
+          .select('*')
+          .contains('trades', [projectData.gewerk_id])
+          .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
+          .order('rating', { ascending: false })
+          .limit(10);
+        
+        setMatchedContractors(contractors || []);
+        console.log(`📋 Loaded ${contractors?.length || 0} contractors (fallback)`);
+      } else {
+        // Extract contractors from matches
+        const contractors = matchesData
+          .map(match => match.contractor)
+          .filter(Boolean);
+        setMatchedContractors(contractors);
+        console.log(`✅ Loaded ${contractors.length} matched contractors`);
+      }
     } catch (error: any) {
+      console.error('❌ Error loading project details:', error);
       toast({
         title: "Fehler beim Laden",
         description: error.message,
@@ -83,8 +109,11 @@ export default function CustomerProjectDetail() {
 
   const startConversation = async (contractorId: string) => {
     try {
+      console.log('💬 Starting conversation with contractor:', contractorId);
+      
       const { data: { session } } = await supabase.auth.getSession();
       if (!session) {
+        console.error('❌ No session found');
         toast({
           title: "Anmeldung erforderlich",
           description: "Bitte melden Sie sich an, um Nachrichten zu senden.",
@@ -94,20 +123,34 @@ export default function CustomerProjectDetail() {
         return;
       }
 
+      console.log('🔍 Checking for existing conversation...', { 
+        project_id: id, 
+        customer_id: session.user.id,
+        contractor_id: contractorId 
+      });
+
       // Check if conversation exists
       const { data: existing, error: fetchError } = await supabase
         .from('conversations')
         .select('id')
         .eq('project_id', id)
         .eq('contractor_id', contractorId)
+        .eq('customer_id', session.user.id)
         .maybeSingle();
 
       if (fetchError) {
-        console.error('Error checking conversation:', fetchError);
+        console.error('❌ Error checking conversation:', fetchError);
+        console.error('Details:', {
+          code: fetchError.code,
+          message: fetchError.message,
+          details: fetchError.details,
+          hint: fetchError.hint
+        });
         throw fetchError;
       }
 
       if (existing) {
+        console.log('✅ Found existing conversation:', existing.id);
         toast({
           title: "Chat geöffnet",
           description: "Sie werden zur bestehenden Unterhaltung weitergeleitet."
@@ -115,6 +158,7 @@ export default function CustomerProjectDetail() {
         navigate(`/nachrichten?conversation=${existing.id}`);
       } else {
         // Create new conversation
+        console.log('➕ Creating new conversation...');
         const { data: newConv, error: createError } = await supabase
           .from('conversations')
           .insert({
@@ -127,10 +171,17 @@ export default function CustomerProjectDetail() {
           .single();
 
         if (createError) {
-          console.error('Error creating conversation:', createError);
+          console.error('❌ Error creating conversation:', createError);
+          console.error('Details:', {
+            code: createError.code,
+            message: createError.message,
+            details: createError.details,
+            hint: createError.hint
+          });
           throw createError;
         }
 
+        console.log('✅ Conversation created:', newConv.id);
         toast({
           title: "Chat erstellt",
           description: "Sie können jetzt mit dem Handwerker chatten."
@@ -138,7 +189,7 @@ export default function CustomerProjectDetail() {
         navigate(`/nachrichten?conversation=${newConv.id}`);
       }
     } catch (error: any) {
-      console.error('Start conversation error:', error);
+      console.error('💥 Start conversation failed:', error);
       toast({
         title: "Fehler beim Chat-Start",
         description: error.message || "Chat konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",

@@ -200,7 +200,7 @@ Deno.serve(async (req) => {
       .from('contractors')
       .select('*')
       .contains('trades', [project.gewerk_id])
-      .eq('handwerker_status', 'APPROVED')
+      .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
       .gte('wallet_balance', leadPrice)
 
     if (contractorsError) {

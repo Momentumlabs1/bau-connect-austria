@@ -22,6 +22,7 @@ import Messages from "./pages/Messages";
 import PublicContractorProfile from "./pages/PublicContractorProfile";
 import Notifications from "./pages/Notifications";
 import SeedDemo from "./pages/SeedDemo";
+import SeedContractors from "./pages/SeedContractors";
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/nachrichten" element={<Messages />} />
           <Route path="/benachrichtigungen" element={<Notifications />} />
           <Route path="/seed-demo" element={<SeedDemo />} />
+          <Route path="/seed-contractors" element={<SeedContractors />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
         </Routes>
