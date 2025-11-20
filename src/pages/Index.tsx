@@ -20,6 +20,8 @@ import {
   TrendingUp,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
+import logoNew from "@/assets/bauconnect-logo-new.png";
+import contractorHero from "@/assets/contractor-hero.png";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -187,15 +189,7 @@ const Index = () => {
           <div className="flex items-center justify-between h-16 md:h-18">
             {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate("/")}>
-              <div className="w-9 h-9 md:w-10 md:h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg shadow-blue-600/20 group-hover:shadow-blue-600/40 transition-all">
-                <Hammer className="h-5 w-5 md:h-6 md:w-6 text-white" />
-              </div>
-              <span className="text-lg md:text-xl font-bold">
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                  BauConnect
-                </span>
-                <span className="text-yellow-500">24</span>
-              </span>
+              <img src={logoNew} alt="BauConnect24 Logo" className="h-10 md:h-12 w-auto" />
             </div>
 
             {/* Desktop Navigation */}
@@ -253,17 +247,44 @@ const Index = () => {
       {/* Hero Section - MyHammer Style */}
       <section className="pt-24 pb-12 md:pt-28 md:pb-16 lg:pt-32 lg:pb-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto px-4">
-          <div className="max-w-4xl mx-auto">
-            {/* Headline */}
-            <div className="text-center mb-8 md:mb-10">
-              <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 md:mb-5 leading-tight">
-                <span className="text-gray-900">Der zuverlässige Weg,</span>
-                <br className="hidden sm:block" />
-                <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                  {" "}
-                  einen Handwerker zu beauftragen
-                </span>
-              </h1>
+          <div className="max-w-6xl mx-auto">
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-8 md:mb-10">
+              {/* Left Side - Headline */}
+              <div className="text-center lg:text-left">
+                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 md:mb-5 leading-tight">
+                  <span className="text-gray-900">Der zuverlässige Weg,</span>
+                  <br />
+                  <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
+                    einen Handwerker zu beauftragen
+                  </span>
+                </h1>
+              </div>
+
+              {/* Right Side - Contractor Image with Rating Bubble */}
+              <div className="relative hidden lg:block">
+                <img 
+                  src={contractorHero} 
+                  alt="Professioneller Handwerker" 
+                  className="w-full h-auto rounded-2xl shadow-2xl"
+                />
+                {/* Rating Bubble */}
+                <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-2xl p-4 border-2 border-blue-100 animate-float">
+                  <div className="flex items-center gap-3">
+                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
+                      <Hammer className="h-6 w-6 text-white" />
+                    </div>
+                    <div>
+                      <div className="font-bold text-gray-900">Thomas M.</div>
+                      <div className="text-sm text-gray-600">Elektriker</div>
+                      <div className="flex items-center gap-1 mt-1">
+                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                        <span className="font-bold text-gray-900">4.9</span>
+                        <span className="text-xs text-gray-500">(247 Bewertungen)</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Main Search Box - Prominent wie MyHammer */}
