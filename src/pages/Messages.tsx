@@ -144,15 +144,48 @@ export default function Messages() {
   };
 
   const sendMessage = async () => {
-    if (!newMessage.trim() || !selectedConvId) return;
-    
+    if (!newMessage.trim() || !selectedConvId || !userId) return;
+
     try {
+      // ============================================================
+      // SECURITY: Validate message before insertion
+      // ============================================================
+      const trimmedMessage = newMessage.trim();
+      
+      if (trimmedMessage.length === 0) {
+        toast({
+          title: "Fehler",
+          description: "Nachricht darf nicht leer sein.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      if (trimmedMessage.length > 5000) {
+        toast({
+          title: "Nachricht zu lang",
+          description: "Nachricht darf maximal 5000 Zeichen lang sein.",
+          variant: "destructive"
+        });
+        return;
+      }
+      
+      // Check for potentially malicious content
+      if (/<script|javascript:|on\w+=/i.test(trimmedMessage)) {
+        toast({
+          title: "Ungültige Nachricht",
+          description: "Nachricht enthält nicht erlaubte Zeichen.",
+          variant: "destructive"
+        });
+        return;
+      }
+
       console.log('📤 Sending message...', { conversation_id: selectedConvId });
       
       const { error: insertError } = await supabase.from('messages').insert({
         conversation_id: selectedConvId,
         sender_id: userId,
-        message: newMessage.trim()
+        message: trimmedMessage
       });
 
       if (insertError) {

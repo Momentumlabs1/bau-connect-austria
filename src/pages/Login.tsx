@@ -37,12 +37,11 @@ export default function Login() {
 
       if (error) throw error;
 
-      // Get user profile to determine role
-      const { data: profile } = await supabase
-        .from("profiles")
+      // Get user roles from user_roles table
+      const { data: userRoles } = await supabase
+        .from("user_roles")
         .select("role")
-        .eq("id", authData.user.id)
-        .single();
+        .eq("user_id", authData.user.id);
 
       toast({
         title: "Anmeldung erfolgreich!",
@@ -50,12 +49,15 @@ export default function Login() {
       });
 
       setTimeout(() => {
-        if (profile?.role === "customer") {
-          navigate("/kunde/dashboard");
-        } else if (profile?.role === "contractor") {
-          navigate("/handwerker/dashboard");
-        } else if (profile?.role === "admin") {
+        // Check roles in priority order: admin > contractor > customer
+        const roles = userRoles?.map(r => r.role) || [];
+        
+        if (roles.includes("admin")) {
           navigate("/admin/dashboard");
+        } else if (roles.includes("contractor")) {
+          navigate("/handwerker/dashboard");
+        } else if (roles.includes("customer")) {
+          navigate("/kunde/dashboard");
         } else {
           navigate("/");
         }

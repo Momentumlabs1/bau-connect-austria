@@ -40,9 +40,23 @@ export default function CustomerContractorSearch() {
   }, [filters]);
 
   const searchContractors = async () => {
+    // ============================================================
+    // SECURITY: Exclude financial/private fields from public query
+    // ============================================================
     let query = supabase
       .from('contractors')
-      .select('*')
+      .select(`
+        id,
+        company_name,
+        rating,
+        total_reviews,
+        city,
+        trades,
+        profile_image_url,
+        description,
+        service_radius,
+        postal_codes
+      `)
       .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW']);
 
     if (filters.gewerk && filters.gewerk !== 'all') {
