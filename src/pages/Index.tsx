@@ -189,7 +189,7 @@ const Index = () => {
           <div className="flex items-center justify-between h-16 md:h-18">
             {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate("/")}>
-              <img src={logoNew} alt="BauConnect24 Logo" className="h-10 md:h-12 w-auto" />
+              <img src={logoNew} alt="BauConnect24 Logo" className="h-14 md:h-16 lg:h-20 w-auto" />
             </div>
 
             {/* Desktop Navigation */}
@@ -250,7 +250,7 @@ const Index = () => {
           <div className="max-w-6xl mx-auto">
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-8 md:mb-10">
               {/* Left Side - Headline */}
-              <div className="text-center lg:text-left">
+              <div className="text-center lg:text-left lg:order-1">
                 <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 md:mb-5 leading-tight">
                   <span className="text-gray-900">Der zuverlässige Weg,</span>
                   <br />
@@ -261,25 +261,27 @@ const Index = () => {
               </div>
 
               {/* Right Side - Contractor Image with Rating Bubble */}
-              <div className="relative hidden lg:block">
-                <img 
-                  src={contractorHero} 
-                  alt="Professioneller Handwerker" 
-                  className="w-full h-auto rounded-2xl shadow-2xl"
-                />
-                {/* Rating Bubble */}
-                <div className="absolute -top-4 -right-4 bg-white rounded-2xl shadow-2xl p-4 border-2 border-blue-100 animate-float">
-                  <div className="flex items-center gap-3">
-                    <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center">
-                      <Hammer className="h-6 w-6 text-white" />
-                    </div>
-                    <div>
-                      <div className="font-bold text-gray-900">Thomas M.</div>
-                      <div className="text-sm text-gray-600">Elektriker</div>
-                      <div className="flex items-center gap-1 mt-1">
-                        <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                        <span className="font-bold text-gray-900">4.9</span>
-                        <span className="text-xs text-gray-500">(247 Bewertungen)</span>
+              <div className="relative lg:order-2 mt-6 lg:mt-0">
+                <div className="relative max-w-sm mx-auto lg:max-w-none">
+                  <img 
+                    src={contractorHero} 
+                    alt="Professioneller Handwerker" 
+                    className="w-full h-auto rounded-2xl shadow-2xl"
+                  />
+                  {/* Rating Bubble - Responsive */}
+                  <div className="absolute top-3 right-3 lg:-top-4 lg:-right-4 bg-white rounded-xl lg:rounded-2xl shadow-2xl p-3 lg:p-4 border-2 border-blue-100 animate-float">
+                    <div className="flex items-center gap-2 lg:gap-3">
+                      <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg lg:rounded-xl flex items-center justify-center">
+                        <Hammer className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
+                      </div>
+                      <div>
+                        <div className="font-bold text-gray-900 text-sm lg:text-base">Thomas M.</div>
+                        <div className="text-xs lg:text-sm text-gray-600">Elektriker</div>
+                        <div className="flex items-center gap-1 mt-0.5 lg:mt-1">
+                          <Star className="h-3 w-3 lg:h-4 lg:w-4 fill-yellow-400 text-yellow-400" />
+                          <span className="font-bold text-gray-900 text-sm lg:text-base">4.9</span>
+                          <span className="text-xs text-gray-500 hidden sm:inline">(247)</span>
+                        </div>
                       </div>
                     </div>
                   </div>
