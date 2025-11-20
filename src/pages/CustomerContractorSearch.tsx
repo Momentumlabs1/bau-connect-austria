@@ -58,15 +58,71 @@ export default function CustomerContractorSearch() {
   };
 
   const startConversation = async (contractorId: string) => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate('/login');
-      return;
-    }
+    try {
+      console.log('💬 Starting conversation with contractor:', contractorId);
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        console.error('❌ No session found');
+        navigate('/login');
+        return;
+      }
 
-    // For now, just navigate to messages
-    // In full implementation, create conversation with latest customer project
-    navigate('/nachrichten');
+      // Get customer's most recent project
+      const { data: latestProject } = await supabase
+        .from('projects')
+        .select('id')
+        .eq('customer_id', session.user.id)
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (!latestProject) {
+        console.warn('⚠️ No projects found, redirecting to messages');
+        navigate('/nachrichten');
+        return;
+      }
+
+      console.log('🔍 Checking for existing conversation...');
+      
+      // Check if conversation exists
+      const { data: existing } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('project_id', latestProject.id)
+        .eq('contractor_id', contractorId)
+        .eq('customer_id', session.user.id)
+        .maybeSingle();
+
+      if (existing) {
+        console.log('✅ Found existing conversation:', existing.id);
+        navigate(`/nachrichten?conversation=${existing.id}`);
+        return;
+      }
+
+      console.log('➕ Creating new conversation...');
+      const { data: newConv, error: createError } = await supabase
+        .from('conversations')
+        .insert({
+          project_id: latestProject.id,
+          customer_id: session.user.id,
+          contractor_id: contractorId,
+          last_message_at: new Date().toISOString()
+        })
+        .select()
+        .single();
+
+      if (createError) {
+        console.error('❌ Error creating conversation:', createError);
+        throw createError;
+      }
+
+      console.log('✅ Conversation created:', newConv.id);
+      navigate(`/nachrichten?conversation=${newConv.id}`);
+    } catch (error: any) {
+      console.error('💥 Start conversation failed:', error);
+      navigate('/nachrichten');
+    }
   };
 
   return (

@@ -214,19 +214,32 @@ export default function HandwerkerDashboard() {
       if (notifsError) throw notifsError;
       setNotifications(notifs || []);
 
-      // Load ALL open projects matching contractor's trades
+      // Load leads WITH matches for this contractor (MyHammer-style)
       const contractorTrades = contractorData.trades || [];
       if (contractorTrades.length > 0) {
-        const { data: leads, error: leadsError } = await supabase
-          .from("projects")
-          .select("*")
-          .eq("status", "open")
-          .eq("visibility", "public")
-          .in("gewerk_id", contractorTrades)
-          .order("created_at", { ascending: false });
+        console.log('🔍 Loading matched leads for contractor:', user.id);
+        
+        const { data: matchesData, error: matchesError } = await supabase
+          .from('matches')
+          .select(`
+            *,
+            project:projects(*)
+          `)
+          .eq('contractor_id', user.id)
+          .eq('lead_purchased', false)
+          .order('created_at', { ascending: false });
 
-        if (leadsError) throw leadsError;
-        setAvailableLeads(leads || []);
+        if (matchesError) {
+          console.error('❌ Error loading matches:', matchesError);
+          throw matchesError;
+        }
+
+        const leads = matchesData
+          ?.map(match => match.project)
+          .filter(Boolean) || [];
+        
+        console.log(`✅ Loaded ${leads.length} matched leads`);
+        setAvailableLeads(leads);
       }
 
     } catch (error: any) {

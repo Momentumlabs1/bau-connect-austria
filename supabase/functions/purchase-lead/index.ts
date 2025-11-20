@@ -75,16 +75,37 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 4. Check if contractor already purchased this lead
-    const { data: existingPurchase } = await supabase
+    // 3.5. Check if a match exists for this contractor-project pair
+    console.log('🔍 Checking if match exists...')
+    const { data: matchRecord, error: matchCheckError } = await supabase
       .from('matches')
       .select('*')
       .eq('project_id', leadId)
       .eq('contractor_id', user.id)
-      .eq('lead_purchased', true)
-      .single()
+      .maybeSingle()
 
-    if (existingPurchase) {
+    if (matchCheckError) {
+      console.error('❌ Error checking match:', matchCheckError)
+      throw matchCheckError
+    }
+
+    if (!matchRecord) {
+      console.warn('⚠️ No match found for this contractor-project pair')
+      return new Response(
+        JSON.stringify({
+          error: 'No match found',
+          message: 'Sie können nur Leads kaufen, die Ihnen zugewiesen wurden.',
+          hint: 'Dieser Lead wurde Ihnen nicht angezeigt oder ist nicht mehr verfügbar.'
+        }),
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
+    console.log('✅ Match exists:', matchRecord.id)
+
+    // 4. Check if contractor already purchased this lead
+    if (matchRecord.lead_purchased === true) {
+      console.warn('⚠️ Lead already purchased')
       return new Response(
         JSON.stringify({
           error: 'Already purchased',

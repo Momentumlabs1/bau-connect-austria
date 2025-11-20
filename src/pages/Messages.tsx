@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Loader2 } from "lucide-react";
+import { Send, Loader2, MessageSquare } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Conversation {
@@ -147,22 +147,35 @@ export default function Messages() {
     if (!newMessage.trim() || !selectedConvId) return;
     
     try {
-      await supabase.from('messages').insert({
+      console.log('📤 Sending message...', { conversation_id: selectedConvId });
+      
+      const { error: insertError } = await supabase.from('messages').insert({
         conversation_id: selectedConvId,
         sender_id: userId,
         message: newMessage.trim()
       });
+
+      if (insertError) {
+        console.error('❌ Error inserting message:', insertError);
+        throw insertError;
+      }
       
-      await supabase
+      const { error: updateError } = await supabase
         .from('conversations')
         .update({ 
           updated_at: new Date().toISOString(),
           last_message_at: new Date().toISOString()
         })
         .eq('id', selectedConvId);
+
+      if (updateError) {
+        console.error('❌ Error updating conversation:', updateError);
+      }
       
+      console.log('✅ Message sent successfully');
       setNewMessage('');
     } catch (error: any) {
+      console.error('💥 Send message failed:', error);
       toast({
         title: "Fehler beim Senden",
         description: error.message,
@@ -183,6 +196,31 @@ export default function Messages() {
         <Navbar />
         <div className="flex items-center justify-center min-h-[60vh]">
           <Loader2 className="h-8 w-8 animate-spin text-primary" />
+        </div>
+      </div>
+    );
+  }
+
+  if (conversations.length === 0) {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-8">
+          <Card className="p-12 text-center max-w-lg mx-auto">
+            <MessageSquare className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
+            <h2 className="text-2xl font-bold mb-2">Keine Nachrichten</h2>
+            <p className="text-muted-foreground mb-6">
+              Sie haben noch keine Unterhaltungen. Kontaktieren Sie Handwerker über Ihre Projekte oder durchsuchen Sie verfügbare Leads.
+            </p>
+            <div className="flex gap-4 justify-center">
+              <Button onClick={() => navigate('/kunde/projekt-erstellen')}>
+                Projekt erstellen
+              </Button>
+              <Button variant="outline" onClick={() => navigate('/handwerker/dashboard')}>
+                Leads ansehen
+              </Button>
+            </div>
+          </Card>
         </div>
       </div>
     );
