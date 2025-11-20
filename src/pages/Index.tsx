@@ -248,41 +248,43 @@ const Index = () => {
       <section className="pt-24 pb-12 md:pt-28 md:pb-16 lg:pt-32 lg:pb-20 bg-gradient-to-b from-gray-50 to-white">
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 lg:gap-12 items-center mb-8 md:mb-10">
-              {/* Left Side - Headline */}
-              <div className="text-center lg:text-left lg:order-1">
-                <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 md:mb-5 leading-tight">
-                  <span className="text-gray-900">Der zuverlässige Weg,</span>
-                  <br />
-                  <span className="bg-gradient-to-r from-blue-600 to-blue-700 bg-clip-text text-transparent">
-                    einen Handwerker zu beauftragen
-                  </span>
-                </h1>
+            {/* Hero Section with Background Image Overlay */}
+            <div className="relative rounded-3xl overflow-hidden mb-8 md:mb-10 min-h-[500px] md:min-h-[600px] flex items-center">
+              {/* Background Image with Opacity */}
+              <div className="absolute inset-0">
+                <img 
+                  src={contractorHero} 
+                  alt="Professioneller Handwerker" 
+                  className="w-full h-full object-cover opacity-20"
+                />
               </div>
 
-              {/* Right Side - Contractor Image with Rating Bubble */}
-              <div className="relative lg:order-2 mt-6 lg:mt-0">
-                <div className="relative max-w-sm mx-auto lg:max-w-none">
-                  <img 
-                    src={contractorHero} 
-                    alt="Professioneller Handwerker" 
-                    className="w-full h-auto rounded-2xl shadow-2xl"
-                  />
-                  {/* Rating Bubble - Responsive */}
-                  <div className="absolute top-3 right-3 lg:-top-4 lg:-right-4 bg-white rounded-xl lg:rounded-2xl shadow-2xl p-3 lg:p-4 border-2 border-blue-100 animate-float">
-                    <div className="flex items-center gap-2 lg:gap-3">
-                      <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg lg:rounded-xl flex items-center justify-center">
-                        <Hammer className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
-                      </div>
-                      <div>
-                        <div className="font-bold text-gray-900 text-sm lg:text-base">Thomas M.</div>
-                        <div className="text-xs lg:text-sm text-gray-600">Elektriker</div>
-                        <div className="flex items-center gap-1 mt-0.5 lg:mt-1">
-                          <Star className="h-3 w-3 lg:h-4 lg:w-4 fill-yellow-400 text-yellow-400" />
-                          <span className="font-bold text-gray-900 text-sm lg:text-base">4.9</span>
-                          <span className="text-xs text-gray-500 hidden sm:inline">(247)</span>
-                        </div>
-                      </div>
+              {/* Content Overlay */}
+              <div className="relative z-10 w-full px-6 md:px-12 py-12 md:py-16">
+                <div className="max-w-3xl">
+                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-4 md:mb-5 leading-tight">
+                    <span className="text-gray-900">Der zuverlässige Weg,</span>
+                    <br />
+                    <span className="bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent">qualifizierte Handwerker</span>
+                    <br />
+                    <span className="text-gray-900">zu finden.</span>
+                  </h1>
+                </div>
+              </div>
+
+              {/* Rating Bubble - positioned on image */}
+              <div className="absolute top-4 right-4 md:top-8 md:right-8 bg-white rounded-xl lg:rounded-2xl shadow-2xl p-3 lg:p-4 border-2 border-blue-100 animate-float z-20">
+                <div className="flex items-center gap-2 lg:gap-3">
+                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg lg:rounded-xl flex items-center justify-center">
+                    <Hammer className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
+                  </div>
+                  <div>
+                    <div className="font-bold text-gray-900 text-sm lg:text-base">Thomas M.</div>
+                    <div className="text-xs lg:text-sm text-gray-600">Elektriker</div>
+                    <div className="flex items-center gap-1 mt-0.5 lg:mt-1">
+                      <Star className="h-3 w-3 lg:h-4 lg:w-4 fill-yellow-400 text-yellow-400" />
+                      <span className="font-bold text-gray-900 text-sm lg:text-base">4.9</span>
+                      <span className="text-xs text-gray-500 hidden sm:inline">(247)</span>
                     </div>
                   </div>
                 </div>
