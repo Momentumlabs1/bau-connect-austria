@@ -140,8 +140,9 @@ export default function ContractorOnboarding() {
           toast({ title: "Fehler", description: "Firmenname ist erforderlich", variant: "destructive" });
           return false;
         }
-        if (description.length < 100) {
-          toast({ title: "Fehler", description: "Beschreibung muss mindestens 100 Zeichen lang sein", variant: "destructive" });
+        const lineCount = description.split('\n').length;
+        if (lineCount < 30) {
+          toast({ title: "Fehler", description: `Beschreibung muss mindestens 30 Zeilen haben (aktuell: ${lineCount})`, variant: "destructive" });
           return false;
         }
         return true;
@@ -243,25 +244,38 @@ export default function ContractorOnboarding() {
         return (
           <div className="space-y-6">
             <div>
+              <Label>Profilbild</Label>
+              <SingleImageUpload
+                value={profileImage}
+                onChange={setProfileImage}
+                bucket="profile-images"
+                folder={contractorId || ''}
+              />
+            </div>
+
+            <div>
               <Label htmlFor="companyName">Firmenname *</Label>
               <Input
                 id="companyName"
                 value={companyName}
                 onChange={(e) => setCompanyName(e.target.value)}
-                placeholder="Mustermann GmbH"
+                placeholder="Sanitär Huber & Co"
               />
             </div>
 
             <div>
-              <Label htmlFor="description">Unternehmensbeschreibung * (min. 100 Zeichen)</Label>
+              <Label htmlFor="description">Unternehmensbeschreibung * (min. 30 Zeilen)</Label>
               <Textarea
                 id="description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="Beschreiben Sie Ihr Unternehmen und Ihre Spezialisierung..."
-                className="min-h-[150px]"
+                placeholder="Experten für Heizung und Sanitär mit über 20 Jahren Erfahrung. Wir bieten professionelle Lösungen für Neubauten, Sanierungen und Wartungsarbeiten..."
+                className="min-h-[480px]"
+                rows={30}
               />
-              <p className="mt-1 text-sm text-muted-foreground">{description.length} / 100 Zeichen</p>
+              <p className="mt-1 text-sm text-muted-foreground">
+                {description.split('\n').length} / 30 Zeilen
+              </p>
             </div>
 
             <div>
@@ -295,16 +309,6 @@ export default function ContractorOnboarding() {
                 value={website}
                 onChange={(e) => setWebsite(e.target.value)}
                 placeholder="https://www.beispiel.at"
-              />
-            </div>
-
-            <div>
-              <Label>Profilbild</Label>
-              <SingleImageUpload
-                value={profileImage}
-                onChange={setProfileImage}
-                bucket="profile-images"
-                folder={contractorId || ''}
               />
             </div>
           </div>
