@@ -248,38 +248,38 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {/* Hero Section with Background Image Overlay */}
-            <div className="relative rounded-3xl overflow-hidden mb-8 md:mb-10 min-h-[700px] md:min-h-[800px] lg:min-h-[900px] flex items-center">
+            <div className="relative rounded-3xl overflow-hidden mb-8 md:mb-10 min-h-[550px] md:min-h-[700px] lg:min-h-[800px] flex items-center">
               {/* Background Image with Opacity */}
               <div className="absolute inset-0">
                 <img 
                   src={contractorHero} 
                   alt="Professioneller Handwerker" 
-                  className="w-full h-full object-cover opacity-20"
+                  className="w-full h-full object-cover opacity-30"
                 />
               </div>
 
               {/* Content Overlay */}
-              <div className="relative z-10 w-full px-6 md:px-12 py-12 md:py-16 lg:py-20">
+              <div className="relative z-10 w-full px-3 md:px-12 py-8 md:py-16 lg:py-20">
                 <div className="max-w-4xl">
                   {/* Headline - 3 Zeilen auf Mobile */}
-                  <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl xl:text-7xl font-extrabold mb-8 md:mb-12 leading-tight">
+                  <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold mb-6 md:mb-10 leading-tight">
                     <span className="block text-gray-900">Der zuverlässige Weg,</span>
                     <span className="block bg-gradient-to-r from-blue-600 via-blue-700 to-blue-800 bg-clip-text text-transparent">qualifizierte Handwerker</span>
                     <span className="block text-orange-600">zu finden.</span>
                   </h1>
 
                   {/* Project Creation Box */}
-                  <div className="max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 border-2 border-gray-100">
-                    <div className="mb-4 md:mb-6">
-                      <h2 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">Beschreiben Sie Ihren Auftrag</h2>
-                      <p className="text-sm md:text-base text-gray-600">
+                  <div className="max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-6 border-2 border-gray-100">
+                    <div className="mb-3 md:mb-5">
+                      <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">Beschreiben Sie Ihren Auftrag</h2>
+                      <p className="text-xs md:text-base text-gray-600">
                         z.B.: Malerarbeiten, Badezimmer renovieren, Elektroinstallation
                       </p>
                     </div>
 
-                    <div className="flex flex-col sm:flex-row gap-3">
+                    <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
                       <div className="flex-1 relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+                        <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-gray-400 z-10" />
                         <Input
                           type="text"
                           placeholder="z.B.: Malerarbeiten"
@@ -288,7 +288,7 @@ const Index = () => {
                           onKeyPress={handleKeyPress}
                           onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                          className="pl-12 h-12 md:h-14 text-base md:text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
+                          className="pl-10 md:pl-12 h-11 md:h-14 text-sm md:text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
                         />
                         
                         {/* Live Search Suggestions */}
@@ -316,9 +316,9 @@ const Index = () => {
                       <Button
                         size="lg"
                         onClick={handleSearch}
-                        className="h-12 md:h-14 px-6 md:px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-base md:text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 transition-all"
+                        className="h-11 md:h-14 px-4 md:px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-sm md:text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 transition-all"
                       >
-                        <ArrowRight className="mr-2 h-5 w-5" />
+                        <ArrowRight className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
                         Auftrag erstellen
                       </Button>
                     </div>
