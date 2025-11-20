@@ -37,13 +37,14 @@ export default function CustomerDashboard() {
       return;
     }
 
-    const { data: profile } = await supabase
-      .from("profiles")
+    const { data: userRoles } = await supabase
+      .from("user_roles")
       .select("role")
-      .eq("id", session.user.id)
-      .maybeSingle();
+      .eq("user_id", session.user.id);
 
-    if (profile?.role !== "customer") {
+    const roles = userRoles?.map(r => r.role) || [];
+    
+    if (!roles.includes("customer")) {
       toast({
         title: "Zugriff verweigert",
         description: "Sie haben keine Berechtigung für diese Seite",

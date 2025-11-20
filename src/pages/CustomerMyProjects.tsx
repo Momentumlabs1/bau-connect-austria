@@ -123,6 +123,39 @@ export default function CustomerMyProjects() {
   const sendBulkMessages = async () => {
     if (!selectedProject || !bulkMessage.trim()) return;
 
+    // ============================================================
+    // SECURITY: Validate message before sending
+    // ============================================================
+    const trimmedMessage = bulkMessage.trim();
+    
+    if (trimmedMessage.length === 0) {
+      toast({
+        title: "Fehler",
+        description: "Nachricht darf nicht leer sein.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    if (trimmedMessage.length > 5000) {
+      toast({
+        title: "Nachricht zu lang",
+        description: "Nachricht darf maximal 5000 Zeichen lang sein.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    // Check for potentially malicious content
+    if (/<script|javascript:|on\w+=/i.test(trimmedMessage)) {
+      toast({
+        title: "Ungültige Nachricht",
+        description: "Nachricht enthält nicht erlaubte Zeichen.",
+        variant: "destructive"
+      });
+      return;
+    }
+
     setSending(true);
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -157,11 +190,11 @@ export default function CustomerMyProjects() {
         }
 
         if (conversationId) {
-          // Send message
+          // Send message (already validated above)
           await supabase.from("messages").insert({
             conversation_id: conversationId,
             sender_id: user.id,
-            message: bulkMessage
+            message: trimmedMessage
           });
 
           // Create notification
@@ -169,7 +202,7 @@ export default function CustomerMyProjects() {
             handwerker_id: contractorId,
             type: "NEW_MESSAGE",
             title: "Neue Nachricht vom Kunden",
-            body: `${selectedProject.title}: ${bulkMessage.substring(0, 100)}...`,
+            body: `${selectedProject.title}: ${trimmedMessage.substring(0, 100)}...`,
             data: {
               project_id: selectedProject.id,
               conversation_id: conversationId

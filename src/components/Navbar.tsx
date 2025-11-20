@@ -34,11 +34,21 @@ export const Navbar = () => {
 
   const loadUserRole = async (userId: string) => {
     const { data } = await supabase
-      .from('profiles')
+      .from('user_roles')
       .select('role')
-      .eq('id', userId)
-      .maybeSingle();
-    setUserRole(data?.role || null);
+      .eq('user_id', userId);
+
+    if (data && data.length > 0) {
+      // Priority: admin > contractor > customer
+      const roles = data.map(r => r.role);
+      if (roles.includes('admin')) {
+        setUserRole('admin');
+      } else if (roles.includes('contractor')) {
+        setUserRole('contractor');
+      } else if (roles.includes('customer')) {
+        setUserRole('customer');
+      }
+    }
   };
 
   const loadUnreadCount = async (userId: string) => {

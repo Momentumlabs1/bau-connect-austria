@@ -17,6 +17,7 @@ interface Project {
   images: string[]
   projekt_typ: string
   estimated_value?: number
+  customer_id: string
 }
 
 interface Contractor {
@@ -54,15 +55,10 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 // Simplified geocoding - Austrian postal codes to approximate coordinates
-// This is a basic implementation - in production you'd use a real geocoding API
 function getCoordinatesFromPostalCode(postalCode: string): { lat: number; lon: number } | null {
-  // Perg center coordinates
   const pergCenter = { lat: 48.2511, lon: 14.6356 }
-  
-  // Very simplified: use first digit to approximate region
   const firstDigit = parseInt(postalCode.charAt(0))
   
-  // Rough approximation of Austrian regions
   const regionOffsets: Record<number, { lat: number; lon: number }> = {
     1: { lat: 48.2082, lon: 16.3738 }, // Vienna
     2: { lat: 48.2, lon: 15.6 }, // Lower Austria
@@ -88,14 +84,14 @@ function calculateRelevanceScore(
   let score = 100
   
   // Distance penalty (closer is better)
-  score -= distance * 0.5 // -0.5 points per km
+  score -= distance * 0.5
   
   // Quality score bonus
-  score += contractor.quality_score * 0.3 // Up to +30 points for quality 100
+  score += contractor.quality_score * 0.3
   
-  // Wallet balance check (can they afford it?)
+  // Wallet balance check
   if (contractor.wallet_balance < leadPrice) {
-    return 0 // Can't match if they can't afford it
+    return 0
   }
   
   // Budget match bonus
@@ -106,13 +102,13 @@ function calculateRelevanceScore(
   
   // Urgency handling
   if (project.urgency === 'high' && !contractor.accepts_urgent) {
-    score -= 50 // Big penalty for urgent projects if contractor doesn't accept them
+    score -= 50
   }
   
   return Math.max(0, score)
 }
 
-// Calculate lead price based on gewerk and urgency
+// Calculate lead price
 function calculateLeadPrice(
   gewerkConfig: GewerkConfig,
   urgency: string,
@@ -121,12 +117,10 @@ function calculateLeadPrice(
 ): number {
   let price = gewerkConfig.base_price
   
-  // Urgency surcharge
   if (urgency === 'high') {
     price += gewerkConfig.urgent_surcharge
   }
   
-  // Quality bonus for detailed leads
   if (hasPhotos && descriptionLength > 200) {
     price += 5
   }
@@ -140,32 +134,72 @@ Deno.serve(async (req) => {
     return new Response(null, { headers: corsHeaders })
   }
 
+  console.log('🎯 Starting contractor matching...')
+
   try {
+    // ============================================================
+    // SECURITY: Verify JWT and project ownership
+    // ============================================================
+    const authHeader = req.headers.get('Authorization')
+    if (!authHeader) {
+      console.error('❌ No Authorization header')
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Missing authentication' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseServiceKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')!
     const supabase = createClient(supabaseUrl, supabaseServiceKey)
 
-    const { projectId } = await req.json()
-    console.log('🔍 Starting contractor matching for project:', projectId)
+    // Get authenticated user
+    const token = authHeader.replace('Bearer ', '')
+    const { data: { user }, error: authError } = await supabase.auth.getUser(token)
+    
+    if (authError || !user) {
+      console.error('❌ Invalid token:', authError)
+      return new Response(
+        JSON.stringify({ error: 'Unauthorized: Invalid token' }), 
+        { status: 401, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
 
-    // 1. Get project details
+    console.log('✅ Authenticated user:', user.id)
+
+    const { projectId } = await req.json()
+    
+    // Verify project exists and user owns it
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .select('*')
       .eq('id', projectId)
       .single()
-
+    
     if (projectError || !project) {
-      throw new Error(`Project not found: ${projectError?.message}`)
+      console.error('❌ Project not found:', projectError)
+      return new Response(
+        JSON.stringify({ error: 'Project not found' }), 
+        { status: 404, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
     }
-
+    
+    if (project.customer_id !== user.id) {
+      console.error('❌ Project ownership mismatch')
+      return new Response(
+        JSON.stringify({ error: 'Forbidden: You do not own this project' }), 
+        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      )
+    }
+    
+    console.log('✅ Project ownership verified')
     console.log('📋 Project details:', {
       gewerk_id: project.gewerk_id,
       city: project.city,
       urgency: project.urgency
     })
 
-    // 2. Get gewerk pricing config
+    // Get gewerk pricing config
     const { data: gewerkConfig, error: gewerkError } = await supabase
       .from('gewerke_config')
       .select('*')
@@ -176,7 +210,7 @@ Deno.serve(async (req) => {
       throw new Error(`Gewerk config not found: ${gewerkError?.message}`)
     }
 
-    // 3. Calculate lead price
+    // Calculate lead price
     const leadPrice = calculateLeadPrice(
       gewerkConfig,
       project.urgency || 'medium',
@@ -186,7 +220,7 @@ Deno.serve(async (req) => {
 
     console.log('💰 Calculated lead price:', leadPrice, 'EUR')
 
-    // 4. Update project with pricing
+    // Update project with pricing
     await supabase
       .from('projects')
       .update({
@@ -195,7 +229,7 @@ Deno.serve(async (req) => {
       })
       .eq('id', projectId)
 
-    // 5. Find matching contractors
+    // Find matching contractors
     const { data: contractors, error: contractorsError } = await supabase
       .from('contractors')
       .select('*')
@@ -221,7 +255,7 @@ Deno.serve(async (req) => {
       )
     }
 
-    // 6. Calculate distances and scores
+    // Calculate distances and scores
     const projectCoords = getCoordinatesFromPostalCode(project.postal_code)
     
     if (!projectCoords) {
@@ -266,10 +300,10 @@ Deno.serve(async (req) => {
 
     console.log('✅ Matched contractors:', scoredContractors.length)
 
-    // 7. Take top 5 contractors
+    // Take top 5 contractors
     const topMatches = scoredContractors.slice(0, 5)
 
-    // 8. Create notifications for matched contractors
+    // Create notifications for matched contractors
     const notifications = topMatches.map(match => ({
       handwerker_id: match!.contractor.id,
       type: 'NEW_LEAD_AVAILABLE',
@@ -285,7 +319,7 @@ Deno.serve(async (req) => {
         postal_code_partial: project.postal_code.substring(0, 2) + '**'
       },
       channels: ['email', 'push'],
-      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString() // 24 hours
+      expires_at: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString()
     }))
 
     if (notifications.length > 0) {
@@ -300,7 +334,7 @@ Deno.serve(async (req) => {
       }
     }
 
-    // 9. Create match records
+    // Create match records
     const matches = topMatches.map(match => ({
       project_id: projectId,
       contractor_id: match!.contractor.id,

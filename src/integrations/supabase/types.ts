@@ -448,7 +448,6 @@ export type Database = {
           id: string
           last_name: string | null
           phone: string | null
-          role: string
           updated_at: string
         }
         Insert: {
@@ -458,7 +457,6 @@ export type Database = {
           id: string
           last_name?: string | null
           phone?: string | null
-          role: string
           updated_at?: string
         }
         Update: {
@@ -468,7 +466,6 @@ export type Database = {
           id?: string
           last_name?: string | null
           phone?: string | null
-          role?: string
           updated_at?: string
         }
         Relationships: []
@@ -795,6 +792,27 @@ export type Database = {
           },
         ]
       }
+      user_roles: {
+        Row: {
+          created_at: string | null
+          id: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          role: Database["public"]["Enums"]["app_role"]
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          role?: Database["public"]["Enums"]["app_role"]
+          user_id?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never
@@ -809,8 +827,16 @@ export type Database = {
         }
         Returns: number
       }
+      has_role: {
+        Args: {
+          _role: Database["public"]["Enums"]["app_role"]
+          _user_id: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
+      app_role: "admin" | "customer" | "contractor"
       gewerk_type:
         | "elektriker"
         | "sanitar-heizung"
@@ -958,6 +984,7 @@ export type CompositeTypes<
 export const Constants = {
   public: {
     Enums: {
+      app_role: ["admin", "customer", "contractor"],
       gewerk_type: [
         "elektriker",
         "sanitar-heizung",

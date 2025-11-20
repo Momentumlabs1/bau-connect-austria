@@ -70,6 +70,16 @@ export default function Register() {
           .eq("id", authData.user.id);
 
         if (profileError) console.error("Profile update error:", profileError);
+
+        // Insert role into user_roles table
+        const { error: roleError } = await supabase
+          .from("user_roles")
+          .insert({
+            user_id: authData.user.id,
+            role: role,
+          });
+
+        if (roleError) console.error("Role insert error:", roleError);
         
         // Create contractor profile if registering as contractor
         if (role === 'contractor' && authData.user) {
