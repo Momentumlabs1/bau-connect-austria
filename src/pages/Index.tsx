@@ -174,7 +174,6 @@ const Index = () => {
   const trustSignals = [
     { label: "Projekte vermittelt", value: "6.075+", icon: Hammer },
     { label: "Verifizierte Handwerker", value: "156+", icon: Users },
-    { label: "Durchschnittsbewertung", value: "4.9★", icon: Star },
   ];
 
   return (
@@ -271,24 +270,6 @@ const Index = () => {
                   </h1>
                 </div>
               </div>
-
-              {/* Rating Bubble - positioned on image */}
-              <div className="absolute top-4 right-4 md:top-8 md:right-8 bg-white rounded-xl lg:rounded-2xl shadow-2xl p-3 lg:p-4 border-2 border-blue-100 animate-float z-20">
-                <div className="flex items-center gap-2 lg:gap-3">
-                  <div className="w-10 h-10 lg:w-12 lg:h-12 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg lg:rounded-xl flex items-center justify-center">
-                    <Hammer className="h-5 w-5 lg:h-6 lg:w-6 text-white" />
-                  </div>
-                  <div>
-                    <div className="font-bold text-gray-900 text-sm lg:text-base">Thomas M.</div>
-                    <div className="text-xs lg:text-sm text-gray-600">Elektriker</div>
-                    <div className="flex items-center gap-1 mt-0.5 lg:mt-1">
-                      <Star className="h-3 w-3 lg:h-4 lg:w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-bold text-gray-900 text-sm lg:text-base">4.9</span>
-                      <span className="text-xs text-gray-500 hidden sm:inline">(247)</span>
-                    </div>
-                  </div>
-                </div>
-              </div>
             </div>
 
             {/* Main Search Box - Prominent wie MyHammer */}
@@ -373,14 +354,16 @@ const Index = () => {
             </div>
 
             {/* Trust Signals - Mini Stats */}
-            <div className="flex flex-wrap justify-center gap-4 md:gap-6 text-sm text-gray-600">
+            <div className="flex flex-wrap justify-center gap-8 md:gap-16">
               {trustSignals.map((signal, idx) => {
                 const Icon = signal.icon;
                 return (
-                  <div key={idx} className="flex items-center gap-2">
-                    <Icon className="h-4 w-4 text-blue-600" />
-                    <span className="font-semibold text-gray-900">{signal.value}</span>
-                    <span className="hidden sm:inline">{signal.label}</span>
+                  <div key={idx} className="flex items-center gap-3">
+                    <Icon className="h-6 w-6 text-blue-600" />
+                    <div>
+                      <div className="text-2xl md:text-3xl font-bold text-gray-900">{signal.value}</div>
+                      <div className="text-sm text-gray-600">{signal.label}</div>
+                    </div>
                   </div>
                 );
               })}
