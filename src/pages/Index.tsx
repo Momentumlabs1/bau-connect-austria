@@ -273,8 +273,8 @@ const Index = () => {
                   {/* Headline - 3 Zeilen */}
                   <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight drop-shadow-2xl">
                     <span className="text-white">Der einfachste Weg,</span><br />
-                    <span className="text-blue-400 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">qualifizierte</span>{' '}
-                    <span className="text-orange-400 drop-shadow-[0_0_15px_rgba(251,146,60,0.5)]">Handwerker</span><br />
+                    <span className="text-blue-600 drop-shadow-[0_0_20px_rgba(37,99,235,0.6)]">qualifizierte</span>{' '}
+                    <span className="text-orange-600 drop-shadow-[0_0_20px_rgba(234,88,12,0.6)]">Handwerker</span><br />
                     <span className="text-white">zu finden.</span>
                   </h1>
 
