@@ -120,8 +120,9 @@ const Index = () => {
         const { data, error } = await supabase
           .from('service_categories')
           .select('*')
-          .eq('level', 2)
+          .in('level', [1, 2])
           .ilike('name', `%${searchQuery}%`)
+          .order('level', { ascending: true })
           .limit(5);
 
         console.log('📊 Search results:', data?.length || 0, 'items');
