@@ -855,38 +855,70 @@ export default function CreateProject() {
               value={projectData.urgency}
               onValueChange={(value) => updateProjectData("urgency", value as 'high' | 'medium' | 'low')}
             >
-              <div className="space-y-3 max-w-2xl mx-auto">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
                 {[
-                  { value: "high", label: "🚨 Sofort / Notfall (innerhalb 24-48h)", description: "Dringender Auftrag - höhere Lead-Kosten" },
-                  { value: "medium", label: "📅 Normal (innerhalb 1-2 Wochen)", description: "Standard-Zeitrahmen" },
-                  { value: "low", label: "🕐 Flexibel / Nach Absprache", description: "Kein fester Zeitplan" }
+                  { 
+                    value: "high", 
+                    label: "Sehr dringend (sofort)", 
+                    description: "Innerhalb 24-48h",
+                    icon: "🔴",
+                    borderColor: "border-red-500",
+                    bgColor: "bg-red-50/40",
+                    bgSelected: "bg-red-50",
+                    ringColor: "ring-red-500"
+                  },
+                  { 
+                    value: "medium", 
+                    label: "Dringend (diese Woche)", 
+                    description: "Innerhalb 1-2 Wochen",
+                    icon: "🟡",
+                    borderColor: "border-yellow-500",
+                    bgColor: "bg-yellow-50/40",
+                    bgSelected: "bg-yellow-50",
+                    ringColor: "ring-yellow-500"
+                  },
+                  { 
+                    value: "low", 
+                    label: "Normal (nächste Wochen)", 
+                    description: "Flexibel nach Absprache",
+                    icon: "🟢",
+                    borderColor: "border-green-500",
+                    bgColor: "bg-green-50/40",
+                    bgSelected: "bg-green-50",
+                    ringColor: "ring-green-500"
+                  }
                 ].map((option) => {
                   const isSelected = projectData.urgency === option.value;
                   
                   return (
                     <motion.div
                       key={option.value}
-                      whileHover={{ scale: 1.02 }}
+                      whileHover={{ scale: 1.03 }}
                       whileTap={{ scale: 0.98 }}
+                      className={cn(
+                        "relative rounded-xl border-2 p-6 cursor-pointer transition-all",
+                        option.borderColor,
+                        isSelected ? `${option.bgSelected} shadow-lg ring-2 ring-offset-2 ${option.ringColor}` : `${option.bgColor} hover:shadow-md`
+                      )}
+                      onClick={() => updateProjectData("urgency", option.value as 'high' | 'medium' | 'low')}
                     >
-                      <div
-                        className={cn(
-                          "flex items-start space-x-4 rounded-lg border-2 p-5 transition-all cursor-pointer hover:border-primary/50 hover:shadow-md",
-                          isSelected
-                            ? "border-primary bg-primary/5 shadow-sm"
-                            : "border-border"
-                        )}
-                        onClick={() => updateProjectData("urgency", option.value as 'high' | 'medium' | 'low')}
-                      >
-                        <RadioGroupItem value={option.value} id={option.value} className="flex-shrink-0 mt-1" />
-                        <div className="flex-1">
+                      <RadioGroupItem 
+                        value={option.value} 
+                        id={option.value} 
+                        className="absolute top-4 right-4 h-5 w-5"
+                      />
+                      <div className="flex flex-col items-center text-center space-y-3 pt-2">
+                        <div className="w-20 h-20 rounded-full bg-white shadow-sm flex items-center justify-center text-5xl">
+                          {option.icon}
+                        </div>
+                        <div className="space-y-1">
                           <Label 
                             htmlFor={option.value} 
-                            className="cursor-pointer font-medium text-base block mb-1"
+                            className="cursor-pointer font-bold text-base block"
                           >
                             {option.label}
                           </Label>
-                          <p className="text-sm text-muted-foreground">{option.description}</p>
+                          <p className="text-sm text-muted-foreground font-medium">{option.description}</p>
                         </div>
                       </div>
                     </motion.div>
