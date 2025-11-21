@@ -259,11 +259,11 @@ const Index = () => {
             {/* Hero Section with Background Image Overlay */}
             <div className="relative rounded-3xl overflow-hidden mb-8 md:mb-10 min-h-[550px] md:min-h-[700px] lg:min-h-[800px] flex items-center">
               {/* Background Image with Opacity */}
-              <div className="absolute inset-0">
+              <div className="absolute inset-0 bg-gradient-to-r from-gray-900/70 to-gray-900/50">
                 <img 
                   src={contractorHero} 
                   alt="Professioneller Handwerker" 
-                  className="w-full h-full object-cover opacity-40"
+                  className="w-full h-full object-cover opacity-50"
                 />
               </div>
 
@@ -271,11 +271,11 @@ const Index = () => {
               <div className="relative z-10 w-full px-3 md:px-12 py-8 md:py-16 lg:py-20">
                 <div className="max-w-4xl">
                   {/* Headline - 3 Zeilen */}
-                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight">
-                    <span className="text-white" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)' }}>Der einfachste Weg,</span><br />
-                    <span className="text-blue-600" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)' }}>qualifizierte</span>{' '}
-                    <span className="text-orange-600" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)' }}>Handwerker</span><br />
-                    <span className="text-white" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)' }}>zu finden.</span>
+                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight drop-shadow-2xl">
+                    <span className="text-white">Der einfachste Weg,</span><br />
+                    <span className="text-blue-400 drop-shadow-[0_0_15px_rgba(59,130,246,0.5)]">qualifizierte</span>{' '}
+                    <span className="text-orange-400 drop-shadow-[0_0_15px_rgba(251,146,60,0.5)]">Handwerker</span><br />
+                    <span className="text-white">zu finden.</span>
                   </h1>
 
                   {/* Project Creation Box */}
