@@ -593,15 +593,15 @@ export default function CreateProject() {
                 )}
 
                 {question.question_type === "multiselect" && question.options && (
-                  <div className="grid grid-cols-2 gap-4 md:grid-cols-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                     {question.options.map((option: any) => {
                       const isSelected = (projectData.tradeSpecificAnswers[question.id] || []).includes(option.value);
                       
                       return (
-                        <SelectionCard
+                        <motion.div
                           key={option.value}
-                          label={option.label}
-                          isSelected={isSelected}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
                           onClick={() => {
                             const current = projectData.tradeSpecificAnswers[question.id] || [];
                             const updated = isSelected
@@ -609,7 +609,27 @@ export default function CreateProject() {
                               : [...current, option.value];
                             updateTradeSpecificAnswer(question.id, updated);
                           }}
-                        />
+                          className={cn(
+                            "relative cursor-pointer rounded-xl border-2 p-6 transition-all hover:shadow-lg",
+                            isSelected
+                              ? "border-primary bg-primary/5 shadow-md"
+                              : "border-gray-200 hover:border-primary/50 bg-white"
+                          )}
+                        >
+                          <Checkbox
+                            checked={isSelected}
+                            className="absolute top-4 right-4 h-5 w-5"
+                          />
+                          <div className="flex flex-col items-center text-center space-y-3">
+                            <div className={cn(
+                              "w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-colors",
+                              isSelected ? "bg-primary/10" : "bg-gray-100"
+                            )}>
+                              {option.icon || "📋"}
+                            </div>
+                            <p className="font-semibold text-base">{option.label}</p>
+                          </div>
+                        </motion.div>
                       );
                     })}
                   </div>
@@ -620,29 +640,43 @@ export default function CreateProject() {
                     value={projectData.tradeSpecificAnswers[question.id]}
                     onValueChange={(value) => updateTradeSpecificAnswer(question.id, value)}
                   >
-                    <div className="space-y-3">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
                       {question.options.map((option: any) => {
                         const isSelected = projectData.tradeSpecificAnswers[question.id] === option.value;
                         
                         return (
-                          <div
+                          <motion.div
                             key={option.value}
+                            whileHover={{ scale: 1.02 }}
+                            whileTap={{ scale: 0.98 }}
                             className={cn(
-                              "flex items-center space-x-3 rounded-lg border-2 p-4 transition-all cursor-pointer hover:border-primary/50 hover:shadow-md",
+                              "relative cursor-pointer rounded-xl border-2 p-6 transition-all hover:shadow-lg",
                               isSelected
-                                ? "border-primary bg-primary/5 shadow-sm"
-                                : "border-border"
+                                ? "border-primary bg-primary/5 shadow-md"
+                                : "border-gray-200 hover:border-primary/50 bg-white"
                             )}
                             onClick={() => updateTradeSpecificAnswer(question.id, option.value)}
                           >
-                            <RadioGroupItem value={option.value} id={option.value} />
-                            <Label 
-                              htmlFor={option.value} 
-                              className="flex-1 cursor-pointer font-normal"
-                            >
-                              {option.label}
-                            </Label>
-                          </div>
+                            <RadioGroupItem
+                              value={option.value}
+                              id={option.value}
+                              className="absolute top-4 right-4"
+                            />
+                            <div className="flex flex-col items-center text-center space-y-3">
+                              <div className={cn(
+                                "w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-colors",
+                                isSelected ? "bg-primary/10" : "bg-gray-100"
+                              )}>
+                                {option.icon || "📋"}
+                              </div>
+                              <Label 
+                                htmlFor={option.value} 
+                                className="font-semibold text-base cursor-pointer"
+                              >
+                                {option.label}
+                              </Label>
+                            </div>
+                          </motion.div>
                         );
                       })}
                     </div>
