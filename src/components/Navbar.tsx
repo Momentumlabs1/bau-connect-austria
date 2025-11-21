@@ -1,16 +1,18 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User } from "lucide-react";
+import { LogOut, User, Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
 import logo from "@/assets/bauconnect-logo.png";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export const Navbar = () => {
   const navigate = useNavigate();
   const [user, setUser] = useState<SupabaseUser | null>(null);
   const [userRole, setUserRole] = useState<string | null>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     supabase.auth.getSession().then(({ data: { session } }) => {
@@ -84,7 +86,8 @@ export const Navbar = () => {
             <img src={logo} alt="BauConnect" className="h-12 md:h-16" />
           </Link>
 
-          <div className="flex items-center gap-3">
+          {/* Desktop Navigation */}
+          <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
                 <Button
@@ -124,6 +127,84 @@ export const Navbar = () => {
               </>
             )}
           </div>
+
+          {/* Mobile Navigation */}
+          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+            <SheetTrigger asChild className="md:hidden">
+              <Button variant="ghost" size="sm">
+                <Menu className="h-6 w-6" />
+              </Button>
+            </SheetTrigger>
+            <SheetContent side="right" className="w-[300px]">
+              <div className="flex flex-col gap-4 mt-8">
+                {user ? (
+                  <>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start"
+                      onClick={() => {
+                        navigate(userRole === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard');
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <User className="mr-2 h-4 w-4" />
+                      Dashboard
+                    </Button>
+                    <Button
+                      variant="ghost"
+                      className="w-full justify-start relative"
+                      onClick={() => {
+                        navigate('/nachrichten');
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <span className="mr-2">💬</span>
+                      Nachrichten
+                      {unreadCount > 0 && (
+                        <span className="ml-auto bg-destructive text-destructive-foreground rounded-full w-6 h-6 text-xs flex items-center justify-center">
+                          {unreadCount}
+                        </span>
+                      )}
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full justify-start"
+                      onClick={() => {
+                        handleLogout();
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      <LogOut className="mr-2 h-4 w-4" />
+                      Abmelden
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button 
+                      variant="ghost" 
+                      className="w-full"
+                      onClick={() => {
+                        navigate("/login");
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Anmelden
+                    </Button>
+                    <Button 
+                      variant="default" 
+                      className="w-full"
+                      onClick={() => {
+                        navigate("/register");
+                        setMobileMenuOpen(false);
+                      }}
+                    >
+                      Registrieren
+                    </Button>
+                  </>
+                )}
+              </div>
+            </SheetContent>
+          </Sheet>
         </div>
       </div>
     </nav>
