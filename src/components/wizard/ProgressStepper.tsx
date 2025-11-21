@@ -13,7 +13,7 @@ interface ProgressStepperProps {
 
 export function ProgressStepper({ steps, currentStep }: ProgressStepperProps) {
   return (
-    <div className="w-full py-6">
+    <div className="w-full py-3 md:py-4">
       <div className="relative">
         {/* Progress Bar Background */}
         <div className="absolute left-0 top-5 h-1 w-full bg-secondary" />
