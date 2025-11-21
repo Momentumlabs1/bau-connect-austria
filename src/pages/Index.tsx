@@ -273,7 +273,7 @@ const Index = () => {
                   {/* Headline - 3 Zeilen */}
                   <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight text-white" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.5)' }}>
                     Der einfachste Weg,<br />
-                    qualifizierte Handwerker<br />
+                    <span className="text-blue-500">qualifizierte</span> <span className="text-orange-500">Handwerker</span><br />
                     zu finden.
                   </h1>
 
