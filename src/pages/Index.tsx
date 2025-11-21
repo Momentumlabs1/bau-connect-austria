@@ -270,10 +270,10 @@ const Index = () => {
               <div className="relative z-10 w-full px-3 md:px-12 py-8 md:py-16 lg:py-20">
                 <div className="max-w-4xl">
                   {/* Headline - 3 Zeilen */}
-                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight">
-                    <span className="block text-gray-900">Der einfachste Weg,</span>
-                    <span className="block text-blue-600">qualifizierte Handwerker</span>
-                    <span className="block text-orange-600">zu finden.</span>
+                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight text-gray-900">
+                    Der einfachste Weg,<br />
+                    qualifizierte Handwerker<br />
+                    zu finden.
                   </h1>
 
                   {/* Project Creation Box */}
