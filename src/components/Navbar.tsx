@@ -4,7 +4,7 @@ import { LogOut, User, Menu, X } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
 import { User as SupabaseUser } from "@supabase/supabase-js";
-import logo from "@/assets/bauconnect-logo.png";
+import logo from "@/assets/bauconnect-logo-new.png";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export const Navbar = () => {

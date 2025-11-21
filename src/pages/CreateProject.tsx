@@ -527,19 +527,35 @@ export default function CreateProject() {
                 </div>
                 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-                  {subCategories.map((category) => {
-                    const IconComponent = category.icon ? iconMap[category.icon] : null;
-                    return (
-                      <SelectionCard
-                        key={category.id}
-                        icon={IconComponent ? <IconComponent className="h-10 w-10" /> : undefined}
-                        label={category.name}
-                        description={category.description}
-                        isSelected={projectData.subcategory_id === category.id}
-                        onClick={() => updateProjectData("subcategory_id", category.id)}
-                      />
-                    );
-                  })}
+                  {subCategories.length > 0 ? (
+                    subCategories.map((category) => {
+                      const IconComponent = category.icon ? iconMap[category.icon] : null;
+                      return (
+                        <SelectionCard
+                          key={category.id}
+                          icon={IconComponent ? <IconComponent className="h-10 w-10" /> : undefined}
+                          label={category.name}
+                          description={category.description}
+                          isSelected={projectData.subcategory_id === category.id}
+                          onClick={() => updateProjectData("subcategory_id", category.id)}
+                        />
+                      );
+                    })
+                  ) : (
+                    <div className="col-span-full text-center py-12">
+                      <p className="text-muted-foreground mb-4">Keine Unterkategorien für dieses Gewerk verfügbar.</p>
+                      <Button 
+                        variant="outline"
+                        onClick={() => {
+                          setSelectedMainCategory("");
+                          setSubCategories([]);
+                        }}
+                      >
+                        <ArrowLeft className="h-4 w-4 mr-2" />
+                        Zurück zur Auswahl
+                      </Button>
+                    </div>
+                  )}
                 </div>
               </div>
             )}
