@@ -306,21 +306,32 @@ const Index = () => {
                             <div className="p-2 bg-gray-50 border-b border-gray-200">
                               <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
                             </div>
-                            {searchSuggestions.map((suggestion) => (
-                              <button
-                                key={suggestion.id}
-                                onClick={() => handleSuggestionClick(suggestion)}
-                                className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                              >
-                                {suggestion.icon && <span className="text-2xl">{suggestion.icon}</span>}
-                                <div className="flex-1">
-                                  <p className="font-semibold text-sm">{suggestion.name}</p>
-                                  {suggestion.description && (
-                                    <p className="text-xs text-muted-foreground">{suggestion.description}</p>
-                                  )}
-                                </div>
-                              </button>
-                            ))}
+                            {searchSuggestions.map((suggestion) => {
+                              // Get parent category name
+                              const parentCategory = suggestion.level === 2 
+                                ? quickCategories.find(cat => cat.id === suggestion.parent_id)?.name 
+                                : suggestion.name;
+                              
+                              return (
+                                <button
+                                  key={suggestion.id}
+                                  onClick={() => handleSuggestionClick(suggestion)}
+                                  className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                >
+                                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                    <span className="text-xl">🔨</span>
+                                  </div>
+                                  <div className="flex-1 min-w-0">
+                                    <p className="font-semibold text-sm text-gray-900">
+                                      {parentCategory}{suggestion.level === 2 && ` / ${suggestion.name}`}
+                                    </p>
+                                    {suggestion.description && (
+                                      <p className="text-xs text-muted-foreground truncate">{suggestion.description}</p>
+                                    )}
+                                  </div>
+                                </button>
+                              );
+                            })}
                           </div>
                         )}
                       </div>
