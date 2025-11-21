@@ -271,10 +271,11 @@ const Index = () => {
               <div className="relative z-10 w-full px-3 md:px-12 py-8 md:py-16 lg:py-20">
                 <div className="max-w-4xl">
                   {/* Headline - 3 Zeilen */}
-                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight text-white" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.7), 0 2px 4px rgba(0,0,0,0.5)' }}>
-                    Der einfachste Weg,<br />
-                    <span className="text-blue-500">qualifizierte</span> <span className="text-orange-500">Handwerker</span><br />
-                    zu finden.
+                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight">
+                    <span className="text-white" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)' }}>Der einfachste Weg,</span><br />
+                    <span className="text-blue-600" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)' }}>qualifizierte</span>{' '}
+                    <span className="text-orange-600" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)' }}>Handwerker</span><br />
+                    <span className="text-white" style={{ textShadow: '0 4px 12px rgba(0,0,0,0.8), 0 2px 4px rgba(0,0,0,0.6)' }}>zu finden.</span>
                   </h1>
 
                   {/* Project Creation Box */}
