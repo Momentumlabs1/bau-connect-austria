@@ -109,7 +109,7 @@ const Index = () => {
   // Live search for subcategories
   useEffect(() => {
     const searchSubcategories = async () => {
-      if (searchQuery.trim().length < 2) {
+      if (searchQuery.trim().length < 1) {
         setSearchSuggestions([]);
         setShowSuggestions(false);
         return;
@@ -293,8 +293,8 @@ const Index = () => {
                           placeholder="z.B.: Malerarbeiten"
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
+                           onKeyPress={handleKeyPress}
+                           onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
                           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                           className="pl-10 md:pl-12 h-11 md:h-14 text-sm md:text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
                         />
