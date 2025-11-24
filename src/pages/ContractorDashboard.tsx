@@ -94,6 +94,35 @@ export default function HandwerkerDashboard() {
     loadDashboardData();
   }, []);
 
+  // Auto-backfill matches on first load if no leads available
+  useEffect(() => {
+    const autoBackfill = async () => {
+      if (!loading && profile && availableLeads.length === 0 && !backfilling) {
+        console.log('🔄 Auto-backfilling matches on dashboard load...');
+        setBackfilling(true);
+        try {
+          const { data, error } = await supabase.functions.invoke('backfill-contractor-matches');
+          
+          if (error) throw error;
+          
+          if (data?.matchesCreated > 0) {
+            toast({
+              title: `✅ ${data.matchesCreated} passende Leads gefunden!`,
+              description: "Diese wurden automatisch für Sie geladen.",
+            });
+            await loadDashboardData();
+          }
+        } catch (error: any) {
+          console.error('Auto-backfill error:', error);
+        } finally {
+          setBackfilling(false);
+        }
+      }
+    };
+    
+    autoBackfill();
+  }, [loading, profile, availableLeads.length]);
+
   useEffect(() => {
     if (profile && userId) {
       checkProfileCompleteness();
