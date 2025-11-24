@@ -21,6 +21,7 @@ import ContractorTransactions from "./pages/ContractorTransactions";
 import Messages from "./pages/Messages";
 import PublicContractorProfile from "./pages/PublicContractorProfile";
 import Notifications from "./pages/Notifications";
+import PaymentSuccess from "./pages/PaymentSuccess";
 import SeedDemo from "./pages/SeedDemo";
 import SeedContractors from "./pages/SeedContractors";
 import NotFound from "./pages/NotFound";
@@ -52,6 +53,7 @@ const App = () => (
           <Route path="/handwerker/:id" element={<PublicContractorProfile />} />
           <Route path="/nachrichten" element={<Messages />} />
           <Route path="/benachrichtigungen" element={<Notifications />} />
+          <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/seed-demo" element={<SeedDemo />} />
           <Route path="/seed-contractors" element={<SeedContractors />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}

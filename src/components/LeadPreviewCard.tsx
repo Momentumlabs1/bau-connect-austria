@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { MapPin, Euro, Clock, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
+import { LeadPurchaseButton } from "@/components/LeadPurchaseButton";
 
 interface LeadPreviewCardProps {
   project: {
@@ -21,13 +22,24 @@ interface LeadPreviewCardProps {
     created_at: string;
   };
   leadPrice: number;
-  onPurchase: () => void;
+  onPurchase?: () => void;
   purchasing?: boolean;
   insufficientBalance?: boolean;
   currentBalance?: number;
+  useStripePayment?: boolean;
+  onPurchaseSuccess?: () => void;
 }
 
-export function LeadPreviewCard({ project, leadPrice, onPurchase, purchasing = false, insufficientBalance = false, currentBalance = 0 }: LeadPreviewCardProps) {
+export function LeadPreviewCard({ 
+  project, 
+  leadPrice, 
+  onPurchase, 
+  purchasing = false, 
+  insufficientBalance = false, 
+  currentBalance = 0,
+  useStripePayment = false,
+  onPurchaseSuccess
+}: LeadPreviewCardProps) {
   const getUrgencyColor = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
       case 'high': return 'destructive';
@@ -156,20 +168,29 @@ export function LeadPreviewCard({ project, leadPrice, onPurchase, purchasing = f
               </ul>
             </div>
 
-            <Button 
-              className="w-full text-lg py-6" 
-              size="lg"
-              onClick={onPurchase}
-              disabled={purchasing || insufficientBalance}
-            >
-              {purchasing ? (
-                <>Wird gekauft...</>
-              ) : insufficientBalance ? (
-                <>Guthaben aufladen erforderlich</>
-              ) : (
-                <>Lead jetzt kaufen für €{leadPrice.toFixed(2)}</>
-              )}
-            </Button>
+            {useStripePayment ? (
+              <LeadPurchaseButton 
+                leadId={project.id}
+                leadTitle={project.title}
+                leadPrice={leadPrice}
+                onPurchaseSuccess={onPurchaseSuccess}
+              />
+            ) : (
+              <Button 
+                className="w-full text-lg py-6" 
+                size="lg"
+                onClick={onPurchase}
+                disabled={purchasing || insufficientBalance}
+              >
+                {purchasing ? (
+                  <>Wird gekauft...</>
+                ) : insufficientBalance ? (
+                  <>Guthaben aufladen erforderlich</>
+                ) : (
+                  <>Lead jetzt kaufen für €{leadPrice.toFixed(2)}</>
+                )}
+              </Button>
+            )}
           </div>
         </div>
       </Card>
