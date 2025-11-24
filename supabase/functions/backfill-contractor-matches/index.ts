@@ -238,7 +238,7 @@ Deno.serve(async (req) => {
           project_id: project.id,
           contractor_id: user.id,
           score: Math.round(score),
-          match_type: 'BACKFILL',
+          match_type: 'suggested',
           status: 'pending',
           lead_purchased: false
         })
