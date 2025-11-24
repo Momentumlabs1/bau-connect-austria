@@ -288,6 +288,47 @@ export type Database = {
         }
         Relationships: []
       }
+      lead_purchases: {
+        Row: {
+          amount: number
+          completed_at: string | null
+          created_at: string | null
+          id: string
+          lead_id: string
+          status: string
+          stripe_payment_intent_id: string
+          user_id: string
+        }
+        Insert: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lead_id: string
+          status?: string
+          stripe_payment_intent_id: string
+          user_id: string
+        }
+        Update: {
+          amount?: number
+          completed_at?: string | null
+          created_at?: string | null
+          id?: string
+          lead_id?: string
+          status?: string
+          stripe_payment_intent_id?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "lead_purchases_lead_id_fkey"
+            columns: ["lead_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       matches: {
         Row: {
           contractor_id: string

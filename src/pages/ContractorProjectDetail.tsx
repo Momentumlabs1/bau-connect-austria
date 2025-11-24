@@ -104,9 +104,24 @@ export default function ContractorProjectDetail() {
         .eq("contractor_id", userId)
         .maybeSingle();
 
+      // Check for Stripe purchases
+      const { data: stripePurchase } = await supabase
+        .from("lead_purchases")
+        .select("*")
+        .eq("lead_id", id)
+        .eq("user_id", userId)
+        .eq("status", "completed")
+        .maybeSingle();
+
       if (matchData) {
         setHasPurchasedLead(matchData.lead_purchased || false);
         setPurchasedAt(matchData.purchased_at || "");
+      }
+
+      // Override with Stripe purchase if exists
+      if (stripePurchase) {
+        setHasPurchasedLead(true);
+        setPurchasedAt(stripePurchase.completed_at || stripePurchase.created_at);
       }
     } catch (error) {
       console.error("Error loading project:", error);
@@ -291,11 +306,12 @@ export default function ContractorProjectDetail() {
         {!hasPurchasedLead ? (
           <LeadPreviewCard
             project={project}
-            leadPrice={project.final_price}
-            onPurchase={handlePurchaseLead}
-            purchasing={purchasing}
-            insufficientBalance={insufficientBalance}
-            currentBalance={walletBalance}
+            leadPrice={5}
+            useStripePayment={true}
+            onPurchaseSuccess={() => {
+              setHasPurchasedLead(true);
+              loadProject();
+            }}
           />
         ) : (
           <FullProjectDetails
