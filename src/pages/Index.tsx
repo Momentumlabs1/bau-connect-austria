@@ -22,6 +22,7 @@ import {
 import { supabase } from "@/integrations/supabase/client";
 import logoNew from "@/assets/bauconnect-logo-new.png";
 import contractorHero from "@/assets/contractor-hero.png";
+import { TopContractors } from "@/components/TopContractors";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -257,13 +258,15 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {/* Hero Section with Background Image Overlay */}
-            <div className="relative rounded-3xl overflow-hidden mb-8 md:mb-10 min-h-[550px] md:min-h-[700px] lg:min-h-[800px] flex items-center">
+            <div className="relative rounded-3xl overflow-hidden mb-8 md:mb-10 min-h-[550px] md:min-h-[700px] lg:min-h-[800px] flex items-center bg-slate-900">
               {/* Background Image with Opacity */}
               <div className="absolute inset-0 bg-gradient-to-r from-gray-900/70 to-gray-900/50">
                 <img 
                   src={contractorHero} 
                   alt="Professioneller Handwerker" 
                   className="w-full h-full object-cover opacity-50"
+                  loading="eager"
+                  decoding="async"
                 />
               </div>
 
@@ -460,6 +463,9 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Top Contractors Section */}
+      <TopContractors />
 
       {/* INNOVATIVE SCROLL-TIMELINE - Warum BauConnect24 */}
       <section className="py-16 md:py-20 lg:py-24 bg-gradient-to-b from-gray-50 to-white overflow-hidden">
