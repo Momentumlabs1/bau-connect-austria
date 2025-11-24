@@ -85,7 +85,9 @@ function calculateRelevanceScore(
     score -= 50
   }
   
-  return Math.max(0, score)
+  // Clamp score between 1 and 100 to match DB constraint
+  const clampedScore = Math.min(100, Math.max(1, score))
+  return clampedScore
 }
 
 Deno.serve(async (req) => {
@@ -233,6 +235,7 @@ Deno.serve(async (req) => {
       }
 
       const score = calculateRelevanceScore(contractor, project, distance)
+      console.log(`📊 Calculated score for project ${project.id}: ${score} (distance: ${distance.toFixed(1)}km)`)
       
       if (score > 0) {
         newMatches.push({
