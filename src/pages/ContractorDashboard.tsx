@@ -106,10 +106,15 @@ export default function HandwerkerDashboard() {
         try {
           const { data, error } = await supabase.functions.invoke('backfill-contractor-matches');
           
-          if (error) {
-            console.error('❌ Backfill error:', error);
-            throw error;
-          }
+        if (error) {
+          console.error('❌ Backfill error:', error);
+          toast({
+            title: "Leads konnten nicht geladen werden",
+            description: "Bitte lade die Seite neu oder versuche es später erneut.",
+            variant: "destructive"
+          });
+          return;
+        }
           
           console.log('✅ Backfill response:', data);
           
