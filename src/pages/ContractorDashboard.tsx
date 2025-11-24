@@ -80,6 +80,7 @@ export default function HandwerkerDashboard() {
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>("");
   const [backfilling, setBackfilling] = useState(false);
+  const [hasRunBackfill, setHasRunBackfill] = useState(false);
   const { toast } = useToast();
   const navigate = useNavigate();
   
@@ -94,26 +95,42 @@ export default function HandwerkerDashboard() {
     loadDashboardData();
   }, []);
 
-  // Auto-backfill matches on first load if no leads available
+  // Auto-backfill matches on first load (runs exactly once)
   useEffect(() => {
     const autoBackfill = async () => {
-      if (!loading && profile && availableLeads.length === 0 && !backfilling) {
+      if (!loading && profile && !hasRunBackfill && !backfilling) {
         console.log('🔄 Auto-backfilling matches on dashboard load...');
         setBackfilling(true);
+        setHasRunBackfill(true); // Prevent re-runs
+        
         try {
           const { data, error } = await supabase.functions.invoke('backfill-contractor-matches');
           
-          if (error) throw error;
+          if (error) {
+            console.error('❌ Backfill error:', error);
+            throw error;
+          }
+          
+          console.log('✅ Backfill response:', data);
           
           if (data?.matchesCreated > 0) {
             toast({
               title: `✅ ${data.matchesCreated} passende Leads gefunden!`,
-              description: "Diese wurden automatisch für Sie geladen.",
             });
             await loadDashboardData();
+          } else {
+            toast({
+              title: "Keine neuen Leads gefunden",
+              description: "Wir prüfen regelmäßig nach neuen Aufträgen in deinem Gebiet.",
+            });
           }
         } catch (error: any) {
-          console.error('Auto-backfill error:', error);
+          console.error('❌ Auto-backfill error:', error);
+          toast({
+            title: "Fehler beim Laden der Leads",
+            description: error.message,
+            variant: "destructive"
+          });
         } finally {
           setBackfilling(false);
         }
@@ -121,7 +138,7 @@ export default function HandwerkerDashboard() {
     };
     
     autoBackfill();
-  }, [loading, profile, availableLeads.length]);
+  }, [loading, profile, hasRunBackfill]);
 
   useEffect(() => {
     if (profile && userId) {
@@ -319,30 +336,6 @@ export default function HandwerkerDashboard() {
     }
   };
 
-  const handleBackfillMatches = async () => {
-    setBackfilling(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('backfill-contractor-matches');
-      
-      if (error) throw error;
-      
-      toast({
-        title: data.matchesCreated > 0 ? "✅ Leads aktualisiert!" : "ℹ️ Keine neuen Leads",
-        description: data.message
-      });
-      
-      // Reload leads
-      await loadDashboardData();
-    } catch (error: any) {
-      toast({
-        title: "Fehler beim Aktualisieren",
-        description: error.message,
-        variant: "destructive"
-      });
-    } finally {
-      setBackfilling(false);
-    }
-  };
 
   const handleRechargeWallet = async () => {
     if (!userId || rechargeAmount <= 0) return;
@@ -473,28 +466,12 @@ export default function HandwerkerDashboard() {
               Hier ist eine Übersicht Ihrer aktuellen Aktivitäten
             </p>
           </div>
-          <div className="flex gap-3">
-            <Button 
-              variant="outline" 
-              onClick={handleBackfillMatches}
-              disabled={backfilling}
-            >
-              {backfilling ? (
-                <>
-                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                  Aktualisiere...
-                </>
-              ) : (
-                '🔄 Leads aktualisieren'
-              )}
-            </Button>
-            <Button 
-              variant="outline" 
-              onClick={() => navigate("/handwerker/profil-bearbeiten")}
-            >
-              Profil bearbeiten
-            </Button>
-          </div>
+          <Button 
+            variant="outline" 
+            onClick={() => navigate("/handwerker/profil-bearbeiten")}
+          >
+            Profil bearbeiten
+          </Button>
         </motion.div>
 
         {/* Stats Grid */}
@@ -645,24 +622,12 @@ export default function HandwerkerDashboard() {
                 <Briefcase className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
                 <h3 className="text-xl font-semibold mb-2">Noch keine Leads für Sie</h3>
                 <p className="text-muted-foreground mb-6">
-                  Aktuell sind keine passenden Leads vorhanden. Klicken Sie auf "Leads aktualisieren", 
-                  um nach neuen Aufträgen zu suchen, die zu Ihrem Profil passen.
+                  Aktuell sind keine passenden Leads vorhanden. Wir suchen automatisch nach neuen 
+                  Aufträgen für dich. Prüfe dein Profil (Gewerke & PLZ), um mehr passende Leads zu bekommen.
                 </p>
-                <div className="flex gap-3 justify-center">
-                  <Button onClick={handleBackfillMatches} disabled={backfilling}>
-                    {backfilling ? (
-                      <>
-                        <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                        Suche läuft...
-                      </>
-                    ) : (
-                      '🔄 Leads aktualisieren'
-                    )}
-                  </Button>
-                  <Button variant="outline" onClick={() => navigate('/handwerker/onboarding')}>
-                    Profil prüfen
-                  </Button>
-                </div>
+                <Button variant="outline" onClick={() => navigate('/handwerker/onboarding')}>
+                  Profil prüfen
+                </Button>
               </Card>
             ) : (
               availableLeads.map((lead, index) => (
