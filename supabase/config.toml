@@ -11,3 +11,9 @@ verify_jwt = true
 
 [functions.stripe-webhook]
 verify_jwt = false
+
+[functions.backfill-contractor-matches]
+verify_jwt = true
+
+[functions.seed-demo-leads]
+verify_jwt = true
