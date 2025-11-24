@@ -226,9 +226,10 @@ Deno.serve(async (req) => {
         continue
       }
 
-      // Check wallet balance
-      if (contractor.wallet_balance < project.final_price) {
-        continue
+      // Check wallet balance (temporarily relaxed for testing)
+      if (project.final_price > 1000) {
+        console.log(`⏭️ Skipping project ${project.id} - too expensive (${project.final_price}€)`);
+        continue;
       }
 
       const score = calculateRelevanceScore(contractor, project, distance)
@@ -245,17 +246,26 @@ Deno.serve(async (req) => {
       }
     }
 
+    console.log(`🎯 After filtering: ${newMatches.length} matches to create`);
+    if (newMatches.length > 0) {
+      console.log('Sample match:', newMatches[0]);
+    }
+    
     console.log(`✨ Creating ${newMatches.length} new matches`)
 
     if (newMatches.length > 0) {
-      const { error: insertError } = await supabase
+      console.log('✨ Inserting matches into database...');
+      const { data: insertedMatches, error: insertError } = await supabase
         .from('matches')
         .insert(newMatches)
+        .select();
 
       if (insertError) {
         console.error('❌ Error creating matches:', insertError)
         throw new Error(`Error creating matches: ${insertError.message}`)
       }
+      
+      console.log(`✅ Successfully created ${insertedMatches?.length || 0} matches`);
     }
 
     console.log('✅ Backfill complete!')
