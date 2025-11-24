@@ -220,9 +220,23 @@ export default function ContractorOnboarding() {
       if (error) throw error;
 
       toast({
-        title: "Profil eingereicht!",
-        description: "Ihr Profil wird geprüft. Sie werden benachrichtigt, sobald es freigegeben wurde.",
+        title: "Profil gespeichert!",
+        description: "Suche nach passenden Aufträgen...",
       });
+
+      // Auto-backfill matches for newly completed profile
+      try {
+        const { data: backfillData } = await supabase.functions.invoke('backfill-contractor-matches');
+        
+        if (backfillData?.matchesCreated > 0) {
+          toast({
+            title: `🎉 ${backfillData.matchesCreated} passende Leads gefunden!`,
+            description: "Sie können diese jetzt in Ihrem Dashboard ansehen.",
+          });
+        }
+      } catch (backfillError) {
+        console.error('Backfill error:', backfillError);
+      }
 
       setTimeout(() => {
         navigate("/handwerker/dashboard");

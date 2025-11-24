@@ -5,10 +5,13 @@ import { Navbar } from "@/components/Navbar";
 import { Loader2, CheckCircle, XCircle } from "lucide-react";
 import { seedDemoContractors } from "@/utils/seedDemoContractors";
 import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function SeedDemo() {
   const [loading, setLoading] = useState(false);
+  const [loadingLeads, setLoadingLeads] = useState(false);
   const [results, setResults] = useState<any[]>([]);
+  const [leadsResult, setLeadsResult] = useState<any>(null);
   const { toast } = useToast();
 
   const handleSeed = async () => {
@@ -33,6 +36,29 @@ export default function SeedDemo() {
     }
   };
 
+  const handleSeedLeads = async () => {
+    setLoadingLeads(true);
+    try {
+      const { data, error } = await supabase.functions.invoke('seed-demo-leads');
+      
+      if (error) throw error;
+      
+      setLeadsResult(data);
+      toast({
+        title: "✅ Demo-Leads erstellt!",
+        description: data.message,
+      });
+    } catch (error: any) {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingLeads(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
@@ -41,7 +67,7 @@ export default function SeedDemo() {
           <CardHeader>
             <CardTitle>Demo-Daten seeden</CardTitle>
             <CardDescription>
-              Erstellt 10 Demo-Handwerker (2 pro Gewerk) mit vollständigen Profilen
+              Erstellt Demo-Handwerker und Demo-Leads mit automatischen Matches
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -60,6 +86,32 @@ export default function SeedDemo() {
                 "10 Demo-Handwerker erstellen"
               )}
             </Button>
+
+            <Button 
+              onClick={handleSeedLeads} 
+              disabled={loadingLeads}
+              size="lg"
+              variant="secondary"
+              className="w-full"
+            >
+              {loadingLeads ? (
+                <>
+                  <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                  Demo-Leads werden erstellt...
+                </>
+              ) : (
+                "10 Demo-Leads + Matches erstellen"
+              )}
+            </Button>
+
+            {leadsResult && (
+              <div className="p-4 rounded-lg border bg-muted">
+                <p className="text-sm font-semibold mb-2">✅ Ergebnis:</p>
+                <p className="text-sm text-muted-foreground">
+                  {leadsResult.projectsCreated} Projekte und {leadsResult.matchesCreated} Matches erstellt
+                </p>
+              </div>
+            )}
 
             {results.length > 0 && (
               <div className="space-y-2 mt-6">
