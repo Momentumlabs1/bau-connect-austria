@@ -15,6 +15,7 @@ import { ProgressStepper } from "@/components/wizard/ProgressStepper";
 import { SelectionCard } from "@/components/wizard/SelectionCard";
 import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer, Star, MessageSquare, Zap, Droplet, Home, Paintbrush } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
+import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
@@ -86,6 +87,7 @@ export default function CreateProject() {
   // Categories state
   const [mainCategories, setMainCategories] = useState<ServiceCategory[]>([]);
   const [subCategories, setSubCategories] = useState<ServiceCategory[]>([]);
+  const [loadingSubCategories, setLoadingSubCategories] = useState(false);
   const [selectedMainCategory, setSelectedMainCategory] = useState<string>("");
   const [categoryQuestions, setCategoryQuestions] = useState<CategoryQuestion[]>([]);
   
@@ -163,7 +165,9 @@ export default function CreateProject() {
   };
 
   const loadSubCategories = async (parentId: string) => {
-    const { data } = await supabase
+    console.log("Loading subcategories for parent:", parentId);
+    setLoadingSubCategories(true);
+    const { data, error } = await supabase
       .from('service_categories')
       .select('*')
       .eq('parent_id', parentId)
@@ -171,7 +175,15 @@ export default function CreateProject() {
       .eq('active', true)
       .order('sort_order');
     
-    if (data) setSubCategories(data);
+    if (error) {
+      console.error("Error loading subcategories:", error);
+      setLoadingSubCategories(false);
+      return;
+    }
+    
+    console.log("Loaded subcategories:", data);
+    setSubCategories(data || []);
+    setLoadingSubCategories(false);
   };
 
   const loadCategoryQuestions = async (categoryId: string) => {
@@ -530,7 +542,12 @@ export default function CreateProject() {
                 </div>
                 
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-                  {subCategories.length > 0 ? (
+                  {loadingSubCategories ? (
+                    <div className="col-span-full text-center py-12">
+                      <LoadingSpinner size="lg" />
+                      <p className="text-muted-foreground mt-4">Lädt Unterkategorien...</p>
+                    </div>
+                  ) : subCategories.length > 0 ? (
                     subCategories.map((category) => {
                       const IconComponent = category.icon ? iconMap[category.icon] : null;
                       return (
