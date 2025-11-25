@@ -155,12 +155,20 @@ const Index = () => {
 
   const handleSuggestionClick = (suggestion: any) => {
     setShowSuggestions(false);
-    navigate("/kunde/projekt-erstellen", { 
-      state: { 
-        selectedGewerk: suggestion.parent_id,
-        selectedSubcategoryId: suggestion.id 
-      } 
-    });
+    if (suggestion.level === 1) {
+      // Level 1 = Main category → only selectedGewerk
+      navigate("/kunde/projekt-erstellen", { 
+        state: { selectedGewerk: suggestion.id } 
+      });
+    } else {
+      // Level 2 = Subcategory → both
+      navigate("/kunde/projekt-erstellen", { 
+        state: { 
+          selectedGewerk: suggestion.parent_id,
+          selectedSubcategoryId: suggestion.id 
+        } 
+      });
+    }
   };
 
   const handleKeyPress = (e: React.KeyboardEvent) => {
@@ -174,11 +182,11 @@ const Index = () => {
 
   const quickCategories = [
     { id: "elektriker", name: "Elektriker", emoji: "⚡", color: "bg-yellow-500" },
-    { id: "sanitar", name: "Sanitär", emoji: "💧", color: "bg-blue-600" },
+    { id: "sanitar-heizung", name: "Sanitär", emoji: "💧", color: "bg-blue-600" },
     { id: "maler", name: "Maler", emoji: "🎨", color: "bg-purple-500" },
     { id: "dachdecker", name: "Dachdecker", emoji: "🏠", color: "bg-orange-500" },
     { id: "fassade", name: "Fassade", emoji: "🏗️", color: "bg-green-500" },
-    { id: "rohbau", name: "Rohbau", emoji: "🧱", color: "bg-red-500" },
+    { id: "bau", name: "Bau / Rohbau", emoji: "🧱", color: "bg-red-500" },
   ];
 
   const trustSignals = [

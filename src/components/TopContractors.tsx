@@ -23,6 +23,7 @@ const GEWERKE_LABELS: Record<string, { label: string; icon: string }> = {
   "dachdecker": { label: "Dachdecker", icon: "🏠" },
   "fassade": { label: "Fassade", icon: "🧱" },
   "maler": { label: "Maler", icon: "🎨" },
+  "bau": { label: "Bau / Rohbau", icon: "🏗️" },
 };
 
 export function TopContractors() {
