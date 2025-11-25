@@ -245,6 +245,7 @@ export default function ContractorProjectDetail() {
     if (!project || !userId) return;
 
     try {
+      // Check if conversation exists
       const { data: existingConv } = await supabase
         .from("conversations")
         .select("id")
@@ -255,19 +256,32 @@ export default function ContractorProjectDetail() {
 
       let conversationId = existingConv?.id;
 
+      // If conversation doesn't exist, it should have been created during purchase
+      // But create it anyway as fallback
       if (!conversationId) {
         const { data: newConv, error } = await supabase
           .from("conversations")
           .insert({
             contractor_id: userId,
             customer_id: project.customer_id,
-            project_id: project.id
+            project_id: project.id,
+            last_message_at: new Date().toISOString()
           })
           .select("id")
           .single();
 
         if (error) throw error;
         conversationId = newConv.id;
+
+        // Send template message
+        await supabase
+          .from("messages")
+          .insert({
+            conversation_id: conversationId,
+            sender_id: userId,
+            message: `Guten Tag! Ich habe großes Interesse an Ihrem Projekt "${project.title}" in ${project.city}. Ich würde mich freuen, Ihnen ein detailliertes Angebot zu erstellen. Könnten wir einen Termin für eine Besichtigung vor Ort vereinbaren?`,
+            read: false
+          });
       }
 
       navigate("/nachrichten");
