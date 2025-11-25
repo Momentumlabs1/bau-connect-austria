@@ -208,9 +208,49 @@ Deno.serve(async (req) => {
       .eq('handwerker_id', user.id)
       .eq('data->lead_id', leadId)
 
+    // 10. Create conversation automatically
+    console.log('💬 Creating conversation...')
+    const { data: existingConv } = await supabase
+      .from('conversations')
+      .select('id')
+      .eq('contractor_id', user.id)
+      .eq('customer_id', lead.customer_id)
+      .eq('project_id', leadId)
+      .maybeSingle()
+
+    let conversationId = existingConv?.id
+
+    if (!conversationId) {
+      const { data: newConv, error: convError } = await supabase
+        .from('conversations')
+        .insert({
+          contractor_id: user.id,
+          customer_id: lead.customer_id,
+          project_id: leadId,
+          last_message_at: new Date().toISOString()
+        })
+        .select('id')
+        .single()
+
+      if (!convError && newConv) {
+        conversationId = newConv.id
+        console.log('✅ Conversation created:', conversationId)
+
+        // Send automatic welcome message from contractor
+        await supabase
+          .from('messages')
+          .insert({
+            conversation_id: conversationId,
+            sender_id: user.id,
+            message: `Guten Tag! Ich habe großes Interesse an Ihrem Projekt "${lead.title || lead.projekt_typ}" in ${lead.city}. Ich würde mich freuen, Ihnen ein detailliertes Angebot zu erstellen. Könnten wir einen Termin für eine Besichtigung vor Ort vereinbaren?`,
+            read: false
+          })
+      }
+    }
+
     console.log('✅ Lead purchased successfully!')
 
-    // 10. Return full lead details
+    // 11. Return full lead details
     return new Response(
       JSON.stringify({
         success: true,
