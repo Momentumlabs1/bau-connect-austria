@@ -123,10 +123,13 @@ export default function CreateProject() {
         subcategory_id: state.selectedSubcategoryId
       }));
       setSelectedMainCategory(state.selectedGewerk);
+      loadSubCategories(state.selectedGewerk);
       setCurrentStep(1); // Skip to details step
     } else if (state?.selectedGewerk) {
       setProjectData(prev => ({ ...prev, gewerk_id: state.selectedGewerk }));
       setSelectedMainCategory(state.selectedGewerk);
+      loadSubCategories(state.selectedGewerk);
+      setCurrentStep(0); // Show subcategory selection
     }
   }, [location]);
 

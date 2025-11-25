@@ -23,6 +23,7 @@ const GEWERKE = [
   { id: "dachdecker", label: "Dachdecker", icon: "🏠" },
   { id: "fassade", label: "Fassade", icon: "🧱" },
   { id: "maler", label: "Maler", icon: "🎨" },
+  { id: "bau", label: "Bau / Rohbau", icon: "🏗️" },
 ];
 
 const RECHTSFORMEN = [
