@@ -8,8 +8,11 @@ import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
+import { VoucherDialog } from "@/components/voucher/VoucherDialog";
+import { useAuth } from "@/stores/authStore";
+import { useContractor } from "@/stores/contractorStore";
 import { 
-  Wallet, 
+  Wallet,
   TrendingUp, 
   Star, 
   Clock, 
@@ -68,6 +71,8 @@ interface AvailableLead {
 }
 
 export default function HandwerkerDashboard() {
+  const { user } = useAuth();
+  const { profile: contractorProfile, loadProfile } = useContractor();
   const [profile, setProfile] = useState<ContractorProfile | null>(null);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [availableLeads, setAvailableLeads] = useState<AvailableLead[]>([]);
@@ -93,7 +98,10 @@ export default function HandwerkerDashboard() {
 
   useEffect(() => {
     loadDashboardData();
-  }, []);
+    if (user?.id) {
+      loadProfile(user.id);
+    }
+  }, [user, loadProfile]);
 
   // Auto-backfill matches on first load (runs exactly once)
   useEffect(() => {
@@ -502,15 +510,18 @@ export default function HandwerkerDashboard() {
                   <Wallet className="h-6 w-6 text-primary" />
                 </div>
               </div>
-              <Button 
-                variant="outline" 
-                size="sm" 
-                className="w-full mt-4"
-                onClick={() => setRechargeDialogOpen(true)}
-              >
-                <Plus className="h-4 w-4 mr-2" />
-                Aufladen
-              </Button>
+              <div className="flex gap-2 mt-4">
+                <Button 
+                  variant="outline" 
+                  size="sm" 
+                  className="flex-1"
+                  onClick={() => setRechargeDialogOpen(true)}
+                >
+                  <Plus className="h-4 w-4 mr-2" />
+                  Aufladen
+                </Button>
+                <VoucherDialog />
+              </div>
             </Card>
           </motion.div>
 
