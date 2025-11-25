@@ -6,6 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { ReviewList } from "@/components/reviews/ReviewList";
+import { PortfolioGallery } from "@/components/portfolio/PortfolioGallery";
 import { Star, MapPin, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
 
 interface Contractor {
@@ -195,22 +198,29 @@ export default function PublicContractorProfile() {
           </div>
         </Card>
         
-        {/* Portfolio */}
-        {contractor.portfolio_images && contractor.portfolio_images.length > 0 && (
-          <Card className="p-6">
-            <h2 className="text-2xl font-bold mb-4">Portfolio</h2>
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-              {contractor.portfolio_images.map((img, i) => (
-                <img 
-                  key={i}
-                  src={img}
-                  alt={`Portfolio ${i + 1}`}
-                  className="rounded-lg w-full h-48 object-cover"
-                />
-              ))}
-            </div>
-          </Card>
-        )}
+        {/* Tabs: Portfolio & Bewertungen */}
+        <Card className="p-6">
+          <Tabs defaultValue="portfolio" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="portfolio">Portfolio</TabsTrigger>
+              <TabsTrigger value="reviews">Bewertungen</TabsTrigger>
+            </TabsList>
+            
+            <TabsContent value="portfolio" className="mt-6">
+              {contractor.portfolio_images && contractor.portfolio_images.length > 0 ? (
+                <PortfolioGallery images={contractor.portfolio_images} />
+              ) : (
+                <div className="text-center py-8 text-muted-foreground">
+                  Noch keine Portfolio-Bilder vorhanden
+                </div>
+              )}
+            </TabsContent>
+            
+            <TabsContent value="reviews" className="mt-6">
+              <ReviewList contractorId={contractor.id} />
+            </TabsContent>
+          </Tabs>
+        </Card>
       </div>
     </div>
   );

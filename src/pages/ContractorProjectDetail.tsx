@@ -3,8 +3,11 @@ import { useParams, useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
+import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2 } from "lucide-react";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { OfferForm } from "@/components/offers/OfferForm";
+import { Loader2, DollarSign } from "lucide-react";
 import { LeadPreviewCard } from "@/components/LeadPreviewCard";
 import { FullProjectDetails } from "@/components/FullProjectDetails";
 
@@ -314,12 +317,41 @@ export default function ContractorProjectDetail() {
             }}
           />
         ) : (
-          <FullProjectDetails
-            project={project}
-            customer={customerData}
-            purchasedAt={purchasedAt}
-            onStartChat={handleStartChat}
-          />
+          <div className="space-y-6">
+            <FullProjectDetails
+              project={project}
+              customer={customerData}
+              purchasedAt={purchasedAt}
+              onStartChat={handleStartChat}
+            />
+            
+            {/* Offer Form */}
+            <Card className="p-6">
+              <h2 className="text-xl font-bold mb-4">Angebot erstellen</h2>
+              <Dialog>
+                <DialogTrigger asChild>
+                  <Button className="w-full" size="lg">
+                    <DollarSign className="mr-2 h-5 w-5" />
+                    Jetzt Angebot senden
+                  </Button>
+                </DialogTrigger>
+                <DialogContent className="max-w-md">
+                  <DialogHeader>
+                    <DialogTitle>Angebot für {project.title}</DialogTitle>
+                  </DialogHeader>
+                  <OfferForm 
+                    projectId={id!}
+                    onSuccess={() => {
+                      toast({
+                        title: "Angebot gesendet",
+                        description: "Dein Angebot wurde erfolgreich an den Kunden gesendet"
+                      });
+                    }}
+                  />
+                </DialogContent>
+              </Dialog>
+            </Card>
+          </div>
         )}
       </div>
     </div>

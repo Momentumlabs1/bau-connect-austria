@@ -4,6 +4,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
+import { NotificationToast } from "@/components/notifications/NotificationToast";
 import { useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
 import Index from "./pages/Index";
@@ -44,6 +45,7 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
+          <NotificationToast />
           <BrowserRouter>
             <Routes>
           <Route path="/" element={<Index />} />

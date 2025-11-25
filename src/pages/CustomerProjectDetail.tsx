@@ -6,7 +6,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
+import { OfferList } from "@/components/offers/OfferList";
 import { MapPin, Calendar, Euro, Star, MessageSquare, Loader2 } from "lucide-react";
 
 interface Project {
@@ -283,66 +285,79 @@ export default function CustomerProjectDetail() {
           )}
         </Card>
 
-        {/* Matched Contractors */}
-        <div>
-          <h2 className="text-2xl font-bold mb-4">
-            Passende Handwerker ({matchedContractors.length})
-          </h2>
-          
-          {matchedContractors.length === 0 ? (
-            <Card className="p-8 text-center">
-              <p className="text-muted-foreground">
-                Aktuell keine passenden Handwerker verfügbar
-              </p>
-            </Card>
-          ) : (
-            <div className="grid gap-4">
-              {matchedContractors.map(contractor => (
-                <Card key={contractor.id} className="p-6">
-                  <div className="flex items-start justify-between">
-                    <div className="flex gap-4 flex-1">
-                      <Avatar className="h-16 w-16">
-                        <AvatarImage src={contractor.profile_image_url || ''} />
-                        <AvatarFallback>{contractor.company_name[0]}</AvatarFallback>
-                      </Avatar>
-                      
-                      <div className="flex-1">
-                        <h3 className="text-xl font-bold mb-1">{contractor.company_name}</h3>
-                        <div className="flex items-center gap-2 text-sm mb-2">
-                          <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                          <span>{contractor.rating.toFixed(1)} ⭐</span>
-                          <span className="text-muted-foreground">
-                            ({contractor.total_reviews} Bewertungen)
-                          </span>
-                        </div>
-                        <div className="flex gap-2 mb-2">
-                          {contractor.trades.slice(0, 3).map(trade => (
-                            <Badge key={trade} variant="secondary">{trade}</Badge>
-                          ))}
-                        </div>
-                        <p className="text-sm text-muted-foreground">
-                          📍 {contractor.city}
-                        </p>
-                      </div>
-                    </div>
-                    
-                    <div className="flex gap-2">
-                      <Button 
-                        variant="outline"
-                        onClick={() => navigate(`/handwerker/${contractor.id}`)}
-                      >
-                        Profil
-                      </Button>
-                      <Button onClick={() => startConversation(contractor.id)}>
-                        <MessageSquare className="h-4 w-4 mr-2" />
-                        Nachricht
-                      </Button>
-                    </div>
-                  </div>
+        {/* Tabs: Angebote & Handwerker */}
+        <div className="mt-6">
+          <Tabs defaultValue="offers" className="w-full">
+            <TabsList className="grid w-full grid-cols-2">
+              <TabsTrigger value="offers">Angebote</TabsTrigger>
+              <TabsTrigger value="contractors">Handwerker ({matchedContractors.length})</TabsTrigger>
+            </TabsList>
+
+            <TabsContent value="offers" className="mt-4">
+              <OfferList 
+                projectId={id!} 
+                showActions={true}
+                onOfferUpdate={loadProjectDetails}
+              />
+            </TabsContent>
+
+            <TabsContent value="contractors" className="mt-4">
+              {matchedContractors.length === 0 ? (
+                <Card className="p-8 text-center">
+                  <p className="text-muted-foreground">
+                    Aktuell keine passenden Handwerker verfügbar
+                  </p>
                 </Card>
-              ))}
-            </div>
-          )}
+              ) : (
+                <div className="grid gap-4">
+                  {matchedContractors.map(contractor => (
+                    <Card key={contractor.id} className="p-6">
+                      <div className="flex items-start justify-between">
+                        <div className="flex gap-4 flex-1">
+                          <Avatar className="h-16 w-16">
+                            <AvatarImage src={contractor.profile_image_url || ''} />
+                            <AvatarFallback>{contractor.company_name[0]}</AvatarFallback>
+                          </Avatar>
+                          
+                          <div className="flex-1">
+                            <h3 className="text-xl font-bold mb-1">{contractor.company_name}</h3>
+                            <div className="flex items-center gap-2 text-sm mb-2">
+                              <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
+                              <span>{contractor.rating.toFixed(1)} ⭐</span>
+                              <span className="text-muted-foreground">
+                                ({contractor.total_reviews} Bewertungen)
+                              </span>
+                            </div>
+                            <div className="flex gap-2 mb-2">
+                              {contractor.trades.slice(0, 3).map(trade => (
+                                <Badge key={trade} variant="secondary">{trade}</Badge>
+                              ))}
+                            </div>
+                            <p className="text-sm text-muted-foreground">
+                              📍 {contractor.city}
+                            </p>
+                          </div>
+                        </div>
+                        
+                        <div className="flex gap-2">
+                          <Button 
+                            variant="outline"
+                            onClick={() => navigate(`/handwerker/${contractor.id}`)}
+                          >
+                            Profil
+                          </Button>
+                          <Button onClick={() => startConversation(contractor.id)}>
+                            <MessageSquare className="h-4 w-4 mr-2" />
+                            Nachricht
+                          </Button>
+                        </div>
+                      </div>
+                    </Card>
+                  ))}
+                </div>
+              )}
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </div>

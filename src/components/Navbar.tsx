@@ -1,57 +1,44 @@
 import { Link, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { LogOut, User, Menu, X } from "lucide-react";
+import { LogOut, User, Menu, X, MessageSquare, Bell } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useEffect, useState } from "react";
-import { User as SupabaseUser } from "@supabase/supabase-js";
+import { Badge } from "@/components/ui/badge";
+import { useAuth } from "@/stores/authStore";
 import logo from "@/assets/bauconnect-logo-new.png";
 import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export const Navbar = () => {
   const navigate = useNavigate();
-  const [user, setUser] = useState<SupabaseUser | null>(null);
-  const [userRole, setUserRole] = useState<string | null>(null);
+  const { user, role, isAuthenticated, signOut } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadUserRole(session.user.id);
-        loadUnreadCount(session.user.id);
-      }
-    });
+    if (user?.id) {
+      loadUnreadCount(user.id);
+      
+      // Realtime subscription for new messages
+      const channel = supabase
+        .channel('navbar-messages')
+        .on(
+          'postgres_changes',
+          {
+            event: 'INSERT',
+            schema: 'public',
+            table: 'messages'
+          },
+          () => {
+            loadUnreadCount(user.id);
+          }
+        )
+        .subscribe();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setUser(session?.user ?? null);
-      if (session?.user) {
-        loadUserRole(session.user.id);
-        loadUnreadCount(session.user.id);
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, []);
-
-  const loadUserRole = async (userId: string) => {
-    const { data } = await supabase
-      .from('user_roles')
-      .select('role')
-      .eq('user_id', userId);
-
-    if (data && data.length > 0) {
-      // Priority: admin > contractor > customer
-      const roles = data.map(r => r.role);
-      if (roles.includes('admin')) {
-        setUserRole('admin');
-      } else if (roles.includes('contractor')) {
-        setUserRole('contractor');
-      } else if (roles.includes('customer')) {
-        setUserRole('customer');
-      }
+      return () => {
+        supabase.removeChannel(channel);
+      };
     }
-  };
+  }, [user]);
 
   const loadUnreadCount = async (userId: string) => {
     const { data: convs } = await supabase
@@ -74,7 +61,7 @@ export const Navbar = () => {
   };
 
   const handleLogout = async () => {
-    await supabase.auth.signOut();
+    await signOut();
     navigate("/");
   };
 
@@ -93,7 +80,7 @@ export const Navbar = () => {
                 <Button
                   variant="ghost"
                   size="sm"
-                  onClick={() => navigate(userRole === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard')}
+                  onClick={() => navigate(role === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard')}
                 >
                   <User className="mr-2 h-4 w-4" />
                   Dashboard
@@ -111,6 +98,28 @@ export const Navbar = () => {
                     </span>
                   )}
                 </Button>
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => navigate('/nachrichten')}
+                  className="relative"
+                >
+                  <MessageSquare className="h-4 w-4" />
+                  {unreadCount > 0 && (
+                    <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                      {unreadCount}
+                    </Badge>
+                  )}
+                </Button>
+                {role === 'contractor' && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate('/benachrichtigungen')}
+                  >
+                    <Bell className="h-4 w-4" />
+                  </Button>
+                )}
                 <Button variant="ghost" size="sm" onClick={handleLogout}>
                   <LogOut className="mr-2 h-4 w-4" />
                   Abmelden
@@ -143,7 +152,7 @@ export const Navbar = () => {
                       variant="ghost"
                       className="w-full justify-start"
                       onClick={() => {
-                        navigate(userRole === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard');
+                        navigate(role === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard');
                         setMobileMenuOpen(false);
                       }}
                     >
@@ -158,14 +167,27 @@ export const Navbar = () => {
                         setMobileMenuOpen(false);
                       }}
                     >
-                      <span className="mr-2">💬</span>
+                      <MessageSquare className="mr-2 h-4 w-4" />
                       Nachrichten
                       {unreadCount > 0 && (
-                        <span className="ml-auto bg-destructive text-destructive-foreground rounded-full w-6 h-6 text-xs flex items-center justify-center">
+                        <Badge className="ml-auto h-6 w-6 p-0 flex items-center justify-center text-xs">
                           {unreadCount}
-                        </span>
+                        </Badge>
                       )}
                     </Button>
+                    {role === 'contractor' && (
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          navigate('/benachrichtigungen');
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <Bell className="mr-2 h-4 w-4" />
+                        Benachrichtigungen
+                      </Button>
+                    )}
                     <Button 
                       variant="ghost" 
                       className="w-full justify-start"
