@@ -481,6 +481,57 @@ export type Database = {
           },
         ]
       }
+      offers: {
+        Row: {
+          amount: number
+          contractor_id: string
+          created_at: string | null
+          id: string
+          message: string | null
+          project_id: string
+          status: string
+          updated_at: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          amount: number
+          contractor_id: string
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          project_id: string
+          status?: string
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          amount?: number
+          contractor_id?: string
+          created_at?: string | null
+          id?: string
+          message?: string | null
+          project_id?: string
+          status?: string
+          updated_at?: string | null
+          valid_until?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "offers_contractor_id_fkey"
+            columns: ["contractor_id"]
+            isOneToOne: false
+            referencedRelation: "contractors"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "offers_project_id_fkey"
+            columns: ["project_id"]
+            isOneToOne: false
+            referencedRelation: "projects"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           created_at: string
@@ -615,6 +666,48 @@ export type Database = {
             referencedColumns: ["id"]
           },
         ]
+      }
+      promo_codes: {
+        Row: {
+          active: boolean
+          code: string
+          created_at: string | null
+          discount_type: string
+          discount_value: number
+          id: string
+          max_uses: number | null
+          updated_at: string | null
+          used_count: number
+          valid_from: string | null
+          valid_until: string | null
+        }
+        Insert: {
+          active?: boolean
+          code: string
+          created_at?: string | null
+          discount_type: string
+          discount_value: number
+          id?: string
+          max_uses?: number | null
+          updated_at?: string | null
+          used_count?: number
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Update: {
+          active?: boolean
+          code?: string
+          created_at?: string | null
+          discount_type?: string
+          discount_value?: number
+          id?: string
+          max_uses?: number | null
+          updated_at?: string | null
+          used_count?: number
+          valid_from?: string | null
+          valid_until?: string | null
+        }
+        Relationships: []
       }
       refund_requests: {
         Row: {
