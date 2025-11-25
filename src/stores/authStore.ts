@@ -24,48 +24,54 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
   initialize: async () => {
     try {
+      // Helper function to fetch user role
+      const fetchUserRole = async (userId: string) => {
+        const { data: roleData } = await supabase
+          .from('user_roles')
+          .select('role')
+          .eq('user_id', userId)
+          .single();
+        
+        set({
+          role: roleData?.role as 'customer' | 'contractor' | 'admin' || null
+        });
+      };
+
       // Get initial session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
-        // Get user role
-        const { data: roleData } = await supabase
-          .from('user_roles')
-          .select('role')
-          .eq('user_id', session.user.id)
-          .single();
-
         set({
           user: session.user,
           session: session,
-          role: roleData?.role as 'customer' | 'contractor' | 'admin' || null,
           loading: false,
           initialized: true
         });
+        
+        // Fetch role separately
+        await fetchUserRole(session.user.id);
       } else {
         set({ user: null, session: null, role: null, loading: false, initialized: true });
       }
 
-      // Listen for auth changes
-      supabase.auth.onAuthStateChange(async (event, session) => {
+      // Listen for auth changes - ONLY synchronous updates in callback
+      supabase.auth.onAuthStateChange((event, session) => {
         console.log('🔐 Auth state changed:', event);
         
+        // Only synchronous state updates here
+        set({
+          user: session?.user ?? null,
+          session: session,
+          loading: false
+        });
+        
+        // Defer Supabase calls with setTimeout to prevent deadlock
         if (session?.user) {
-          // Get user role
-          const { data: roleData } = await supabase
-            .from('user_roles')
-            .select('role')
-            .eq('user_id', session.user.id)
-            .single();
-
-          set({
-            user: session.user,
-            session: session,
-            role: roleData?.role as 'customer' | 'contractor' | 'admin' || null,
-            loading: false
-          });
+          setTimeout(() => {
+            fetchUserRole(session.user.id);
+          }, 0);
         } else {
-          set({ user: null, session: null, role: null, loading: false });
+          set({ role: null });
         }
       });
     } catch (error) {
