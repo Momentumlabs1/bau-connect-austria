@@ -63,7 +63,7 @@ export default function CustomerMyProjects() {
           created_at,
           status,
           urgency,
-          matches!inner(
+          matches(
             id,
             contractor_id,
             lead_purchased,

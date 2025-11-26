@@ -2,311 +2,156 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
-import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
-import { useToast } from "@/hooks/use-toast";
-import { VoucherDialog } from "@/components/voucher/VoucherDialog";
-import { useAuth } from "@/stores/authStore";
-import { useContractor } from "@/stores/contractorStore";
-import { 
-  Wallet,
-  TrendingUp, 
-  Star, 
-  Clock, 
-  Briefcase,
-  Bell,
-  MapPin,
-  Euro,
-  CheckCircle2,
-  XCircle,
-  AlertCircle,
-  Loader2,
-  Image as ImageIcon,
-  Plus
-} from "lucide-react";
-import { Label } from "@/components/ui/label";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { useToast } from "@/hooks/use-toast";
+import { Loader2, Wallet, TrendingUp, Star, AlertCircle, Plus } from "lucide-react";
 import { motion } from "framer-motion";
-import { cn } from "@/lib/utils";
+import { AvailableLeadCard } from "@/components/contractor/AvailableLeadCard";
+import { PurchasedLeadCard } from "@/components/contractor/PurchasedLeadCard";
+import { ActiveProjectCard } from "@/components/contractor/ActiveProjectCard";
+import { CompletedProjectCard } from "@/components/contractor/CompletedProjectCard";
+import { Footer } from "@/components/Footer";
 
-interface ContractorProfile {
-  id: string;
-  company_name: string;
-  wallet_balance: number;
-  leads_bought: number;
-  leads_won: number;
-  conversion_rate: number;
-  quality_score: number;
-  rating: number;
-  review_count: number;
-  total_reviews: number;
-}
-
-interface Notification {
-  id: string;
-  type: string;
-  title: string;
-  body: string;
-  data: any;
-  read: boolean;
-  created_at: string;
-  expires_at: string;
-}
-
-interface AvailableLead {
-  id: string;
-  projekt_typ: string;
-  city: string;
-  postal_code: string;
-  urgency: string;
-  estimated_value: number;
-  final_price: number;
-  created_at: string;
-  expires_at: string;
-  description: string;
-  images: string[];
-}
-
-export default function HandwerkerDashboard() {
-  const { user } = useAuth();
-  const { profile: contractorProfile, loadProfile } = useContractor();
-  const [profile, setProfile] = useState<ContractorProfile | null>(null);
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [availableLeads, setAvailableLeads] = useState<AvailableLead[]>([]);
-  const [selectedLead, setSelectedLead] = useState<AvailableLead | null>(null);
-  const [purchaseDialogOpen, setPurchaseDialogOpen] = useState(false);
-  const [purchasing, setPurchasing] = useState(false);
-  const [rechargeDialogOpen, setRechargeDialogOpen] = useState(false);
-  const [rechargeAmount, setRechargeAmount] = useState(100);
-  const [recharging, setRecharging] = useState(false);
+export default function ContractorDashboard() {
+  const navigate = useNavigate();
+  const { toast } = useToast();
   const [loading, setLoading] = useState(true);
   const [userId, setUserId] = useState<string>("");
-  const [backfilling, setBackfilling] = useState(false);
-  const [hasRunBackfill, setHasRunBackfill] = useState(false);
-  const { toast } = useToast();
-  const navigate = useNavigate();
   
-  const markNotificationAsRead = async (notificationId: string) => {
-    await supabase
-      .from("notifications")
-      .update({ read: true, read_at: new Date().toISOString() })
-      .eq("id", notificationId);
-  };
+  // Stats
+  const [walletBalance, setWalletBalance] = useState(0);
+  const [conversionRate, setConversionRate] = useState(0);
+  const [rating, setRating] = useState(0);
+  const [openOffers, setOpenOffers] = useState(0);
+  
+  // Leads data
+  const [availableLeads, setAvailableLeads] = useState<any[]>([]);
+  const [purchasedLeads, setPurchasedLeads] = useState<any[]>([]);
+  const [activeProjects, setActiveProjects] = useState<any[]>([]);
+  const [completedProjects, setCompletedProjects] = useState<any[]>([]);
+  
+  // Wallet dialog
+  const [showWalletDialog, setShowWalletDialog] = useState(false);
+  const [rechargeAmount, setRechargeAmount] = useState<number | string>(100);
 
   useEffect(() => {
-    loadDashboardData();
-    if (user?.id) {
-      loadProfile(user.id);
+    checkAuth();
+  }, []);
+
+  useEffect(() => {
+    if (userId) {
+      loadDashboardData();
     }
-  }, [user, loadProfile]);
-
-  // Auto-backfill matches on first load (runs exactly once)
-  useEffect(() => {
-    const autoBackfill = async () => {
-      if (!loading && profile && !hasRunBackfill && !backfilling) {
-        console.log('🔄 Auto-backfilling matches on dashboard load...');
-        setBackfilling(true);
-        setHasRunBackfill(true); // Prevent re-runs
-        
-        try {
-          const { data, error } = await supabase.functions.invoke('backfill-contractor-matches');
-          
-        if (error) {
-          console.error('❌ Backfill error:', error);
-          toast({
-            title: "Leads konnten nicht geladen werden",
-            description: "Bitte lade die Seite neu oder versuche es später erneut.",
-            variant: "destructive"
-          });
-          return;
-        }
-          
-          console.log('✅ Backfill response:', data);
-          
-          if (data?.matchesCreated > 0) {
-            toast({
-              title: `✅ ${data.matchesCreated} passende Leads gefunden!`,
-            });
-            await loadDashboardData();
-          } else {
-            toast({
-              title: "Keine neuen Leads gefunden",
-              description: "Wir prüfen regelmäßig nach neuen Aufträgen in deinem Gebiet.",
-            });
-          }
-        } catch (error: any) {
-          console.error('❌ Auto-backfill error:', error);
-          toast({
-            title: "Fehler beim Laden der Leads",
-            description: error.message,
-            variant: "destructive"
-          });
-        } finally {
-          setBackfilling(false);
-        }
-      }
-    };
-    
-    autoBackfill();
-  }, [loading, profile, hasRunBackfill]);
-
-  useEffect(() => {
-    if (profile && userId) {
-      checkProfileCompleteness();
-    }
-  }, [profile, userId]);
-
-  // Real-time notification subscription for new leads
-  useEffect(() => {
-    if (!userId) return;
-
-    const channel = supabase
-      .channel('new-lead-notifications')
-      .on(
-        'postgres_changes',
-        {
-          event: 'INSERT',
-          schema: 'public',
-          table: 'notifications',
-          filter: `handwerker_id=eq.${userId}`
-        },
-        (payload: any) => {
-          if (payload.new.type === 'NEW_LEAD') {
-            toast({
-              title: "🎯 Neuer Lead verfügbar!",
-              description: payload.new.title,
-              action: (
-                <Button
-                  size="sm"
-                  onClick={() => navigate(`/handwerker/projekt/${payload.new.data?.lead_id}`)}
-                >
-                  Ansehen
-                </Button>
-              ),
-            });
-            
-            // Reload available leads
-            loadDashboardData();
-          }
-        }
-      )
-      .subscribe();
-
-    return () => {
-      supabase.removeChannel(channel);
-    };
   }, [userId]);
 
-  const checkProfileCompleteness = async () => {
-    if (!userId) return;
-    
-    const { data: contractor } = await supabase
-      .from("contractors")
-      .select("trades, postal_codes, description, city, address")
-      .eq("id", userId)
-      .maybeSingle();
-      
-    if (contractor) {
-      const isIncomplete = 
-        !contractor.trades || contractor.trades.length === 0 ||
-        !contractor.postal_codes || contractor.postal_codes.length === 0 ||
-        !contractor.description || 
-        !contractor.city ||
-        !contractor.address;
-      
-      if (isIncomplete) {
-        navigate('/handwerker/onboarding');
-      }
+  const checkAuth = async () => {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) {
+      navigate("/login");
+      return;
     }
+    setUserId(user.id);
   };
 
   const loadDashboardData = async () => {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) {
-        navigate("/login");
-        return;
-      }
-      setUserId(user.id);
-
       // Load contractor profile
-      const { data: contractor, error: profileError } = await supabase
+      const { data: contractorData } = await supabase
         .from("contractors")
         .select("*")
-        .eq("id", user.id)
+        .eq("id", userId)
         .maybeSingle();
 
-      if (profileError) throw profileError;
-      
-      // Check if contractor profile exists
-      if (!contractor) {
-        setLoading(false);
+      if (!contractorData) {
+        navigate("/handwerker/onboarding");
         return;
       }
-      
-      // Map to profile interface with defaults
-      const contractorData = contractor as any;
-      setProfile({
-        id: contractorData.id,
-        company_name: contractorData.company_name || contractorData.firmenname || "Firma",
-        wallet_balance: Number(contractorData.wallet_balance) || 0,
-        leads_bought: contractorData.leads_bought || 0,
-        leads_won: contractorData.leads_won || 0,
-        conversion_rate: Number(contractorData.conversion_rate) || 0,
-        quality_score: contractorData.quality_score || 0,
-        rating: Number(contractorData.rating) || 0,
-        review_count: contractorData.review_count || contractorData.total_reviews || 0,
-        total_reviews: contractorData.total_reviews || 0
-      });
 
-      // Load unread notifications
-      const { data: notifs, error: notifsError } = await supabase
-        .from("notifications")
-        .select("*")
-        .eq("handwerker_id", user.id)
-        .eq("read", false)
-        .order("created_at", { ascending: false })
-        .limit(10);
-
-      if (notifsError) throw notifsError;
-      setNotifications(notifs || []);
-
-      // Load leads WITH matches for this contractor (MyHammer-style)
-      const contractorTrades = contractorData.trades || [];
-      if (contractorTrades.length > 0) {
-        console.log('🔍 Loading matched leads for contractor:', user.id);
-        
-        const { data: matchesData, error: matchesError } = await supabase
-          .from('matches')
-          .select(`
-            *,
-            project:projects(*)
-          `)
-          .eq('contractor_id', user.id)
-          .eq('lead_purchased', false)
-          .order('created_at', { ascending: false });
-
-        if (matchesError) {
-          console.error('❌ Error loading matches:', matchesError);
-          throw matchesError;
-        }
-
-        const leads = matchesData
-          ?.map(match => match.project)
-          .filter(Boolean) || [];
-        
-        console.log(`✅ Loaded ${leads.length} matched leads`);
-        setAvailableLeads(leads);
+      if (contractorData.handwerker_status === 'INCOMPLETE' || contractorData.handwerker_status === 'REGISTERED') {
+        navigate("/handwerker/onboarding");
+        return;
       }
 
+      // Set stats
+      setWalletBalance(Number(contractorData.wallet_balance) || 0);
+      setConversionRate(Number(contractorData.conversion_rate) || 0);
+      setRating(Number(contractorData.rating) || 0);
+
+      // Load available leads (not purchased)
+      const { data: availableData } = await supabase
+        .from("matches")
+        .select(`
+          *,
+          project:projects(*)
+        `)
+        .eq("contractor_id", userId)
+        .eq("lead_purchased", false)
+        .order("created_at", { ascending: false });
+
+      setAvailableLeads(availableData || []);
+
+      // Load purchased leads (contacted/pending)
+      const { data: purchasedData } = await supabase
+        .from("matches")
+        .select(`
+          *,
+          project:projects(
+            *,
+            profiles(first_name, last_name, email, phone)
+          )
+        `)
+        .eq("contractor_id", userId)
+        .eq("lead_purchased", true)
+        .in("status", ["contacted", "pending"])
+        .order("purchased_at", { ascending: false });
+
+      setPurchasedLeads(purchasedData || []);
+
+      // Load active projects
+      const { data: activeData } = await supabase
+        .from("matches")
+        .select(`
+          *,
+          project:projects(*)
+        `)
+        .eq("contractor_id", userId)
+        .eq("status", "accepted")
+        .order("updated_at", { ascending: false });
+
+      setActiveProjects(activeData || []);
+
+      // Load completed projects
+      const { data: completedData } = await supabase
+        .from("matches")
+        .select(`
+          *,
+          project:projects(*)
+        `)
+        .eq("contractor_id", userId)
+        .in("status", ["won", "lost", "completed"])
+        .order("updated_at", { ascending: false });
+
+      setCompletedProjects(completedData || []);
+
+      // Load open offers count
+      const { count } = await supabase
+        .from("offers")
+        .select("*", { count: "exact", head: true })
+        .eq("contractor_id", userId)
+        .eq("status", "pending");
+
+      setOpenOffers(count || 0);
+      
     } catch (error: any) {
       console.error("Error loading dashboard:", error);
       toast({
-        title: "Fehler beim Laden",
-        description: error.message,
+        title: "Fehler",
+        description: "Dashboard konnte nicht geladen werden.",
         variant: "destructive"
       });
     } finally {
@@ -314,524 +159,222 @@ export default function HandwerkerDashboard() {
     }
   };
 
-  const purchaseLead = async (lead: AvailableLead) => {
-    setPurchasing(true);
-    try {
-      const { data, error } = await supabase.functions.invoke('purchase-lead', {
-        body: {
-          leadId: lead.id,
-          contractorId: userId
-        }
-      });
-
-      if (error) throw error;
-
-      if (data.success) {
-        toast({
-          title: "Lead erfolgreich gekauft!",
-          description: `Sie haben €${lead.final_price.toFixed(2)} bezahlt.`
-        });
-
-        setPurchaseDialogOpen(false);
-        navigate(`/handwerker/projekt/${lead.id}`);
-      } else {
-        throw new Error(data.error || "Lead-Kauf fehlgeschlagen");
-      }
-    } catch (error: any) {
-      console.error("Error purchasing lead:", error);
-      toast({
-        title: "Fehler beim Lead-Kauf",
-        description: error.message || "Lead konnte nicht gekauft werden.",
-        variant: "destructive"
-      });
-    } finally {
-      setPurchasing(false);
-    }
-  };
-
-
-  const handleRechargeWallet = async () => {
-    if (!userId || rechargeAmount <= 0) return;
+  const handleRecharge = async () => {
+    const amount = typeof rechargeAmount === 'string' ? parseFloat(rechargeAmount) : rechargeAmount;
     
-    setRecharging(true);
-    try {
-      const { data: contractor } = await supabase
-        .from('contractors')
-        .select('wallet_balance')
-        .eq('id', userId)
-        .single();
-      
-      if (!contractor) throw new Error('Contractor not found');
-      
-      const currentBalance = Number(contractor.wallet_balance) || 0;
-      const newBalance = currentBalance + rechargeAmount;
-      
-      // Update wallet balance
-      const { error: updateError } = await supabase
-        .from('contractors')
-        .update({ wallet_balance: newBalance })
-        .eq('id', userId);
-      
-      if (updateError) throw updateError;
-      
-      // Create transaction record
-      const { error: transactionError } = await supabase
-        .from('transactions')
-        .insert({
-          handwerker_id: userId,
-          type: 'WALLET_RECHARGE',
-          amount: rechargeAmount,
-          balance_after: newBalance,
-          description: `Test-Aufladung: €${rechargeAmount}`
-        });
-      
-      if (transactionError) throw transactionError;
-      
+    if (!amount || amount < 10) {
       toast({
-        title: "✅ Test-Guthaben hinzugefügt!",
-        description: `€${rechargeAmount} wurden Ihrem Wallet hinzugefügt. (Test-Modus ohne echte Zahlung)`
-      });
-      
-      setRechargeDialogOpen(false);
-      setRechargeAmount(100);
-      loadDashboardData();
-    } catch (error: any) {
-      toast({
-        title: "Fehler beim Aufladen",
-        description: error.message,
+        title: "Ungültiger Betrag",
+        description: "Mindestbetrag: €10",
         variant: "destructive"
       });
-    } finally {
-      setRecharging(false);
+      return;
     }
-  };
 
-  const getUrgencyColor = (urgency: string) => {
-    switch (urgency) {
-      case "sofort": return "text-red-500 bg-red-50 dark:bg-red-950";
-      case "normal": return "text-blue-500 bg-blue-50 dark:bg-blue-950";
-      case "flexibel": return "text-green-500 bg-green-50 dark:bg-green-950";
-      default: return "text-gray-500 bg-gray-50 dark:bg-gray-950";
-    }
-  };
+    toast({
+      title: "Test-Modus",
+      description: `€${amount} wurden Ihrem Guthaben hinzugefügt (Demo)`,
+    });
 
-  const getUrgencyLabel = (urgency: string) => {
-    switch (urgency) {
-      case "sofort": return "🚨 Sofort";
-      case "normal": return "📅 Normal";
-      case "flexibel": return "🕐 Flexibel";
-      default: return urgency;
-    }
+    const newBalance = walletBalance + amount;
+    setWalletBalance(newBalance);
+    
+    await supabase
+      .from("contractors")
+      .update({ wallet_balance: newBalance })
+      .eq("id", userId);
+
+    setShowWalletDialog(false);
+    setRechargeAmount(100);
   };
 
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
         <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center space-y-4">
-              <Loader2 className="h-12 w-12 animate-spin mx-auto text-primary" />
-              <p className="text-muted-foreground">Lade Dashboard...</p>
-            </div>
-          </div>
+        <div className="flex items-center justify-center h-[80vh]">
+          <Loader2 className="h-8 w-8 animate-spin text-primary" />
         </div>
       </div>
     );
   }
 
-  if (!profile) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <Card className="p-8 text-center">
-            <AlertCircle className="h-12 w-12 mx-auto mb-4 text-yellow-500" />
-            <h2 className="text-2xl font-bold mb-2">Profil unvollständig</h2>
-            <p className="text-muted-foreground mb-6">
-              Bitte vervollständigen Sie Ihr Handwerker-Profil, um Aufträge zu erhalten.
-            </p>
-            <Button onClick={() => navigate("/handwerker/profile")}>
-              Profil vervollständigen
-            </Button>
-          </Card>
-        </div>
-      </div>
-    );
-  }
+  const showLowBalanceWarning = walletBalance < 50;
 
   return (
     <div className="min-h-screen bg-background">
       <Navbar />
       
-      <div className="container mx-auto px-4 py-8 space-y-8">
-        {/* Header */}
-        <motion.div
-          initial={{ opacity: 0, y: -20 }}
-          animate={{ opacity: 1, y: 0 }}
-          className="flex items-start justify-between"
-        >
-          <div>
-            <h1 className="text-4xl font-bold mb-2">
-              Willkommen zurück, {profile.company_name}!
-            </h1>
-            <p className="text-muted-foreground">
-              Hier ist eine Übersicht Ihrer aktuellen Aktivitäten
-            </p>
-          </div>
-          <Button 
-            variant="outline" 
-            onClick={() => navigate("/handwerker/profil-bearbeiten")}
-          >
-            Profil bearbeiten
-          </Button>
-        </motion.div>
-
-        {/* Stats Grid */}
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-          {/* Wallet Balance Card */}
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.1 }}
-          >
-            <Card className={cn(
-              "p-6",
-              profile.wallet_balance < 50 && "border-2 border-destructive/50"
-            )}>
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Wallet-Guthaben</p>
-                  <p className="text-3xl font-bold">
-                    €{profile.wallet_balance.toFixed(2)}
-                  </p>
-                </div>
-                <div className="p-3 bg-primary/10 rounded-full">
-                  <Wallet className="h-6 w-6 text-primary" />
-                </div>
-              </div>
-              <div className="flex gap-2 mt-4">
-                <Button 
-                  variant="outline" 
-                  size="sm" 
-                  className="flex-1"
-                  onClick={() => setRechargeDialogOpen(true)}
-                >
-                  <Plus className="h-4 w-4 mr-2" />
+      <div className="container mx-auto px-4 py-8">
+        {/* Header with Stats */}
+        <div className="mb-8">
+          <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+          
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+            <Card className="p-6">
+              <div className="flex items-center justify-between mb-2">
+                <Wallet className="h-5 w-5 text-primary" />
+                <Button size="sm" variant="outline" onClick={() => setShowWalletDialog(true)}>
+                  <Plus className="h-4 w-4 mr-1" />
                   Aufladen
                 </Button>
-                <VoucherDialog />
               </div>
+              <p className="text-2xl font-bold">€{walletBalance.toFixed(2)}</p>
+              <p className="text-sm text-muted-foreground">Wallet-Guthaben</p>
             </Card>
-          </motion.div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.2 }}
-          >
             <Card className="p-6">
-              <div className="flex items-center justify-between">
+              <TrendingUp className="h-5 w-5 text-primary mb-2" />
+              <p className="text-2xl font-bold">{conversionRate.toFixed(0)}%</p>
+              <p className="text-sm text-muted-foreground">Conversion-Rate</p>
+            </Card>
+
+            <Card className="p-6">
+              <Star className="h-5 w-5 text-primary mb-2" />
+              <p className="text-2xl font-bold">{rating.toFixed(1)} ⭐</p>
+              <p className="text-sm text-muted-foreground">Bewertung</p>
+            </Card>
+
+            <Card className="p-6">
+              <AlertCircle className="h-5 w-5 text-primary mb-2" />
+              <p className="text-2xl font-bold">{openOffers}</p>
+              <p className="text-sm text-muted-foreground">Offene Angebote</p>
+            </Card>
+          </div>
+
+          {showLowBalanceWarning && (
+            <Card className="p-4 bg-destructive/10 border-destructive/20 mb-6">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="h-5 w-5 text-destructive" />
                 <div>
-                  <p className="text-sm text-muted-foreground">Conversion Rate</p>
-                  <p className="text-3xl font-bold">
-                    {profile.conversion_rate}%
+                  <p className="font-semibold text-destructive">Niedriges Guthaben</p>
+                  <p className="text-sm text-muted-foreground">
+                    Ihr Guthaben ist unter €50. Laden Sie auf, um weiterhin Leads kaufen zu können.
                   </p>
                 </div>
-                <div className="p-3 bg-green-500/10 rounded-full">
-                  <TrendingUp className="h-6 w-6 text-green-500" />
-                </div>
+                <Button size="sm" onClick={() => setShowWalletDialog(true)}>
+                  Jetzt aufladen
+                </Button>
               </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                {profile.leads_won} von {profile.leads_bought} Leads gewonnen
-              </p>
             </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.3 }}
-          >
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Bewertung</p>
-                  <div className="flex items-center gap-2">
-                    <p className="text-3xl font-bold">{profile.rating.toFixed(1)}</p>
-                    <Star className="h-6 w-6 text-yellow-500 fill-yellow-500" />
-                  </div>
-                </div>
-                <div className="p-3 bg-yellow-500/10 rounded-full">
-                  <Star className="h-6 w-6 text-yellow-500" />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                {profile.review_count} Bewertungen
-              </p>
-            </Card>
-          </motion.div>
-
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ delay: 0.4 }}
-          >
-            <Card className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <p className="text-sm text-muted-foreground">Quality Score</p>
-                  <p className="text-3xl font-bold">{profile.quality_score}</p>
-                </div>
-                <div className="p-3 bg-blue-500/10 rounded-full">
-                  <Briefcase className="h-6 w-6 text-blue-500" />
-                </div>
-              </div>
-              <p className="text-xs text-muted-foreground mt-4">
-                Von 100 Punkten
-              </p>
-            </Card>
-          </motion.div>
+          )}
         </div>
 
-        {/* Low Balance Warning */}
-        {profile.wallet_balance < 50 && (
-          <motion.div
-            initial={{ opacity: 0, y: 20 }}
-            animate={{ opacity: 1, y: 0 }}
-          >
-            <Card className="p-6 border-2 border-destructive/50 bg-destructive/5">
-              <div className="flex items-start gap-4">
-                <AlertCircle className="h-6 w-6 text-destructive flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <h3 className="font-semibold text-lg mb-2">Guthaben zu niedrig</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Ihr Wallet-Guthaben beträgt nur noch €{profile.wallet_balance.toFixed(2)}. 
-                    Laden Sie jetzt auf, um keine Leads zu verpassen!
-                  </p>
-                  <Button onClick={() => setRechargeDialogOpen(true)}>
-                    <Plus className="h-4 w-4 mr-2" />
-                    Jetzt aufladen
-                  </Button>
-                </div>
-              </div>
-            </Card>
-          </motion.div>
-        )}
-
-        {/* Main Content */}
-        <Tabs defaultValue="leads" className="space-y-6">
-          <TabsList className="grid w-full grid-cols-2 lg:w-auto">
-            <TabsTrigger value="leads" className="gap-2">
-              <Briefcase className="h-4 w-4" />
+        {/* Tabs */}
+        <Tabs defaultValue="available" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="available">
               Verfügbare Leads ({availableLeads.length})
             </TabsTrigger>
-            <TabsTrigger value="notifications" className="gap-2">
-              <Bell className="h-4 w-4" />
-              Benachrichtigungen ({notifications.length})
+            <TabsTrigger value="purchased">
+              Gekaufte Leads ({purchasedLeads.length})
+            </TabsTrigger>
+            <TabsTrigger value="active">
+              Aktive Projekte ({activeProjects.length})
+            </TabsTrigger>
+            <TabsTrigger value="completed">
+              Abgeschlossen ({completedProjects.length})
             </TabsTrigger>
           </TabsList>
 
-          <TabsContent value="leads" className="space-y-4">
+          <TabsContent value="available" className="space-y-4 mt-6">
             {availableLeads.length === 0 ? (
               <Card className="p-12 text-center">
-                <Briefcase className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-xl font-semibold mb-2">Noch keine Leads für Sie</h3>
-                <p className="text-muted-foreground mb-6">
-                  Aktuell sind keine passenden Leads vorhanden. Wir suchen automatisch nach neuen 
-                  Aufträgen für dich. Prüfe dein Profil (Gewerke & PLZ), um mehr passende Leads zu bekommen.
-                </p>
-                <Button variant="outline" onClick={() => navigate('/handwerker/onboarding')}>
-                  Profil prüfen
-                </Button>
+                <p className="text-muted-foreground">Keine verfügbaren Leads im Moment</p>
               </Card>
             ) : (
-              availableLeads.map((lead, index) => (
-                <motion.div
-                  key={lead.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: index * 0.1 }}
-                >
-                  <Card className="p-6 hover:shadow-lg transition-shadow">
-                    <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
-                      <div className="flex-1 space-y-3">
-                        <div className="flex items-start justify-between gap-4">
-                          <div>
-                            <h3 className="text-xl font-bold mb-1">
-                              {lead.projekt_typ}
-                            </h3>
-                            <div className="flex items-center gap-3 text-sm text-muted-foreground">
-                              <div className="flex items-center gap-1">
-                                <MapPin className="h-4 w-4" />
-                                {lead.city} ({lead.postal_code.substring(0, 2)}**)
-                              </div>
-                              <Badge className={cn("font-medium", getUrgencyColor(lead.urgency))}>
-                                {getUrgencyLabel(lead.urgency)}
-                              </Badge>
-                            </div>
-                          </div>
-                        </div>
-
-                        <p className="text-sm text-muted-foreground line-clamp-2">
-                          {lead.description}
-                        </p>
-
-                        <div className="flex flex-wrap gap-4 text-sm">
-                          <div className="flex items-center gap-2">
-                            <Euro className="h-4 w-4 text-muted-foreground" />
-                            <span>Geschätzt: €{lead.estimated_value || 'k.A.'}</span>
-                          </div>
-                          <div className="flex items-center gap-2">
-                            <Clock className="h-4 w-4 text-muted-foreground" />
-                            <span>Erstellt vor {new Date(lead.created_at).toLocaleDateString('de-DE')}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex flex-col items-end gap-3">
-                        <div className="text-right">
-                          <p className="text-sm text-muted-foreground">Lead-Preis</p>
-                          <p className="text-2xl font-bold text-primary">
-                            €{lead.final_price.toFixed(2)}
-                          </p>
-                        </div>
-                        <Button 
-                          size="lg" 
-                          className="w-full lg:w-auto"
-                          onClick={() => navigate(`/handwerker/projekt/${lead.id}`)}
-                        >
-                          Details ansehen
-                        </Button>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
+              availableLeads.map((match, index) => (
+                <AvailableLeadCard key={match.id} match={match} index={index} />
               ))
             )}
           </TabsContent>
 
-          <TabsContent value="notifications" className="space-y-4">
-            {notifications.length === 0 ? (
+          <TabsContent value="purchased" className="space-y-4 mt-6">
+            {purchasedLeads.length === 0 ? (
               <Card className="p-12 text-center">
-                <Bell className="h-16 w-16 mx-auto mb-4 text-muted-foreground opacity-50" />
-                <h3 className="text-xl font-semibold mb-2">Keine neuen Benachrichtigungen</h3>
-                <p className="text-muted-foreground">
-                  Sie haben alle Benachrichtigungen gelesen
-                </p>
+                <p className="text-muted-foreground">Noch keine Leads gekauft</p>
               </Card>
             ) : (
-              notifications.map((notification, index) => (
-                <motion.div
-                  key={notification.id}
-                  initial={{ opacity: 0, x: -20 }}
-                  animate={{ opacity: 1, x: 0 }}
-                  transition={{ delay: index * 0.05 }}
-                >
-                  <Card 
-                    className={cn(
-                      "p-6 cursor-pointer hover:shadow-md transition-all",
-                      !notification.read && "border-l-4 border-l-primary"
-                    )}
-                    onClick={() => markNotificationAsRead(notification.id)}
-                  >
-                    <div className="flex items-start gap-4">
-                      <div className="p-2 bg-primary/10 rounded-full">
-                        <Bell className="h-5 w-5 text-primary" />
-                      </div>
-                      <div className="flex-1">
-                        <h4 className="font-semibold mb-1">{notification.title}</h4>
-                        <p className="text-sm text-muted-foreground mb-2">
-                          {notification.body}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs text-muted-foreground">
-                          <span>{new Date(notification.created_at).toLocaleString('de-DE')}</span>
-                          {notification.data?.distance && (
-                            <span className="flex items-center gap-1">
-                              <MapPin className="h-3 w-3" />
-                              {notification.data.distance} km entfernt
-                            </span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </Card>
-                </motion.div>
+              purchasedLeads.map((match, index) => (
+                <PurchasedLeadCard key={match.id} match={match} index={index} />
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="active" className="space-y-4 mt-6">
+            {activeProjects.length === 0 ? (
+              <Card className="p-12 text-center">
+                <p className="text-muted-foreground">Keine aktiven Projekte</p>
+              </Card>
+            ) : (
+              activeProjects.map((match, index) => (
+                <ActiveProjectCard key={match.id} match={match} index={index} />
+              ))
+            )}
+          </TabsContent>
+
+          <TabsContent value="completed" className="space-y-4 mt-6">
+            {completedProjects.length === 0 ? (
+              <Card className="p-12 text-center">
+                <p className="text-muted-foreground">Noch keine abgeschlossenen Projekte</p>
+              </Card>
+            ) : (
+              completedProjects.map((match, index) => (
+                <CompletedProjectCard key={match.id} match={match} index={index} />
               ))
             )}
           </TabsContent>
         </Tabs>
-
-        {/* Recharge Dialog */}
-        <Dialog open={rechargeDialogOpen} onOpenChange={setRechargeDialogOpen}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Test-Wallet aufladen</DialogTitle>
-              <DialogDescription>
-                Fügen Sie Test-Guthaben hinzu (ohne echte Zahlung). Stripe-Integration folgt später.
-              </DialogDescription>
-            </DialogHeader>
-            
-            <div className="space-y-4 py-4">
-              <div>
-                <Label htmlFor="amount">Betrag wählen</Label>
-                <div className="grid grid-cols-3 gap-2 mt-2">
-                  <Button
-                    variant={rechargeAmount === 100 ? "default" : "outline"}
-                    onClick={() => setRechargeAmount(100)}
-                  >
-                    €100
-                  </Button>
-                  <Button
-                    variant={rechargeAmount === 250 ? "default" : "outline"}
-                    onClick={() => setRechargeAmount(250)}
-                  >
-                    €250
-                  </Button>
-                  <Button
-                    variant={rechargeAmount === 500 ? "default" : "outline"}
-                    onClick={() => setRechargeAmount(500)}
-                  >
-                    €500
-                  </Button>
-                </div>
-              </div>
-              
-              <div>
-                <Label htmlFor="custom-amount">Oder eigenen Betrag eingeben</Label>
-                <Input
-                  id="custom-amount"
-                  type="number"
-                  min="10"
-                  value={rechargeAmount}
-                  onChange={(e) => setRechargeAmount(Number(e.target.value))}
-                  className="mt-2"
-                />
-              </div>
-            </div>
-
-            <DialogFooter className="flex-col gap-2">
-              <Button 
-                className="w-full" 
-                onClick={handleRechargeWallet}
-                disabled={recharging || rechargeAmount <= 0}
-              >
-                {recharging ? (
-                  <>
-                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-                    Wird hinzugefügt...
-                  </>
-                ) : (
-                  `Test-Guthaben €${rechargeAmount} hinzufügen`
-                )}
-              </Button>
-              <p className="text-xs text-muted-foreground text-center">
-                Dies ist ein Test-Modus. Keine echte Zahlung erforderlich.
-              </p>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
       </div>
+
+      <Footer />
+
+      {/* Wallet Recharge Dialog */}
+      <Dialog open={showWalletDialog} onOpenChange={setShowWalletDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Guthaben aufladen</DialogTitle>
+            <DialogDescription>
+              Laden Sie Ihr Wallet auf, um Leads kaufen zu können
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4">
+            <div className="grid grid-cols-3 gap-2">
+              <Button variant="outline" onClick={() => setRechargeAmount(100)}>
+                €100
+              </Button>
+              <Button variant="outline" onClick={() => setRechargeAmount(250)}>
+                €250
+              </Button>
+              <Button variant="outline" onClick={() => setRechargeAmount(500)}>
+                €500
+              </Button>
+            </div>
+            
+            <div>
+              <Label htmlFor="custom-amount">Oder eigener Betrag</Label>
+              <Input
+                id="custom-amount"
+                type="number"
+                min="10"
+                value={rechargeAmount}
+                onChange={(e) => setRechargeAmount(e.target.value)}
+                placeholder="Betrag eingeben"
+              />
+            </div>
+          </div>
+
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setShowWalletDialog(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleRecharge}>
+              Aufladen (Test-Modus)
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

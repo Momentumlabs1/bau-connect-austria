@@ -367,7 +367,7 @@ export default function ContractorProjectDetail() {
         {!hasPurchasedLead ? (
           <LeadPreviewCard
             project={project}
-            leadPrice={5}
+            leadPrice={project.final_price}
             onPurchase={handlePurchaseLead}
             purchasing={purchasing}
             insufficientBalance={insufficientBalance}

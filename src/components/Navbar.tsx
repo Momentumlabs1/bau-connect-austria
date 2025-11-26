@@ -91,19 +91,6 @@ export const Navbar = () => {
                   onClick={() => navigate('/nachrichten')}
                   className="relative"
                 >
-                  <span className="mr-2">💬</span>
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-destructive text-destructive-foreground rounded-full w-5 h-5 text-xs flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate('/nachrichten')}
-                  className="relative"
-                >
                   <MessageSquare className="h-4 w-4" />
                   {unreadCount > 0 && (
                     <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
