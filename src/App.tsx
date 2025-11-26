@@ -18,6 +18,7 @@ import ContractorProfile from "./pages/ContractorProfile";
 import ContractorProfileEdit from "./pages/ContractorProfileEdit";
 import ContractorProjects from "./pages/ContractorProjects";
 import ContractorProjectDetail from "./pages/ContractorProjectDetail";
+import ContractorOrders from "./pages/ContractorOrders";
 import CustomerProjectDetail from "./pages/CustomerProjectDetail";
 import CustomerContractorSearch from "./pages/CustomerContractorSearch";
 import CustomerMyProjects from "./pages/CustomerMyProjects";
@@ -62,6 +63,7 @@ const App = () => {
           <Route path="/handwerker/profil-bearbeiten" element={<ContractorProfileEdit />} />
           <Route path="/handwerker/transaktionen" element={<ContractorTransactions />} />
           <Route path="/handwerker/projekte" element={<ContractorProjects />} />
+          <Route path="/handwerker/auftraege" element={<ContractorOrders />} />
           <Route path="/handwerker/projekt/:id" element={<ContractorProjectDetail />} />
           <Route path="/handwerker/:id" element={<PublicContractorProfile />} />
           <Route path="/nachrichten" element={<Messages />} />
