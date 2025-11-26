@@ -109,8 +109,11 @@ export default function ContractorProjectDetail() {
         ...typedProject,
         funnel_answers: typedProject.funnel_answers as Record<string, any> || {}
       });
-      // Nur setzen wenn noch keine customerData existiert (nicht überschreiben!)
-      setCustomerData(prev => prev || typedProject.profiles);
+      
+      // Kundeninfos NUR laden wenn noch nicht vorhanden (verhindert Überschreiben nach Purchase)
+      if (!customerData && typedProject.profiles) {
+        setCustomerData(typedProject.profiles);
+      }
 
       // Load category questions if subcategory_id exists
       if (typedProject.subcategory_id) {
@@ -379,58 +382,56 @@ export default function ContractorProjectDetail() {
             }}
           />
         ) : (
-          <div className="space-y-6">
+          <>
             {customerData ? (
-              <FullProjectDetails
-                project={project}
-                customer={customerData}
-                purchasedAt={purchasedAt}
-                onStartChat={() => setShowOfferDialog(true)}
-                categoryQuestions={categoryQuestions}
-              />
+              <>
+                <FullProjectDetails
+                  project={project}
+                  customer={customerData}
+                  purchasedAt={purchasedAt}
+                  categoryQuestions={categoryQuestions}
+                />
+                
+                {/* Offer Dialog */}
+                <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
+                  <DialogTrigger asChild>
+                    <Button className="w-full" size="lg">
+                      <DollarSign className="mr-2 h-5 w-5" />
+                      Jetzt Angebot senden
+                    </Button>
+                  </DialogTrigger>
+                  <DialogContent className="max-w-md max-h-[90vh] overflow-y-auto">
+                    <DialogHeader>
+                      <DialogTitle>Angebot für {project.title}</DialogTitle>
+                    </DialogHeader>
+                    <OfferForm 
+                      projectId={id!}
+                      projectTitle={project.title}
+                      projectCity={project.city}
+                      onSuccess={() => {
+                        setShowOfferDialog(false);
+                        toast({
+                          title: "Angebot gesendet",
+                          description: "Dein Angebot wurde erfolgreich an den Kunden gesendet"
+                        });
+                        navigate('/nachrichten');
+                      }}
+                    />
+                  </DialogContent>
+                </Dialog>
+              </>
             ) : (
-              <Card className="p-6">
-                <h2 className="text-xl font-bold mb-2">Kundendaten nicht verfügbar</h2>
-                <p className="text-muted-foreground text-sm">
-                  Die Kontaktdaten des Kunden können aktuell nicht geladen werden. Du kannst den Kunden trotzdem über den Chat kontaktieren.
+              <Card className="p-8 text-center">
+                <h2 className="text-xl font-bold mb-2">Kundendaten werden geladen...</h2>
+                <p className="text-muted-foreground mb-4">
+                  Die Kontaktdaten sollten gleich verfügbar sein.
                 </p>
-                <Button className="mt-4" onClick={handleStartChat}>
-                  Chat starten
+                <Button onClick={() => loadProject()} variant="outline">
+                  Erneut laden
                 </Button>
               </Card>
             )}
-            
-            {/* Offer Form */}
-            <Card className="p-6">
-              <h2 className="text-xl font-bold mb-4">Angebot erstellen</h2>
-              <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
-                <DialogTrigger asChild>
-                  <Button className="w-full" size="lg">
-                    <DollarSign className="mr-2 h-5 w-5" />
-                    Jetzt Angebot senden
-                  </Button>
-                </DialogTrigger>
-                <DialogContent className="max-w-md">
-                  <DialogHeader>
-                    <DialogTitle>Angebot für {project.title}</DialogTitle>
-                  </DialogHeader>
-                  <OfferForm 
-                    projectId={id!}
-                    projectTitle={project.title}
-                    projectCity={project.city}
-                    onSuccess={() => {
-                      setShowOfferDialog(false);
-                      toast({
-                        title: "Angebot gesendet",
-                        description: "Dein Angebot wurde erfolgreich an den Kunden gesendet und im Chat hinterlegt"
-                      });
-                      navigate('/nachrichten');
-                    }}
-                  />
-                </DialogContent>
-              </Dialog>
-            </Card>
-          </div>
+          </>
         )}
       </div>
     </div>

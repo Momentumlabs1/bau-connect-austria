@@ -45,11 +45,10 @@ interface FullProjectDetailsProps {
     phone?: string;
   };
   purchasedAt: string;
-  onStartChat: () => void;
   categoryQuestions?: CategoryQuestion[];
 }
 
-export const FullProjectDetails = ({ project, customer, purchasedAt, onStartChat, categoryQuestions = [] }: FullProjectDetailsProps) => {
+export const FullProjectDetails = ({ project, customer, purchasedAt, categoryQuestions = [] }: FullProjectDetailsProps) => {
   const [questions, setQuestions] = useState<CategoryQuestion[]>(categoryQuestions);
   const [categoryName, setCategoryName] = useState<string>("");
 
@@ -133,52 +132,47 @@ export const FullProjectDetails = ({ project, customer, purchasedAt, onStartChat
       </Card>
 
       {/* Customer Contact Information */}
-      <Card className="p-6">
-        <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
-          <User className="h-5 w-5" />
-          Kundenkontakt
-        </h3>
-        <div className="space-y-3">
+      <Card className="p-6 bg-gradient-to-br from-primary/5 to-primary/10 border-primary/20">
+        <div className="flex items-center gap-2 mb-4">
+          <User className="h-5 w-5 text-primary" />
+          <h3 className="font-semibold text-lg">Kundenkontakt</h3>
+        </div>
+        <div className="bg-background/80 backdrop-blur rounded-lg p-4 space-y-3">
           <div className="flex items-center gap-3">
-            <User className="h-4 w-4 text-muted-foreground" />
-            <span className="font-medium">
+            <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <User className="h-5 w-5 text-primary" />
+            </div>
+            <span className="font-semibold text-lg">
               {customer.first_name && customer.last_name 
                 ? `${customer.first_name} ${customer.last_name}`
                 : 'Kunde'}
             </span>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 pl-13">
             <Mail className="h-4 w-4 text-muted-foreground" />
-            <a href={`mailto:${customer.email}`} className="text-primary hover:underline">
+            <a href={`mailto:${customer.email}`} className="text-primary hover:underline font-medium">
               {customer.email}
             </a>
           </div>
           {customer.phone && (
-            <div className="flex items-center gap-3">
+            <div className="flex items-center gap-3 pl-13">
               <Phone className="h-4 w-4 text-muted-foreground" />
-              <a href={`tel:${customer.phone}`} className="text-primary hover:underline">
+              <a href={`tel:${customer.phone}`} className="text-primary hover:underline font-medium">
                 {customer.phone}
               </a>
             </div>
           )}
-          <div className="mt-4">
-            <Button 
-              className="w-full" 
-              onClick={onStartChat}
-            >
-              <MessageSquare className="h-4 w-4 mr-2" />
-              Angebot erstellen
-            </Button>
-          </div>
         </div>
       </Card>
 
       {/* Project Details */}
-      <Card className="p-6">
-        <h2 className="text-2xl font-semibold mb-6 flex items-center gap-2">
-          <FileText className="h-6 w-6" />
-          Projektdetails
-        </h2>
+      <Card className="p-6 md:p-8">
+        <div className="flex items-center gap-3 mb-6 pb-4 border-b">
+          <div className="h-10 w-10 rounded-lg bg-primary/10 flex items-center justify-center">
+            <FileText className="h-5 w-5 text-primary" />
+          </div>
+          <h2 className="text-2xl font-bold">Projektdetails</h2>
+        </div>
         
         <div className="space-y-6">
           <div>
@@ -229,19 +223,22 @@ export const FullProjectDetails = ({ project, customer, purchasedAt, onStartChat
 
           {/* Funnel Answers Section */}
           {project.funnel_answers && Object.keys(project.funnel_answers).length > 0 && questions.length > 0 ? (
-            <div className="border-t pt-6">
-              <h4 className="font-semibold text-lg mb-4">📋 Projektanforderungen</h4>
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="border-t pt-6 mt-6">
+              <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <span>📋</span>
+                Projektanforderungen
+              </h4>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
                 {questions.map((question) => {
                   const answer = project.funnel_answers?.[question.id];
                   if (!answer) return null;
                   
                   return (
-                    <div key={question.id} className="bg-muted/50 p-4 rounded-lg">
-                      <p className="text-sm font-medium text-muted-foreground mb-1">
+                    <div key={question.id} className="bg-muted/30 p-4 rounded-lg border hover:border-primary/20 transition-colors">
+                      <p className="text-sm font-medium text-muted-foreground mb-2">
                         {question.question_text}
                       </p>
-                      <p className="text-foreground font-medium">
+                      <p className="text-foreground font-semibold">
                         {formatAnswer(question.id, answer)}
                       </p>
                     </div>
@@ -250,9 +247,9 @@ export const FullProjectDetails = ({ project, customer, purchasedAt, onStartChat
               </div>
             </div>
           ) : (
-            <div className="border-t pt-6">
-              <h4 className="font-medium text-muted-foreground mb-2">Projektbeschreibung</h4>
-              <p className="text-foreground whitespace-pre-wrap leading-relaxed">
+            <div className="border-t pt-6 mt-6">
+              <h4 className="font-semibold text-lg mb-3">Projektbeschreibung</h4>
+              <p className="text-foreground whitespace-pre-wrap leading-relaxed bg-muted/20 p-4 rounded-lg">
                 {project.description}
               </p>
             </div>
