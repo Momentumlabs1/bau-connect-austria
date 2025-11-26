@@ -338,12 +338,24 @@ export default function ContractorProjectDetail() {
           />
         ) : (
           <div className="space-y-6">
-            <FullProjectDetails
-              project={project}
-              customer={customerData}
-              purchasedAt={purchasedAt}
-              onStartChat={handleStartChat}
-            />
+            {customerData ? (
+              <FullProjectDetails
+                project={project}
+                customer={customerData}
+                purchasedAt={purchasedAt}
+                onStartChat={handleStartChat}
+              />
+            ) : (
+              <Card className="p-6">
+                <h2 className="text-xl font-bold mb-2">Kundendaten nicht verfügbar</h2>
+                <p className="text-muted-foreground text-sm">
+                  Die Kontaktdaten des Kunden können aktuell nicht geladen werden. Du kannst den Kunden trotzdem über den Chat kontaktieren.
+                </p>
+                <Button className="mt-4" onClick={handleStartChat}>
+                  Chat starten
+                </Button>
+              </Card>
+            )}
             
             {/* Offer Form */}
             <Card className="p-6">
