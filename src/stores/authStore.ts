@@ -56,8 +56,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
 
       // Listen for auth changes - ONLY synchronous updates in callback
       supabase.auth.onAuthStateChange((event, session) => {
-        console.log('🔐 Auth state changed:', event);
-        
         // Only synchronous state updates here
         set({
           user: session?.user ?? null,
@@ -75,7 +73,6 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         }
       });
     } catch (error) {
-      console.error('❌ Auth initialization error:', error);
       set({ loading: false, initialized: true });
     }
   },

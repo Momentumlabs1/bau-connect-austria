@@ -67,7 +67,7 @@ export default function Register() {
 
       // Update profile with additional info
       if (authData.user) {
-        const { error: profileError } = await supabase
+        await supabase
           .from("profiles")
           .update({
             first_name: data.firstName,
@@ -75,21 +75,17 @@ export default function Register() {
           })
           .eq("id", authData.user.id);
 
-        if (profileError) console.error("Profile update error:", profileError);
-
         // Insert role into user_roles table
-        const { error: roleError } = await supabase
+        await supabase
           .from("user_roles")
           .insert({
             user_id: authData.user.id,
             role: role,
           });
-
-        if (roleError) console.error("Role insert error:", roleError);
         
         // Create contractor profile if registering as contractor
         if (role === 'contractor' && authData.user) {
-          const { error: contractorError } = await supabase
+          await supabase
             .from('contractors')
             .insert({
               id: authData.user.id,
@@ -100,8 +96,6 @@ export default function Register() {
               verified: false,
               handwerker_status: 'REGISTERED'
             });
-          
-          if (contractorError) console.error("Contractor creation error:", contractorError);
         }
       }
 
