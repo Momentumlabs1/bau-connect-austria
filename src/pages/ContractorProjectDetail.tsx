@@ -16,6 +16,7 @@ interface Project {
   title: string;
   description: string;
   gewerk_id: string;
+  subcategory_id?: string;
   postal_code: string;
   city: string;
   address: string | null;
@@ -24,6 +25,7 @@ interface Project {
   urgency: string;
   preferred_start_date: string | null;
   images: string[];
+  funnel_answers?: Record<string, any>;
   created_at: string;
   customer_id: string;
   final_price: number;
@@ -34,6 +36,7 @@ export default function ContractorProjectDetail() {
   const navigate = useNavigate();
   const [project, setProject] = useState<Project | null>(null);
   const [customerData, setCustomerData] = useState<any>(null);
+  const [categoryQuestions, setCategoryQuestions] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [hasPurchasedLead, setHasPurchasedLead] = useState(false);
@@ -68,7 +71,23 @@ export default function ContractorProjectDetail() {
       const { data: projectData, error: projectError } = await supabase
         .from("projects")
         .select(`
-          *,
+          id,
+          title,
+          description,
+          gewerk_id,
+          subcategory_id,
+          postal_code,
+          city,
+          address,
+          budget_min,
+          budget_max,
+          urgency,
+          preferred_start_date,
+          images,
+          funnel_answers,
+          created_at,
+          customer_id,
+          final_price,
           profiles!projects_customer_id_fkey(
             first_name,
             last_name,
@@ -85,9 +104,26 @@ export default function ContractorProjectDetail() {
         return;
       }
 
-      setProject(projectData);
+      const typedProject = projectData as any;
+      setProject({
+        ...typedProject,
+        funnel_answers: typedProject.funnel_answers as Record<string, any> || {}
+      });
       // Nur setzen wenn noch keine customerData existiert (nicht überschreiben!)
-      setCustomerData(prev => prev || projectData.profiles);
+      setCustomerData(prev => prev || typedProject.profiles);
+
+      // Load category questions if subcategory_id exists
+      if (typedProject.subcategory_id) {
+        const { data: questionsData } = await supabase
+          .from('category_questions')
+          .select('*')
+          .eq('category_id', typedProject.subcategory_id)
+          .order('sort_order');
+        
+        if (questionsData) {
+          setCategoryQuestions(questionsData);
+        }
+      }
 
       // Load contractor wallet balance
       const { data: contractorData } = await supabase
@@ -350,6 +386,7 @@ export default function ContractorProjectDetail() {
                 customer={customerData}
                 purchasedAt={purchasedAt}
                 onStartChat={() => setShowOfferDialog(true)}
+                categoryQuestions={categoryQuestions}
               />
             ) : (
               <Card className="p-6">
@@ -379,6 +416,8 @@ export default function ContractorProjectDetail() {
                   </DialogHeader>
                   <OfferForm 
                     projectId={id!}
+                    projectTitle={project.title}
+                    projectCity={project.city}
                     onSuccess={() => {
                       setShowOfferDialog(false);
                       toast({

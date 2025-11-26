@@ -3,17 +3,48 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Label } from '@/components/ui/label';
+import { RadioGroup, RadioGroupItem } from '@/components/ui/radio-group';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
+import { Card } from '@/components/ui/card';
+import { MessageSquare, Send, Edit } from 'lucide-react';
 
 interface OfferFormProps {
   projectId: string;
+  projectTitle?: string;
+  projectCity?: string;
   onSuccess?: () => void;
 }
 
-export const OfferForm = ({ projectId, onSuccess }: OfferFormProps) => {
+const MESSAGE_TEMPLATES = [
+  {
+    id: 'professional',
+    title: '👔 Professionelle Anfrage',
+    template: (title: string, city: string) => 
+      `Guten Tag!\n\nIch habe Ihr Projekt "${title}" in ${city} gesehen und bin sehr an der Umsetzung interessiert. Als erfahrener Handwerker kann ich Ihnen eine qualitativ hochwertige Ausführung garantieren.\n\nGerne würde ich weitere Details mit Ihnen besprechen und einen Vor-Ort-Termin vereinbaren.\n\nMit freundlichen Grüßen`,
+    preview: 'Professionelle Vorstellung mit Terminvorschlag'
+  },
+  {
+    id: 'quick',
+    title: '⚡ Schnelle Kontaktaufnahme',
+    template: (title: string, city: string) => 
+      `Hallo!\n\nIhr Projekt "${title}" interessiert mich sehr. Ich bin in der Region ${city} tätig und könnte zeitnah mit der Arbeit beginnen.\n\nKönnen wir telefonisch die Details besprechen?\n\nViele Grüße`,
+    preview: 'Kurz und direkt, fokussiert auf schnellen Start'
+  },
+  {
+    id: 'detailed',
+    title: '📋 Detaillierte Vorstellung',
+    template: (title: string, city: string) => 
+      `Sehr geehrte/r Interessent/in,\n\nzu Ihrem Projekt "${title}" in ${city} möchte ich mich gerne als qualifizierter Handwerker vorstellen.\n\nIch verfüge über langjährige Erfahrung in diesem Bereich und lege großen Wert auf:\n• Termingerechte Ausführung\n• Saubere Arbeitsweise\n• Faire Preisgestaltung\n• Nachhaltige Lösungen\n\nGerne erstelle ich Ihnen ein unverbindliches Angebot nach einer Besichtigung vor Ort.\n\nFreundliche Grüße`,
+    preview: 'Ausführliche Vorstellung mit Leistungspunkten'
+  }
+];
+
+export const OfferForm = ({ projectId, projectTitle = 'dieses Projekt', projectCity = 'Ihrer Region', onSuccess }: OfferFormProps) => {
   const [amount, setAmount] = useState('');
-  const [message, setMessage] = useState('');
+  const [messageType, setMessageType] = useState<'template' | 'custom'>('template');
+  const [selectedTemplate, setSelectedTemplate] = useState('professional');
+  const [customMessage, setCustomMessage] = useState('');
   const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -23,13 +54,23 @@ export const OfferForm = ({ projectId, onSuccess }: OfferFormProps) => {
     if (isNaN(amountNum) || amountNum <= 0) {
       toast({
         title: 'Ungültiger Betrag',
-        description: 'Bitte gib einen gültigen Betrag ein',
+        description: 'Bitte gib einen gültigen Angebotspreis ein',
         variant: 'destructive'
       });
       return;
     }
 
-    if (!message.trim() || message.trim().length < 20) {
+    let finalMessage = '';
+    if (messageType === 'template') {
+      const template = MESSAGE_TEMPLATES.find(t => t.id === selectedTemplate);
+      if (template) {
+        finalMessage = template.template(projectTitle, projectCity);
+      }
+    } else {
+      finalMessage = customMessage.trim();
+    }
+
+    if (!finalMessage || finalMessage.length < 20) {
       toast({
         title: 'Nachricht erforderlich',
         description: 'Bitte füge eine Nachricht mit mindestens 20 Zeichen hinzu',
@@ -45,7 +86,7 @@ export const OfferForm = ({ projectId, onSuccess }: OfferFormProps) => {
         body: {
           projectId,
           amount: amountNum,
-          message: message.trim() || null,
+          message: finalMessage,
           validDays: 7
         }
       });
@@ -58,7 +99,9 @@ export const OfferForm = ({ projectId, onSuccess }: OfferFormProps) => {
       });
 
       setAmount('');
-      setMessage('');
+      setCustomMessage('');
+      setMessageType('template');
+      setSelectedTemplate('professional');
       onSuccess?.();
     } catch (error: any) {
       console.error('❌ Error creating offer:', error);
@@ -73,47 +116,124 @@ export const OfferForm = ({ projectId, onSuccess }: OfferFormProps) => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-4">
+    <form onSubmit={handleSubmit} className="space-y-6">
+      {/* Price Input */}
       <div>
-        <Label htmlFor="amount">Angebotspreis (€) *</Label>
-        <Input
-          id="amount"
-          type="number"
-          step="0.01"
-          min="1"
-          value={amount}
-          onChange={(e) => setAmount(e.target.value)}
-          placeholder="z.B. 1500.00"
-          required
-        />
+        <Label htmlFor="amount" className="text-base font-semibold flex items-center gap-2">
+          💰 Ihr Angebotspreis
+        </Label>
+        <div className="relative mt-2">
+          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-muted-foreground">€</span>
+          <Input
+            id="amount"
+            type="number"
+            step="0.01"
+            min="1"
+            value={amount}
+            onChange={(e) => setAmount(e.target.value)}
+            placeholder="z.B. 1500.00"
+            className="pl-8 text-lg h-12"
+            required
+          />
+        </div>
       </div>
 
+      {/* Message Selection */}
       <div>
-        <Label htmlFor="message">Ihre Nachricht zum Angebot *</Label>
-        <Textarea
-          id="message"
-          value={message}
-          onChange={(e) => setMessage(e.target.value)}
-          placeholder="Beschreiben Sie Ihr Angebot und warum Sie der richtige Handwerker für dieses Projekt sind..."
-          rows={6}
-          minLength={20}
-          maxLength={500}
-          required
-        />
-        <p className="text-xs text-muted-foreground mt-1">
-          {message.length}/500 Zeichen (mindestens 20 Zeichen erforderlich)
+        <Label className="text-base font-semibold flex items-center gap-2 mb-4">
+          📝 Ihre Nachricht
+        </Label>
+
+        <RadioGroup value={messageType} onValueChange={(value: any) => setMessageType(value)} className="space-y-3">
+          {/* Template Options */}
+          {MESSAGE_TEMPLATES.map((template) => (
+            <Card
+              key={template.id}
+              className={`p-4 cursor-pointer transition-all hover:border-primary ${
+                messageType === 'template' && selectedTemplate === template.id
+                  ? 'border-primary bg-primary/5'
+                  : 'border-border'
+              }`}
+              onClick={() => {
+                setMessageType('template');
+                setSelectedTemplate(template.id);
+              }}
+            >
+              <div className="flex items-start gap-3">
+                <RadioGroupItem value={template.id} id={template.id} className="mt-1" />
+                <div className="flex-1">
+                  <label htmlFor={template.id} className="font-medium cursor-pointer block">
+                    {template.title}
+                  </label>
+                  <p className="text-sm text-muted-foreground mt-1">{template.preview}</p>
+                  {messageType === 'template' && selectedTemplate === template.id && (
+                    <div className="mt-3 p-3 bg-muted/50 rounded-md text-sm whitespace-pre-wrap">
+                      {template.template(projectTitle, projectCity)}
+                    </div>
+                  )}
+                </div>
+              </div>
+            </Card>
+          ))}
+
+          {/* Custom Message Option */}
+          <Card
+            className={`p-4 cursor-pointer transition-all hover:border-primary ${
+              messageType === 'custom' ? 'border-primary bg-primary/5' : 'border-border'
+            }`}
+            onClick={() => setMessageType('custom')}
+          >
+            <div className="flex items-start gap-3">
+              <RadioGroupItem value="custom" id="custom" className="mt-1" />
+              <div className="flex-1">
+                <label htmlFor="custom" className="font-medium cursor-pointer flex items-center gap-2">
+                  <Edit className="h-4 w-4" />
+                  Eigene Nachricht schreiben
+                </label>
+                {messageType === 'custom' && (
+                  <Textarea
+                    value={customMessage}
+                    onChange={(e) => setCustomMessage(e.target.value)}
+                    placeholder="Beschreiben Sie Ihr Angebot und warum Sie der richtige Handwerker für dieses Projekt sind..."
+                    rows={8}
+                    minLength={20}
+                    maxLength={500}
+                    className="mt-3"
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                )}
+                {messageType === 'custom' && (
+                  <p className="text-xs text-muted-foreground mt-2">
+                    {customMessage.length}/500 Zeichen (mindestens 20 Zeichen erforderlich)
+                  </p>
+                )}
+              </div>
+            </div>
+          </Card>
+        </RadioGroup>
+      </div>
+
+      {/* Info Box */}
+      <div className="bg-muted/50 p-4 rounded-lg text-sm border">
+        <p className="font-medium mb-1 flex items-center gap-2">
+          <MessageSquare className="h-4 w-4" />
+          Hinweis:
         </p>
-      </div>
-
-      <div className="bg-muted p-3 rounded-md text-sm">
-        <p className="font-medium mb-1">Hinweis:</p>
         <p className="text-muted-foreground">
-          Dein Angebot ist 7 Tage gültig und kann vom Kunden angenommen oder abgelehnt werden.
+          Dein Angebot ist 7 Tage gültig und wird als Nachricht an den Kunden gesendet. Der Kunde kann dein Angebot annehmen oder ablehnen.
         </p>
       </div>
 
-      <Button type="submit" disabled={loading} className="w-full">
-        {loading ? 'Wird gesendet...' : 'Angebot senden'}
+      {/* Submit Button */}
+      <Button type="submit" disabled={loading} className="w-full h-12 text-base" size="lg">
+        {loading ? (
+          'Wird gesendet...'
+        ) : (
+          <>
+            <Send className="h-4 w-4 mr-2" />
+            Angebot senden
+          </>
+        )}
       </Button>
     </form>
   );
