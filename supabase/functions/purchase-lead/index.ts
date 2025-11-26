@@ -219,32 +219,30 @@ Deno.serve(async (req) => {
 
     if (transactionError) throw transactionError
 
-    // 8. Update match record
-    const { error: matchError } = await supabase
+    // 8. Update match record with UPSERT
+    console.log('📝 Updating match record with UPSERT...')
+    const { data: updatedMatch, error: matchError } = await supabase
       .from('matches')
-      .update({
+      .upsert({
+        project_id: leadId,
+        contractor_id: user.id,
         lead_purchased: true,
         purchased_at: new Date().toISOString(),
-        status: 'active'
+        status: 'active',
+        match_type: matchRecord?.match_type || 'MANUAL',
+        score: matchRecord?.score || 0
+      }, {
+        onConflict: 'project_id,contractor_id'
       })
-      .eq('project_id', leadId)
-      .eq('contractor_id', user.id)
+      .select()
+      .single()
 
     if (matchError) {
-      console.warn('⚠️ Match record not found, creating new one')
-      // Create match if it doesn't exist
-      await supabase
-        .from('matches')
-        .insert({
-          project_id: leadId,
-          contractor_id: user.id,
-          lead_purchased: true,
-          purchased_at: new Date().toISOString(),
-          status: 'active',
-          match_type: 'MANUAL',
-          score: 0
-        })
+      console.error('❌ Failed to update match:', matchError)
+      throw matchError
     }
+
+    console.log('✅ Match updated successfully:', updatedMatch)
 
     // 9. Mark notification as read
     await supabase
@@ -295,7 +293,19 @@ Deno.serve(async (req) => {
 
     console.log('✅ Lead purchased successfully!')
 
-    // 11. Return full lead details
+    // 11. Get customer details
+    console.log('👤 Fetching customer details...')
+    const { data: customerProfile, error: customerError } = await supabase
+      .from('profiles')
+      .select('first_name, last_name, email, phone')
+      .eq('id', lead.customer_id)
+      .single()
+
+    if (customerError) {
+      console.warn('⚠️ Could not fetch customer profile:', customerError)
+    }
+
+    // 12. Return full lead details with customer info
     return new Response(
       JSON.stringify({
         success: true,
@@ -304,6 +314,7 @@ Deno.serve(async (req) => {
           : `Lead erfolgreich gekauft für €${leadPrice}`,
         newBalance,
         voucherApplied,
+        conversationId,
         leadDetails: {
           id: lead.id,
           title: lead.title || lead.projekt_typ,
@@ -318,17 +329,10 @@ Deno.serve(async (req) => {
           estimated_value: lead.estimated_value,
           preferred_start_date: lead.preferred_start_date,
           images: lead.images || lead.fotos || [],
-          
-          // Customer contact (now unlocked!)
-          customer: {
-            // We'd need to join with profiles table in a real implementation
-            // For now return project customer_id
-            id: lead.customer_id
-          },
-          
           purchased_at: new Date().toISOString(),
           price_paid: leadPrice
-        }
+        },
+        customerDetails: customerProfile || { email: 'Nicht verfügbar' }
       }),
       { 
         headers: { ...corsHeaders, 'Content-Type': 'application/json' }

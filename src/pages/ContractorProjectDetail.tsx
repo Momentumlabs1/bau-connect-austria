@@ -141,7 +141,7 @@ export default function ContractorProjectDetail() {
   const handlePurchaseLead = async (voucherCode?: string) => {
     if (!project || !userId) return;
 
-    // Skip balance check if voucher code is provided
+    // Bei Gutscheincode: Balance-Check überspringen
     if (!voucherCode && (insufficientBalance || walletBalance < project.final_price)) {
       toast({
         title: "Guthaben zu niedrig",
@@ -176,7 +176,6 @@ export default function ContractorProjectDetail() {
       });
 
       if (error) {
-        // Handle specific error cases
         if (error.message.includes("Insufficient balance") || error.message.includes("Guthaben")) {
           setInsufficientBalance(true);
           toast({
@@ -219,18 +218,26 @@ export default function ContractorProjectDetail() {
         throw error;
       }
 
-      // Success
+      // ✨ SOFORTIGE UI-UPDATES (nicht auf DB warten!)
+      setHasPurchasedLead(true);
+      setPurchasedAt(new Date().toISOString());
+      setWalletBalance(data.newBalance);
+      setInsufficientBalance(false); // Reset warning
+      
+      // Kundendetails aus Response laden
+      if (data.customerDetails) {
+        setCustomerData(data.customerDetails);
+      }
+
       toast({
         title: data.voucherApplied ? "Lead mit Gutschein gekauft! 🎉" : "Lead erfolgreich gekauft! 🎉",
         description: data.voucherApplied 
           ? `${data.message} Neues Guthaben: €${data.newBalance.toFixed(2)}`
-          : `Neues Guthaben: €${data.newBalance.toFixed(2)}. Sie können jetzt den Kunden kontaktieren.`,
+          : `Sie können jetzt den Kunden kontaktieren. Neues Guthaben: €${data.newBalance.toFixed(2)}`,
       });
 
-      setHasPurchasedLead(true);
-      setPurchasedAt(new Date().toISOString());
-      setWalletBalance(data.newBalance);
-      loadProject();
+      // Optional: Reload für vollständige Daten im Hintergrund
+      setTimeout(() => loadProject(), 1000);
     } catch (error: any) {
       console.error("Purchase error:", error);
       toast({

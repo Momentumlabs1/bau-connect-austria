@@ -1,10 +1,15 @@
+import { useState } from "react";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Euro, Phone, Mail, User, Calendar, CheckCircle2, MessageSquare } from "lucide-react";
+import { MapPin, Euro, Phone, Mail, User, Calendar, CheckCircle2, MessageSquare, Sparkles } from "lucide-react";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { MessageTemplates } from "./MessageTemplates";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
 
 interface FullProjectDetailsProps {
   project: {
@@ -23,6 +28,7 @@ interface FullProjectDetailsProps {
     images?: string[];
     created_at: string;
     preferred_start_date?: string;
+    customer_id: string;
   };
   customer: {
     first_name?: string;
@@ -35,6 +41,11 @@ interface FullProjectDetailsProps {
 }
 
 export function FullProjectDetails({ project, customer, purchasedAt, onStartChat }: FullProjectDetailsProps) {
+  const [showTemplates, setShowTemplates] = useState(false);
+  const [sending, setSending] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
   const getUrgencyColor = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
       case 'high': return 'destructive';
@@ -50,6 +61,70 @@ export function FullProjectDetails({ project, customer, purchasedAt, onStartChat
       case 'medium': return 'Normal';
       case 'low': return 'Flexibel';
       default: return urgency;
+    }
+  };
+
+  const handleSendTemplateMessage = async (message: string) => {
+    setSending(true);
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) throw new Error('Not authenticated');
+
+      // Check if conversation exists
+      const { data: existingConv } = await supabase
+        .from('conversations')
+        .select('id')
+        .eq('contractor_id', user.id)
+        .eq('project_id', project.id)
+        .maybeSingle();
+
+      let conversationId = existingConv?.id;
+
+      // Create conversation if not exists
+      if (!conversationId) {
+        const { data: newConv, error: convError } = await supabase
+          .from('conversations')
+          .insert({
+            contractor_id: user.id,
+            customer_id: project.customer_id,
+            project_id: project.id,
+            last_message_at: new Date().toISOString()
+          })
+          .select('id')
+          .single();
+
+        if (convError) throw convError;
+        conversationId = newConv.id;
+      }
+
+      // Send message
+      const { error: msgError } = await supabase
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          message,
+          read: false
+        });
+
+      if (msgError) throw msgError;
+
+      toast({
+        title: "Nachricht gesendet! ✉️",
+        description: "Der Kunde wurde benachrichtigt.",
+      });
+
+      // Navigate to messages
+      setTimeout(() => navigate('/nachrichten'), 1000);
+    } catch (error: any) {
+      console.error('Error sending message:', error);
+      toast({
+        title: "Fehler",
+        description: "Nachricht konnte nicht gesendet werden",
+        variant: "destructive",
+      });
+    } finally {
+      setSending(false);
     }
   };
 
@@ -102,12 +177,36 @@ export function FullProjectDetails({ project, customer, purchasedAt, onStartChat
               </a>
             </div>
           )}
-          <Button className="w-full mt-4" onClick={onStartChat}>
-            <MessageSquare className="h-4 w-4 mr-2" />
-            Nachricht an Kunden senden
-          </Button>
+          <div className="grid grid-cols-2 gap-2 mt-4">
+            <Button 
+              className="w-full" 
+              onClick={() => setShowTemplates(!showTemplates)}
+              variant={showTemplates ? "default" : "outline"}
+              disabled={sending}
+            >
+              <Sparkles className="h-4 w-4 mr-2" />
+              Vorlage verwenden
+            </Button>
+            <Button className="w-full" onClick={onStartChat} disabled={sending}>
+              <MessageSquare className="h-4 w-4 mr-2" />
+              Eigene Nachricht
+            </Button>
+          </div>
         </div>
       </Card>
+
+      {/* Message Templates */}
+      {showTemplates && (
+        <MessageTemplates
+          projectTitle={project.title}
+          projectCity={project.city}
+          onSelectTemplate={handleSendTemplateMessage}
+          onCustomMessage={() => {
+            setShowTemplates(false);
+            onStartChat();
+          }}
+        />
+      )}
 
       {/* Project Details */}
       <Card className="p-6">
