@@ -138,11 +138,11 @@ export default function ContractorProjectDetail() {
     }
   };
 
-  const handlePurchaseLead = async () => {
+  const handlePurchaseLead = async (voucherCode?: string) => {
     if (!project || !userId) return;
 
-    // Pre-check balance before attempting purchase
-    if (insufficientBalance || walletBalance < project.final_price) {
+    // Skip balance check if voucher code is provided
+    if (!voucherCode && (insufficientBalance || walletBalance < project.final_price)) {
       toast({
         title: "Guthaben zu niedrig",
         description: `Sie benötigen €${project.final_price}. Ihr aktuelles Guthaben: €${walletBalance.toFixed(2)}`,
@@ -169,7 +169,7 @@ export default function ContractorProjectDetail() {
       }
 
       const { data, error } = await supabase.functions.invoke("purchase-lead", {
-        body: { leadId: project.id },
+        body: { leadId: project.id, voucherCode },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -221,8 +221,10 @@ export default function ContractorProjectDetail() {
 
       // Success
       toast({
-        title: "Lead erfolgreich gekauft! 🎉",
-        description: `Neues Guthaben: €${data.newBalance.toFixed(2)}. Sie können jetzt den Kunden kontaktieren.`,
+        title: data.voucherApplied ? "Lead mit Gutschein gekauft! 🎉" : "Lead erfolgreich gekauft! 🎉",
+        description: data.voucherApplied 
+          ? `${data.message} Neues Guthaben: €${data.newBalance.toFixed(2)}`
+          : `Neues Guthaben: €${data.newBalance.toFixed(2)}. Sie können jetzt den Kunden kontaktieren.`,
       });
 
       setHasPurchasedLead(true);
@@ -324,7 +326,11 @@ export default function ContractorProjectDetail() {
           <LeadPreviewCard
             project={project}
             leadPrice={5}
-            useStripePayment={true}
+            onPurchase={handlePurchaseLead}
+            purchasing={purchasing}
+            insufficientBalance={insufficientBalance}
+            currentBalance={walletBalance}
+            useStripePayment={false}
             onPurchaseSuccess={() => {
               setHasPurchasedLead(true);
               loadProject();

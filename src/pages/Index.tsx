@@ -32,11 +32,25 @@ const Index = () => {
   const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
   const [stats, setStats] = useState({
     totalProjects: 0,
     totalContractors: 0,
     averageRating: 0,
   });
+
+  // Preload hero image
+  useEffect(() => {
+    const img = new Image();
+    img.src = contractorHero;
+    img.onload = () => {
+      setHeroImageLoaded(true);
+    };
+    img.onerror = () => {
+      // Still show page even if image fails to load
+      setHeroImageLoaded(true);
+    };
+  }, []);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -196,6 +210,22 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-white">
+      {/* Loading Screen - Show until hero image loads */}
+      {!heroImageLoaded && (
+        <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center">
+          <div className="text-center space-y-4">
+            <img src={logoNew} alt="BauConnect24 Logo" className="h-24 w-auto mx-auto animate-pulse" />
+            <div className="flex items-center gap-2">
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content - Hidden until hero image loads */}
+      <div className={heroImageLoaded ? 'opacity-100' : 'opacity-0'}>
       {/* Minimalist Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -755,6 +785,7 @@ const Index = () => {
           </div>
         </div>
       </footer>
+      </div> {/* End of heroImageLoaded wrapper */}
     </div>
   );
 };
