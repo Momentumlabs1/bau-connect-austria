@@ -577,6 +577,7 @@ export type Database = {
           expires_at: string | null
           final_price: number | null
           fotos: string[] | null
+          funnel_answers: Json | null
           gewerk_id: string
           id: string
           images: string[] | null
@@ -587,6 +588,7 @@ export type Database = {
           quality_checks: Json | null
           spam_score: number | null
           status: string | null
+          subcategory_id: string | null
           title: string
           updated_at: string
           urgency: string | null
@@ -606,6 +608,7 @@ export type Database = {
           expires_at?: string | null
           final_price?: number | null
           fotos?: string[] | null
+          funnel_answers?: Json | null
           gewerk_id: string
           id?: string
           images?: string[] | null
@@ -616,6 +619,7 @@ export type Database = {
           quality_checks?: Json | null
           spam_score?: number | null
           status?: string | null
+          subcategory_id?: string | null
           title: string
           updated_at?: string
           urgency?: string | null
@@ -635,6 +639,7 @@ export type Database = {
           expires_at?: string | null
           final_price?: number | null
           fotos?: string[] | null
+          funnel_answers?: Json | null
           gewerk_id?: string
           id?: string
           images?: string[] | null
@@ -645,6 +650,7 @@ export type Database = {
           quality_checks?: Json | null
           spam_score?: number | null
           status?: string | null
+          subcategory_id?: string | null
           title?: string
           updated_at?: string
           urgency?: string | null
@@ -663,6 +669,13 @@ export type Database = {
             columns: ["customer_id"]
             isOneToOne: false
             referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "projects_subcategory_id_fkey"
+            columns: ["subcategory_id"]
+            isOneToOne: false
+            referencedRelation: "service_categories"
             referencedColumns: ["id"]
           },
         ]

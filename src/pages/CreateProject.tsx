@@ -315,6 +315,7 @@ export default function CreateProject() {
           title: projectData.title,
           description: generatedDescription,
           gewerk_id: projectData.gewerk_id,
+          subcategory_id: projectData.subcategory_id || null,
           postal_code: projectData.postal_code,
           city: projectData.city,
           address: projectData.address || null,
@@ -327,6 +328,7 @@ export default function CreateProject() {
           preferred_start_date: projectData.preferred_start_date || null,
           projekt_typ: projectData.title,
           fotos: projectData.images,
+          funnel_answers: projectData.tradeSpecificAnswers,
           status: "open",
           visibility: "public"
         }])
