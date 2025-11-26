@@ -18,15 +18,19 @@ import {
   Zap,
   MessageSquare,
   TrendingUp,
+  LogOut,
+  User,
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import logoNew from "@/assets/bauconnect-logo-new.png";
 import contractorHero from "@/assets/contractor-hero.png";
 import { TopContractors } from "@/components/TopContractors";
 import { Footer } from "@/components/Footer";
+import { useAuth } from "@/stores/authStore";
 
 const Index = () => {
   const navigate = useNavigate();
+  const { user, role, signOut } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -39,6 +43,11 @@ const Index = () => {
     totalContractors: 0,
     averageRating: 0,
   });
+
+  const handleLogout = async () => {
+    await signOut();
+    navigate("/");
+  };
 
   // Preload hero image
   useEffect(() => {
@@ -242,19 +251,42 @@ const Index = () => {
 
             {/* Desktop Navigation */}
             <div className="hidden md:flex items-center gap-6">
-              <Button
-                variant="ghost"
-                onClick={() => navigate("/login")}
-                className="text-gray-600 hover:text-blue-600 font-medium"
-              >
-                Anmelden
-              </Button>
-              <Button
-                onClick={() => navigate("/register?role=contractor")}
-                className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg shadow-blue-600/30"
-              >
-                Als Handwerker registrieren
-              </Button>
+              {user ? (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate(role === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard')}
+                    className="text-gray-600 hover:text-blue-600 font-medium"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Button>
+                  <Button
+                    variant="ghost"
+                    onClick={handleLogout}
+                    className="text-gray-600 hover:text-blue-600 font-medium"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Abmelden
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="ghost"
+                    onClick={() => navigate("/login")}
+                    className="text-gray-600 hover:text-blue-600 font-medium"
+                  >
+                    Anmelden
+                  </Button>
+                  <Button
+                    onClick={() => navigate("/register")}
+                    className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold shadow-lg shadow-blue-600/30"
+                  >
+                    Registrieren
+                  </Button>
+                </>
+              )}
             </div>
 
             {/* Mobile Menu Button */}
@@ -268,25 +300,54 @@ const Index = () => {
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-t border-gray-100 shadow-xl">
             <div className="container mx-auto px-4 py-6 flex flex-col gap-4">
-              <Button
-                variant="outline"
-                onClick={() => {
-                  navigate("/login");
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full font-semibold"
-              >
-                Anmelden
-              </Button>
-              <Button
-                onClick={() => {
-                  navigate("/register?role=contractor");
-                  setMobileMenuOpen(false);
-                }}
-                className="w-full bg-gradient-to-r from-blue-600 to-blue-700 font-semibold"
-              >
-                Als Handwerker registrieren
-              </Button>
+              {user ? (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      navigate(role === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard');
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full font-semibold"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Button>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      handleLogout();
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full font-semibold"
+                  >
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Abmelden
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    variant="outline"
+                    onClick={() => {
+                      navigate("/login");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full font-semibold"
+                  >
+                    Anmelden
+                  </Button>
+                  <Button
+                    onClick={() => {
+                      navigate("/register");
+                      setMobileMenuOpen(false);
+                    }}
+                    className="w-full bg-gradient-to-r from-blue-600 to-blue-700 font-semibold"
+                  >
+                    Registrieren
+                  </Button>
+                </>
+              )}
             </div>
           </div>
         )}
