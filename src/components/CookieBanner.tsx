@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Cookie } from "lucide-react";
-import { Link } from "react-router-dom";
 
 export const CookieBanner = () => {
   const [showBanner, setShowBanner] = useState(false);
@@ -36,9 +35,9 @@ export const CookieBanner = () => {
             </p>
             <p className="text-xs text-muted-foreground">
               Weitere Informationen finden Sie in unserer{" "}
-              <Link to="/datenschutz" className="text-primary hover:underline">
+              <a href="/datenschutz" className="text-primary hover:underline">
                 Datenschutzerklärung
-              </Link>
+              </a>
               .
             </p>
           </div>
