@@ -15,6 +15,7 @@ interface LeadPurchaseButtonProps {
   leadTitle: string;
   leadPrice?: number;
   onPurchaseSuccess?: () => void;
+  voucherCode?: string;
 }
 
 const CheckoutForm = ({ 
@@ -104,7 +105,8 @@ export const LeadPurchaseButton = ({
   leadId, 
   leadTitle, 
   leadPrice = 5, 
-  onPurchaseSuccess 
+  onPurchaseSuccess,
+  voucherCode 
 }: LeadPurchaseButtonProps) => {
   const [showDialog, setShowDialog] = useState(false);
   const [clientSecret, setClientSecret] = useState<string | null>(null);
@@ -128,7 +130,7 @@ export const LeadPurchaseButton = ({
 
       // Create payment intent
       const { data, error } = await supabase.functions.invoke('create-payment-intent', {
-        body: { leadId },
+        body: { leadId, voucherCode },
       });
 
       if (error) throw error;

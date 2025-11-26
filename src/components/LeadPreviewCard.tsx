@@ -1,9 +1,11 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, Euro, Clock, AlertCircle, Image as ImageIcon } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { MapPin, Euro, Clock, AlertCircle, Image as ImageIcon, Ticket } from "lucide-react";
 import { motion } from "framer-motion";
 import { LeadPurchaseButton } from "@/components/LeadPurchaseButton";
+import { useState } from "react";
 
 interface LeadPreviewCardProps {
   project: {
@@ -22,7 +24,7 @@ interface LeadPreviewCardProps {
     created_at: string;
   };
   leadPrice: number;
-  onPurchase?: () => void;
+  onPurchase?: (voucherCode?: string) => void;
   purchasing?: boolean;
   insufficientBalance?: boolean;
   currentBalance?: number;
@@ -40,6 +42,7 @@ export function LeadPreviewCard({
   useStripePayment = false,
   onPurchaseSuccess
 }: LeadPreviewCardProps) {
+  const [voucherCode, setVoucherCode] = useState("");
   const getUrgencyColor = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
       case 'high': return 'destructive';
@@ -168,24 +171,45 @@ export function LeadPreviewCard({
               </ul>
             </div>
 
+            <div className="space-y-2">
+              <div className="flex items-center gap-2 text-sm font-medium">
+                <Ticket className="h-4 w-4 text-primary" />
+                <span>Gutschein-Code (optional)</span>
+              </div>
+              <Input
+                placeholder="z.B. CONNECT2025"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                className="uppercase"
+              />
+              {voucherCode && (
+                <p className="text-xs text-muted-foreground">
+                  ✓ Gutschein wird beim Kauf angewendet
+                </p>
+              )}
+            </div>
+
             {useStripePayment ? (
               <LeadPurchaseButton 
                 leadId={project.id}
                 leadTitle={project.title}
                 leadPrice={leadPrice}
                 onPurchaseSuccess={onPurchaseSuccess}
+                voucherCode={voucherCode}
               />
             ) : (
               <Button 
                 className="w-full text-lg py-6" 
                 size="lg"
-                onClick={onPurchase}
-                disabled={purchasing || insufficientBalance}
+                onClick={() => onPurchase?.(voucherCode)}
+                disabled={purchasing || (insufficientBalance && !voucherCode)}
               >
                 {purchasing ? (
                   <>Wird gekauft...</>
-                ) : insufficientBalance ? (
+                ) : insufficientBalance && !voucherCode ? (
                   <>Guthaben aufladen erforderlich</>
+                ) : voucherCode ? (
+                  <>Lead mit Gutschein kaufen</>
                 ) : (
                   <>Lead jetzt kaufen für €{leadPrice.toFixed(2)}</>
                 )}
