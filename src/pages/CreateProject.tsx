@@ -131,9 +131,18 @@ export default function CreateProject() {
       setProjectData(prev => ({ ...prev, gewerk_id: state.selectedGewerk }));
       setSelectedMainCategory(state.selectedGewerk);
       loadSubCategories(state.selectedGewerk);
-      setCurrentStep(0); // Show subcategory selection
+      setCurrentStep(0); // Show subcategory selection with tab pre-selected
     }
   }, [location]);
+
+  // Auto-select first category when categories load (only if no category is pre-selected)
+  useEffect(() => {
+    if (mainCategories.length > 0 && !selectedMainCategory) {
+      const firstCategory = mainCategories[0];
+      setSelectedMainCategory(firstCategory.id);
+      updateProjectData("gewerk_id", firstCategory.id);
+    }
+  }, [mainCategories]);
 
   useEffect(() => {
     if (selectedMainCategory) {
@@ -199,24 +208,24 @@ export default function CreateProject() {
   const currentTradeQuestions = categoryQuestions;
 
   const handleNext = () => {
-    // Validation for Step 0 - Main category selection
-    if (currentStep === 0 && selectedMainCategory === "") {
-      toast({
-        title: "Bitte wählen Sie eine Hauptkategorie",
-        description: "Wählen Sie zunächst eine Hauptkategorie aus",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    // Validation for Step 0 - Subcategory selection (substep)
-    if (currentStep === 0 && !projectData.subcategory_id) {
-      toast({
-        title: "Bitte wählen Sie eine Unterkategorie",
-        description: "Wählen Sie eine spezifische Unterkategorie aus",
-        variant: "destructive",
-      });
-      return;
+    // Validation for Step 0 - Category and subcategory selection
+    if (currentStep === 0) {
+      if (!selectedMainCategory) {
+        toast({
+          title: "Bitte wählen Sie eine Kategorie",
+          description: "Wählen Sie zunächst eine Kategorie aus den Tabs",
+          variant: "destructive",
+        });
+        return;
+      }
+      if (!projectData.subcategory_id) {
+        toast({
+          title: "Bitte wählen Sie eine Unterkategorie",
+          description: "Wählen Sie eine spezifische Dienstleistung aus",
+          variant: "destructive",
+        });
+        return;
+      }
     }
 
     // Validation for Step 2
@@ -485,7 +494,7 @@ export default function CreateProject() {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        // Category Selection - Main + Sub
+        // Combined Category Selection with Tabs
         return (
           <motion.div
             initial={{ opacity: 0 }}
@@ -493,56 +502,42 @@ export default function CreateProject() {
             exit={{ opacity: 0 }}
             className="space-y-8"
           >
-            {/* Main Categories */}
-            {!selectedMainCategory && (
-              <div className="text-center space-y-6">
-                <div>
-                  <h2 className="text-3xl font-bold mb-2">Welche Dienstleistung benötigen Sie?</h2>
-                  <p className="text-muted-foreground">Wählen Sie zunächst eine Hauptkategorie</p>
-                </div>
+            <div className="text-center space-y-2">
+              <h2 className="text-3xl font-bold">Welche Dienstleistung benötigen Sie?</h2>
+              <p className="text-muted-foreground">Wählen Sie eine Unterkategorie</p>
+            </div>
+
+            {/* Category Tabs */}
+            <div className="flex flex-wrap justify-center gap-2 md:gap-3 max-w-4xl mx-auto">
+              {mainCategories.map((category) => {
+                const IconComponent = iconMap[category.icon] || Home;
+                const isActive = selectedMainCategory === category.id;
                 
-                <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
-                  {mainCategories.map((category) => {
-                    const IconComponent = iconMap[category.icon] || Home;
-                    return (
-                      <SelectionCard
-                        key={category.id}
-                        icon={<IconComponent className="h-12 w-12" />}
-                        label={category.name}
-                        description={category.description}
-                        isSelected={false}
-                        onClick={() => {
-                          setSelectedMainCategory(category.id);
-                          updateProjectData("gewerk_id", category.id);
-                        }}
-                      />
-                    );
-                  })}
-                </div>
-              </div>
-            )}
+                return (
+                  <button
+                    key={category.id}
+                    onClick={() => {
+                      setSelectedMainCategory(category.id);
+                      updateProjectData("gewerk_id", category.id);
+                      updateProjectData("subcategory_id", "");
+                    }}
+                    className={cn(
+                      "flex items-center gap-2 px-4 py-2.5 rounded-xl font-semibold transition-all",
+                      isActive
+                        ? "bg-primary text-primary-foreground shadow-lg scale-105"
+                        : "bg-muted hover:bg-muted/80 text-muted-foreground hover:text-foreground"
+                    )}
+                  >
+                    <IconComponent className="h-5 w-5" />
+                    <span className="text-sm md:text-base">{category.name}</span>
+                  </button>
+                );
+              })}
+            </div>
 
             {/* Subcategories */}
             {selectedMainCategory && (
               <div className="space-y-6">
-                <div className="text-center">
-                  <Button 
-                    variant="ghost" 
-                    onClick={() => {
-                      setSelectedMainCategory("");
-                      setSubCategories([]);
-                      updateProjectData("subcategory_id", "");
-                    }}
-                    className="mb-4"
-                  >
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    Zurück zur Hauptkategorie
-                  </Button>
-                  
-                  <h2 className="text-3xl font-bold mb-2">Was genau benötigen Sie?</h2>
-                  <p className="text-muted-foreground">Wählen Sie die spezifische Dienstleistung</p>
-                </div>
-                
                 <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 max-w-5xl mx-auto">
                   {loadingSubCategories ? (
                     <div className="col-span-full text-center py-12">
@@ -555,7 +550,7 @@ export default function CreateProject() {
                       return (
                         <SelectionCard
                           key={category.id}
-                          icon={IconComponent ? <IconComponent className="h-10 w-10" /> : undefined}
+                          icon={IconComponent ? <IconComponent className="h-10 w-10" /> : <span className="text-3xl">📋</span>}
                           label={category.name}
                           description={category.description}
                           isSelected={projectData.subcategory_id === category.id}
@@ -565,20 +560,16 @@ export default function CreateProject() {
                     })
                   ) : (
                     <div className="col-span-full text-center py-12">
-                      <p className="text-muted-foreground mb-4">Keine Unterkategorien für dieses Gewerk verfügbar.</p>
-                      <Button 
-                        variant="outline"
-                        onClick={() => {
-                          setSelectedMainCategory("");
-                          setSubCategories([]);
-                        }}
-                      >
-                        <ArrowLeft className="h-4 w-4 mr-2" />
-                        Zurück zur Auswahl
-                      </Button>
+                      <p className="text-muted-foreground">Keine Unterkategorien verfügbar</p>
                     </div>
                   )}
                 </div>
+              </div>
+            )}
+
+            {!selectedMainCategory && (
+              <div className="text-center py-8">
+                <p className="text-muted-foreground">👆 Wählen Sie zuerst eine Kategorie</p>
               </div>
             )}
           </motion.div>
