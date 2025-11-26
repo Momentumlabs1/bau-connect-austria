@@ -1,4 +1,3 @@
-import { Link } from "react-router-dom";
 import { Separator } from "@/components/ui/separator";
 
 export const Footer = () => {
@@ -11,33 +10,33 @@ export const Footer = () => {
           </div>
           
           <div className="flex flex-wrap justify-center items-center gap-4 text-sm">
-            <Link 
-              to="/impressum" 
+            <a 
+              href="/impressum" 
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Impressum
-            </Link>
+            </a>
             <Separator orientation="vertical" className="h-4" />
-            <Link 
-              to="/datenschutz" 
+            <a 
+              href="/datenschutz" 
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Datenschutz
-            </Link>
+            </a>
             <Separator orientation="vertical" className="h-4" />
-            <Link 
-              to="/agb" 
+            <a 
+              href="/agb" 
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               AGB
-            </Link>
+            </a>
             <Separator orientation="vertical" className="h-4" />
-            <Link 
-              to="/widerruf" 
+            <a 
+              href="/widerruf" 
               className="text-muted-foreground hover:text-foreground transition-colors"
             >
               Widerruf
-            </Link>
+            </a>
           </div>
         </div>
       </div>
