@@ -228,7 +228,7 @@ Deno.serve(async (req) => {
         contractor_id: user.id,
         lead_purchased: true,
         purchased_at: new Date().toISOString(),
-        status: 'active',
+        status: 'contacted',
         match_type: matchRecord?.match_type || 'MANUAL',
         score: matchRecord?.score || 0
       }, {
