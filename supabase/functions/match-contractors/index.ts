@@ -55,7 +55,8 @@ function calculateDistance(lat1: number, lon1: number, lat2: number, lon2: numbe
 }
 
 // Simplified geocoding - Austrian postal codes to approximate coordinates
-function getCoordinatesFromPostalCode(postalCode: string): { lat: number; lon: number } | null {
+function getCoordinatesFromPostalCode(postalCode: string | null | undefined): { lat: number; lon: number } | null {
+  if (!postalCode) return null
   const pergCenter = { lat: 48.2511, lon: 14.6356 }
   const firstDigit = parseInt(postalCode.charAt(0))
   

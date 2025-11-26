@@ -284,7 +284,7 @@ export default function Messages() {
                   const isUserContractor = conv.contractor_id === userId;
                   const projectLink = isUserContractor 
                     ? `/handwerker/projekt/${conv.project_id}`
-                    : `/kunde/projekte/${conv.project_id}`;
+                    : `/kunde/projekt/${conv.project_id}`;
                   
                   return (
                     <div
@@ -322,7 +322,7 @@ export default function Messages() {
                     <div>
                       <h3 className="font-semibold text-lg">
                         {isContractor ? (
-                          <Link to={`/kunde/projekte/${selectedConversation.customer_id}`} className="hover:text-primary transition-colors">
+                          <Link to={`/kunde/projekt/${selectedConversation.customer_id}`} className="hover:text-primary transition-colors">
                             {getConversationTitle(selectedConversation)}
                           </Link>
                         ) : (
@@ -332,7 +332,7 @@ export default function Messages() {
                         )}
                       </h3>
                       <Link 
-                        to={isContractor ? `/handwerker/projekt/${selectedConversation.project_id}` : `/kunde/projekte/${selectedConversation.project_id}`}
+                        to={isContractor ? `/handwerker/projekt/${selectedConversation.project_id}` : `/kunde/projekt/${selectedConversation.project_id}`}
                         className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
                       >
                         {selectedConversation.project?.title || 'Projekt'}

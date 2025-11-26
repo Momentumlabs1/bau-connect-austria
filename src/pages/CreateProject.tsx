@@ -1219,7 +1219,7 @@ export default function CreateProject() {
             <Button 
               onClick={() => {
                 setShowSuccessDialog(false);
-                navigate(`/kunde/projekte/${createdProjectId}`);
+                navigate(`/kunde/projekt/${createdProjectId}`);
               }}
               className="w-full sm:w-auto"
             >
