@@ -446,7 +446,7 @@ const Index = () => {
               <p className="text-base md:text-lg text-gray-600">In nur 3 Schritten zum perfekten Handwerker</p>
             </div>
 
-            <div className="space-y-12 md:space-y-16 lg:space-y-20">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 sm:gap-6 lg:gap-8">
               {[
                 {
                   num: 1,
@@ -467,35 +467,26 @@ const Index = () => {
                   image: "/bc-home3.png",
                 },
               ].map((step, idx) => (
-                <div
-                  key={idx}
-                  className={`grid grid-cols-1 lg:grid-cols-2 gap-6 md:gap-8 lg:gap-10 items-center ${
-                    idx % 2 === 1 ? "lg:grid-flow-dense" : ""
-                  }`}
-                >
-                  {/* Bild - KLEINER */}
-                  <div className={`${idx % 2 === 1 ? "lg:col-start-2" : ""}`}>
-                    <div className="relative max-w-xs sm:max-w-sm md:max-w-md mx-auto">
-                      <img src={step.image} alt={step.title} className="w-full h-auto" />
-                    </div>
+                <div key={idx} className="flex flex-col items-center text-center gap-3 sm:gap-4">
+                  {/* Bild oben */}
+                  <div className="w-24 sm:w-32 md:w-40 lg:w-48">
+                    <img src={step.image} alt={step.title} className="w-full h-auto" />
                   </div>
 
-                  {/* Text mit Nummer NEBEN Titel - KEINE UMBRÜCHE */}
-                  <div className={`text-center lg:text-left ${idx % 2 === 1 ? "lg:col-start-1" : ""}`}>
-                    {/* Nummer und Titel in einer Zeile */}
-                    <div className="flex items-center justify-center lg:justify-start gap-3 mb-3 md:mb-4">
-                      <div className="flex-shrink-0 w-10 h-10 md:w-11 md:h-11 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
-                        <span className="text-xl md:text-2xl font-extrabold text-white">{step.num}</span>
-                      </div>
-                      <h3 className="text-xl sm:text-2xl md:text-3xl lg:text-3xl xl:text-4xl font-extrabold text-gray-900 whitespace-nowrap">
-                        {step.title}
-                      </h3>
-                    </div>
-
-                    <p className="text-sm md:text-base lg:text-lg text-gray-600 leading-relaxed max-w-md mx-auto lg:mx-0">
-                      {step.desc}
-                    </p>
+                  {/* Nummer Badge */}
+                  <div className="w-8 h-8 sm:w-10 sm:h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+                    <span className="text-lg sm:text-xl font-extrabold text-white">{step.num}</span>
                   </div>
+
+                  {/* Titel */}
+                  <h3 className="text-lg sm:text-xl md:text-2xl font-extrabold text-gray-900">
+                    {step.title}
+                  </h3>
+
+                  {/* Beschreibung */}
+                  <p className="text-xs sm:text-sm md:text-base text-gray-600 leading-relaxed">
+                    {step.desc}
+                  </p>
                 </div>
               ))}
             </div>
