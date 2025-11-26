@@ -23,6 +23,7 @@ import { supabase } from "@/integrations/supabase/client";
 import logoNew from "@/assets/bauconnect-logo-new.png";
 import contractorHero from "@/assets/contractor-hero.png";
 import { TopContractors } from "@/components/TopContractors";
+import { Footer } from "@/components/Footer";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -758,33 +759,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Footer - Minimal */}
-      <footer className="bg-gray-900 text-gray-400 py-10">
-        <div className="container mx-auto px-4">
-          <div className="flex flex-col md:flex-row justify-between items-center gap-6">
-            <div className="flex items-center gap-2">
-              <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-blue-700 rounded-lg flex items-center justify-center">
-                <Hammer className="h-5 w-5 text-white" />
-              </div>
-              <span className="text-base font-bold text-white">BauConnect24</span>
-            </div>
-
-            <div className="text-sm">© 2024 BauConnect24 - Alle Rechte vorbehalten</div>
-
-            <div className="flex gap-6 text-sm">
-              <a href="#" className="hover:text-white transition-colors">
-                Impressum
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                Datenschutz
-              </a>
-              <a href="#" className="hover:text-white transition-colors">
-                AGB
-              </a>
-            </div>
-          </div>
-        </div>
-      </footer>
+      <Footer />
       </div> {/* End of heroImageLoaded wrapper */}
     </div>
   );

@@ -30,6 +30,11 @@ import PaymentSuccess from "./pages/PaymentSuccess";
 import SeedDemo from "./pages/SeedDemo";
 import SeedContractors from "./pages/SeedContractors";
 import NotFound from "./pages/NotFound";
+import Impressum from "./pages/Impressum";
+import Datenschutz from "./pages/Datenschutz";
+import AGB from "./pages/AGB";
+import Widerruf from "./pages/Widerruf";
+import { CookieBanner } from "@/components/CookieBanner";
 
 const queryClient = new QueryClient();
 
@@ -47,6 +52,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <NotificationToast />
+          <CookieBanner />
           <BrowserRouter>
             <Routes>
           <Route path="/" element={<Index />} />
@@ -71,6 +77,10 @@ const App = () => {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/seed-demo" element={<SeedDemo />} />
           <Route path="/seed-contractors" element={<SeedContractors />} />
+          <Route path="/impressum" element={<Impressum />} />
+          <Route path="/datenschutz" element={<Datenschutz />} />
+          <Route path="/agb" element={<AGB />} />
+          <Route path="/widerruf" element={<Widerruf />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
           </Routes>
