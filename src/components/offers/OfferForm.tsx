@@ -29,6 +29,15 @@ export const OfferForm = ({ projectId, onSuccess }: OfferFormProps) => {
       return;
     }
 
+    if (!message.trim() || message.trim().length < 20) {
+      toast({
+        title: 'Nachricht erforderlich',
+        description: 'Bitte füge eine Nachricht mit mindestens 20 Zeichen hinzu',
+        variant: 'destructive'
+      });
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -80,17 +89,19 @@ export const OfferForm = ({ projectId, onSuccess }: OfferFormProps) => {
       </div>
 
       <div>
-        <Label htmlFor="message">Nachricht (optional)</Label>
+        <Label htmlFor="message">Ihre Nachricht zum Angebot *</Label>
         <Textarea
           id="message"
           value={message}
           onChange={(e) => setMessage(e.target.value)}
-          placeholder="Füge Details zu deinem Angebot hinzu..."
-          rows={4}
+          placeholder="Beschreiben Sie Ihr Angebot und warum Sie der richtige Handwerker für dieses Projekt sind..."
+          rows={6}
+          minLength={20}
           maxLength={500}
+          required
         />
         <p className="text-xs text-muted-foreground mt-1">
-          {message.length}/500 Zeichen
+          {message.length}/500 Zeichen (mindestens 20 Zeichen erforderlich)
         </p>
       </div>
 

@@ -41,6 +41,7 @@ export default function ContractorProjectDetail() {
   const [userId, setUserId] = useState<string>("");
   const [walletBalance, setWalletBalance] = useState(0);
   const [insufficientBalance, setInsufficientBalance] = useState(false);
+  const [showOfferDialog, setShowOfferDialog] = useState(false);
   const { toast } = useToast();
 
   useEffect(() => {
@@ -348,7 +349,7 @@ export default function ContractorProjectDetail() {
                 project={project}
                 customer={customerData}
                 purchasedAt={purchasedAt}
-                onStartChat={handleStartChat}
+                onStartChat={() => setShowOfferDialog(true)}
               />
             ) : (
               <Card className="p-6">
@@ -365,7 +366,7 @@ export default function ContractorProjectDetail() {
             {/* Offer Form */}
             <Card className="p-6">
               <h2 className="text-xl font-bold mb-4">Angebot erstellen</h2>
-              <Dialog>
+              <Dialog open={showOfferDialog} onOpenChange={setShowOfferDialog}>
                 <DialogTrigger asChild>
                   <Button className="w-full" size="lg">
                     <DollarSign className="mr-2 h-5 w-5" />
@@ -379,10 +380,12 @@ export default function ContractorProjectDetail() {
                   <OfferForm 
                     projectId={id!}
                     onSuccess={() => {
+                      setShowOfferDialog(false);
                       toast({
                         title: "Angebot gesendet",
-                        description: "Dein Angebot wurde erfolgreich an den Kunden gesendet"
+                        description: "Dein Angebot wurde erfolgreich an den Kunden gesendet und im Chat hinterlegt"
                       });
+                      navigate('/nachrichten');
                     }}
                   />
                 </DialogContent>

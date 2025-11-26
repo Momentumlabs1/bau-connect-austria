@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { useNavigate, useSearchParams } from "react-router-dom";
+import { useNavigate, useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Loader2, MessageSquare } from "lucide-react";
+import { Send, Loader2, MessageSquare, ExternalLink } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Conversation {
@@ -223,6 +223,10 @@ export default function Messages() {
     return 'Unbekannt';
   };
 
+  const selectedConversation = conversations.find(c => c.id === selectedConvId);
+  const isContractor = selectedConversation?.contractor_id === userId;
+  const otherParticipantId = isContractor ? selectedConversation?.customer_id : selectedConversation?.contractor_id;
+
   if (loading) {
     return (
       <div className="min-h-screen bg-background">
@@ -276,29 +280,68 @@ export default function Messages() {
                   Noch keine Unterhaltungen
                 </p>
               ) : (
-                conversations.map(conv => (
-                  <div
-                    key={conv.id}
-                    className={cn(
-                      "p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors",
-                      selectedConvId === conv.id && "bg-primary/10"
-                    )}
-                    onClick={() => setSelectedConvId(conv.id)}
-                  >
-                    <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
-                    <p className="text-sm text-muted-foreground line-clamp-1">
-                      {conv.project?.title || 'Projekt'}
-                    </p>
-                  </div>
-                ))
+                conversations.map(conv => {
+                  const isUserContractor = conv.contractor_id === userId;
+                  const projectLink = isUserContractor 
+                    ? `/handwerker/projekt/${conv.project_id}`
+                    : `/kunde/projekte/${conv.project_id}`;
+                  
+                  return (
+                    <div
+                      key={conv.id}
+                      className={cn(
+                        "p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors",
+                        selectedConvId === conv.id && "bg-primary/10"
+                      )}
+                      onClick={() => setSelectedConvId(conv.id)}
+                    >
+                      <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
+                      <Link 
+                        to={projectLink}
+                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {conv.project?.title || 'Projekt'}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  );
+                })
+              
               )}
             </div>
           </Card>
           
           {/* Messages Area */}
           <Card className="lg:col-span-2 p-4 flex flex-col">
-            {selectedConvId ? (
+            {selectedConvId && selectedConversation ? (
               <>
+                {/* Chat Header */}
+                <div className="border-b pb-3 mb-4">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <h3 className="font-semibold text-lg">
+                        {isContractor ? (
+                          <Link to={`/kunde/projekte/${selectedConversation.customer_id}`} className="hover:text-primary transition-colors">
+                            {getConversationTitle(selectedConversation)}
+                          </Link>
+                        ) : (
+                          <Link to={`/handwerker/${selectedConversation.contractor_id}`} className="hover:text-primary transition-colors">
+                            {getConversationTitle(selectedConversation)}
+                          </Link>
+                        )}
+                      </h3>
+                      <Link 
+                        to={isContractor ? `/handwerker/projekt/${selectedConversation.project_id}` : `/kunde/projekte/${selectedConversation.project_id}`}
+                        className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+                      >
+                        {selectedConversation.project?.title || 'Projekt'}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    </div>
+                  </div>
+                </div>
+
                 <div className="flex-1 overflow-y-auto space-y-4 mb-4">
                   {messages.map(msg => (
                     <div
