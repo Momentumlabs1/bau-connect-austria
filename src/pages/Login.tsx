@@ -10,6 +10,7 @@ import { Navbar } from "@/components/Navbar";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Footer } from "@/components/Footer";
 
 const loginSchema = z.object({
   email: z.string().email("Bitte geben Sie eine gültige E-Mail ein"),
@@ -141,6 +142,7 @@ export default function Login() {
           </Card>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }

@@ -11,12 +11,18 @@ import { Wrench, User } from "lucide-react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { Checkbox } from "@/components/ui/checkbox";
+import { Link } from "react-router-dom";
+import { Footer } from "@/components/Footer";
 
 const registerSchema = z.object({
   email: z.string().email("Bitte geben Sie eine gültige E-Mail ein"),
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen lang sein"),
   firstName: z.string().min(2, "Vorname ist erforderlich"),
   lastName: z.string().min(2, "Nachname ist erforderlich"),
+  acceptTerms: z.literal(true, {
+    errorMap: () => ({ message: "Sie müssen die AGB und Datenschutzerklärung akzeptieren" }),
+  }),
 });
 
 type RegisterForm = z.infer<typeof registerSchema>;
@@ -227,6 +233,38 @@ export default function Register() {
                     )}
                   </div>
 
+                  <div className="flex items-start space-x-2">
+                    <Checkbox
+                      id="acceptTerms"
+                      {...register("acceptTerms")}
+                      className="mt-1"
+                    />
+                    <Label
+                      htmlFor="acceptTerms"
+                      className="text-sm font-normal leading-relaxed cursor-pointer"
+                    >
+                      Ich akzeptiere die{" "}
+                      <Link
+                        to="/agb"
+                        target="_blank"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        AGB
+                      </Link>{" "}
+                      und{" "}
+                      <Link
+                        to="/datenschutz"
+                        target="_blank"
+                        className="text-primary hover:underline font-medium"
+                      >
+                        Datenschutzerklärung
+                      </Link>
+                    </Label>
+                  </div>
+                  {errors.acceptTerms && (
+                    <p className="text-sm text-destructive">{errors.acceptTerms.message}</p>
+                  )}
+
                   <div className="flex gap-2">
                     <Button
                       type="button"
@@ -246,6 +284,7 @@ export default function Register() {
           </div>
         )}
       </div>
+      <Footer />
     </div>
   );
 }
