@@ -112,6 +112,64 @@ Deno.serve(async (req) => {
       throw offerError;
     }
 
+    console.log(`✅ Offer created successfully: ${offer.id}`);
+
+    // ============================================================
+    // Create/Get conversation and send message in chat
+    // ============================================================
+    console.log('💬 Creating conversation and message...');
+    
+    // Check if conversation exists
+    const { data: existingConv } = await supabaseClient
+      .from('conversations')
+      .select('id')
+      .eq('contractor_id', user.id)
+      .eq('project_id', projectId)
+      .maybeSingle();
+
+    let conversationId = existingConv?.id;
+
+    // Create conversation if not exists
+    if (!conversationId) {
+      const { data: newConv, error: convError } = await supabaseClient
+        .from('conversations')
+        .insert({
+          contractor_id: user.id,
+          customer_id: project.customer_id,
+          project_id: projectId,
+          last_message_at: new Date().toISOString()
+        })
+        .select('id')
+        .single();
+
+      if (convError) {
+        console.error('❌ Conversation creation failed:', convError);
+      } else {
+        conversationId = newConv.id;
+        console.log('✅ Conversation created:', conversationId);
+      }
+    }
+
+    // Send offer message in chat
+    if (conversationId) {
+      const offerMessage = `📋 **Angebot: €${amount.toFixed(2)}**\n\n${message || 'Kein Nachrichtentext'}`;
+      
+      const { error: msgError } = await supabaseClient
+        .from('messages')
+        .insert({
+          conversation_id: conversationId,
+          sender_id: user.id,
+          message: offerMessage,
+          read: false
+        });
+
+      if (msgError) {
+        console.error('❌ Message creation failed:', msgError);
+      } else {
+        console.log('✅ Offer message sent to chat');
+      }
+    }
+
     // Create notification for customer
     const { error: notificationError } = await supabaseClient
       .from('notifications')
@@ -132,13 +190,11 @@ Deno.serve(async (req) => {
       // Don't fail the whole operation
     }
 
-    console.log(`✅ Offer created successfully: ${offer.id}`);
-
     return new Response(
       JSON.stringify({
         success: true,
         offer: offer,
-        message: 'Angebot erfolgreich erstellt'
+        message: 'Angebot erfolgreich erstellt und Nachricht gesendet'
       }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
