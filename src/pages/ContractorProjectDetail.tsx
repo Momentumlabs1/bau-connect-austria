@@ -85,7 +85,8 @@ export default function ContractorProjectDetail() {
       }
 
       setProject(projectData);
-      setCustomerData(projectData.profiles);
+      // Nur setzen wenn noch keine customerData existiert (nicht überschreiben!)
+      setCustomerData(prev => prev || projectData.profiles);
 
       // Load contractor wallet balance
       const { data: contractorData } = await supabase
@@ -235,9 +236,6 @@ export default function ContractorProjectDetail() {
           ? `${data.message} Neues Guthaben: €${data.newBalance.toFixed(2)}`
           : `Sie können jetzt den Kunden kontaktieren. Neues Guthaben: €${data.newBalance.toFixed(2)}`,
       });
-
-      // Optional: Reload für vollständige Daten im Hintergrund
-      setTimeout(() => loadProject(), 1000);
     } catch (error: any) {
       console.error("Purchase error:", error);
       toast({
