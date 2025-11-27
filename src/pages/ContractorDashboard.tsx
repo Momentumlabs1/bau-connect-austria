@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/stores/authStore";
 import { Navbar } from "@/components/Navbar";
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -18,6 +19,7 @@ import { CompletedProjectCard } from "@/components/contractor/CompletedProjectCa
 import { Footer } from "@/components/Footer";
 
 export default function ContractorDashboard() {
+  const { user, role, loading: authLoading } = useAuth();
   const navigate = useNavigate();
   const { toast } = useToast();
   const [loading, setLoading] = useState(true);
@@ -50,11 +52,17 @@ export default function ContractorDashboard() {
   }, [userId]);
 
   const checkAuth = async () => {
-    const { data: { user } } = await supabase.auth.getUser();
     if (!user) {
       navigate("/login");
       return;
     }
+    
+    // Role-Guard: Redirect customers to their dashboard
+    if (!authLoading && role && role !== 'contractor') {
+      navigate('/kunde/dashboard');
+      return;
+    }
+    
     setUserId(user.id);
   };
 
