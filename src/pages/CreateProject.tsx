@@ -13,13 +13,14 @@ import { Navbar } from "@/components/Navbar";
 import { ImageUpload } from "@/components/ImageUpload";
 import { ProgressStepper } from "@/components/wizard/ProgressStepper";
 import { SelectionCard } from "@/components/wizard/SelectionCard";
-import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer, Star, MessageSquare, Zap, Droplet, Home, Paintbrush } from "lucide-react";
+import { ArrowLeft, ArrowRight, MapPin, Calendar, Image as ImageIcon, FileText, CheckCircle2, Hammer, Star, MessageSquare, Zap, Droplet, Home, Paintbrush, User } from "lucide-react";
 import { Checkbox } from "@/components/ui/checkbox";
 import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
+import { Slider } from "@/components/ui/slider";
 
 // Icon mapping for service categories
 const iconMap: Record<string, any> = {
@@ -83,6 +84,17 @@ export default function CreateProject() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdProjectId, setCreatedProjectId] = useState<string>("");
   const [matchedContractors, setMatchedContractors] = useState<any[]>([]);
+  const [timeSliderValue, setTimeSliderValue] = useState(2);
+  
+  // Guest data for inline registration
+  const [guestData, setGuestData] = useState({
+    firstName: "",
+    lastName: "",
+    email: "",
+    phone: "",
+    password: "",
+    acceptTerms: false
+  });
   
   // Categories state
   const [mainCategories, setMainCategories] = useState<ServiceCategory[]>([]);
@@ -264,14 +276,83 @@ export default function CreateProject() {
   };
 
   const handleSubmit = async () => {
+    let finalUserId = userId;
+
+    // If user not logged in, create account first
     if (!userId) {
-      toast({
-        title: "Anmeldung erforderlich",
-        description: "Sie müssen angemeldet sein, um ein Projekt zu erstellen",
-        variant: "destructive",
-      });
-      navigate("/login");
-      return;
+      // Validate guest data
+      if (!guestData.email || !guestData.password || !guestData.firstName) {
+        toast({
+          title: "Pflichtfelder fehlen",
+          description: "Bitte füllen Sie alle Kontaktdaten aus",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (guestData.password.length < 6) {
+        toast({
+          title: "Passwort zu kurz",
+          description: "Das Passwort muss mindestens 6 Zeichen lang sein",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!guestData.acceptTerms) {
+        toast({
+          title: "AGB nicht akzeptiert",
+          description: "Bitte akzeptieren Sie die AGB und Datenschutzerklärung",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      setLoading(true);
+
+      try {
+        // Create account
+        const { data: authData, error: authError } = await supabase.auth.signUp({
+          email: guestData.email,
+          password: guestData.password,
+          options: {
+            emailRedirectTo: `${window.location.origin}/`,
+            data: { role: 'customer' }
+          }
+        });
+
+        if (authError) throw authError;
+        if (!authData.user) throw new Error("Konto konnte nicht erstellt werden");
+
+        // Update profile
+        await supabase.from('profiles').update({
+          first_name: guestData.firstName,
+          last_name: guestData.lastName,
+          phone: guestData.phone
+        }).eq('id', authData.user.id);
+
+        // Set user role
+        await supabase.from('user_roles').insert({
+          user_id: authData.user.id,
+          role: 'customer'
+        });
+
+        finalUserId = authData.user.id;
+        setUserId(finalUserId);
+
+        toast({
+          title: "Konto erstellt!",
+          description: "Ihr Projekt wird jetzt veröffentlicht...",
+        });
+      } catch (error: any) {
+        toast({
+          title: "Registrierung fehlgeschlagen",
+          description: error.message,
+          variant: "destructive",
+        });
+        setLoading(false);
+        return;
+      }
     }
 
     if (!projectData.title) {
@@ -280,10 +361,10 @@ export default function CreateProject() {
         description: "Bitte geben Sie einen Projekttitel ein",
         variant: "destructive",
       });
+      setLoading(false);
       return;
     }
 
-    setLoading(true);
     try {
       // Generate comprehensive description from trade-specific answers
       let generatedDescription = projectData.description || "";
@@ -320,7 +401,7 @@ export default function CreateProject() {
       const { data: newProject, error } = await supabase
         .from("projects")
         .insert([{
-          customer_id: userId,
+          customer_id: finalUserId,
           title: projectData.title,
           description: generatedDescription,
           gewerk_id: projectData.gewerk_id,
@@ -845,7 +926,24 @@ export default function CreateProject() {
         );
 
       case 3:
-        // Timing
+        // Timing - Slider Version
+        const timeOptions = [
+          { value: 0, label: "Sofort", sublabel: "Innerhalb 1 Woche", urgency: 'high' as const },
+          { value: 1, label: "1-2 Wochen", sublabel: "Zeitnah", urgency: 'high' as const },
+          { value: 2, label: "1 Monat", sublabel: "Normal", urgency: 'medium' as const },
+          { value: 3, label: "2-3 Monate", sublabel: "Nicht eilig", urgency: 'low' as const },
+          { value: 4, label: "Flexibel", sublabel: "Kein Zeitdruck", urgency: 'low' as const }
+        ];
+
+        const getUrgencyColor = (value: number) => {
+          if (value <= 1) return { slider: 'bg-red-500', badge: 'bg-red-500' };
+          if (value === 2) return { slider: 'bg-yellow-500', badge: 'bg-yellow-500' };
+          return { slider: 'bg-green-500', badge: 'bg-green-500' };
+        };
+
+        const currentColor = getUrgencyColor(timeSliderValue);
+        const currentOption = timeOptions[timeSliderValue];
+
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -864,81 +962,52 @@ export default function CreateProject() {
               </p>
             </div>
 
-            <RadioGroup
-              value={projectData.urgency}
-              onValueChange={(value) => updateProjectData("urgency", value as 'high' | 'medium' | 'low')}
-            >
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 max-w-5xl mx-auto">
-                {[
-                  { 
-                    value: "high", 
-                    label: "Sehr dringend (sofort)", 
-                    description: "Innerhalb 24-48h",
-                    icon: "🔴",
-                    borderColor: "border-red-500",
-                    bgColor: "bg-red-50/40",
-                    bgSelected: "bg-red-50",
-                    ringColor: "ring-red-500"
-                  },
-                  { 
-                    value: "medium", 
-                    label: "Dringend (diese Woche)", 
-                    description: "Innerhalb 1-2 Wochen",
-                    icon: "🟡",
-                    borderColor: "border-yellow-500",
-                    bgColor: "bg-yellow-50/40",
-                    bgSelected: "bg-yellow-50",
-                    ringColor: "ring-yellow-500"
-                  },
-                  { 
-                    value: "low", 
-                    label: "Normal (nächste Wochen)", 
-                    description: "Flexibel nach Absprache",
-                    icon: "🟢",
-                    borderColor: "border-green-500",
-                    bgColor: "bg-green-50/40",
-                    bgSelected: "bg-green-50",
-                    ringColor: "ring-green-500"
-                  }
-                ].map((option) => {
-                  const isSelected = projectData.urgency === option.value;
-                  
-                  return (
-                    <motion.div
-                      key={option.value}
-                      whileHover={{ scale: 1.03 }}
-                      whileTap={{ scale: 0.98 }}
-                      className={cn(
-                        "relative rounded-xl border-2 p-6 cursor-pointer transition-all",
-                        option.borderColor,
-                        isSelected ? `${option.bgSelected} shadow-lg ring-2 ring-offset-2 ${option.ringColor}` : `${option.bgColor} hover:shadow-md`
-                      )}
-                      onClick={() => updateProjectData("urgency", option.value as 'high' | 'medium' | 'low')}
-                    >
-                      <RadioGroupItem 
-                        value={option.value} 
-                        id={option.value} 
-                        className="absolute top-4 right-4 h-5 w-5"
-                      />
-                      <div className="flex flex-col items-center text-center space-y-3 pt-2">
-                        <div className="w-20 h-20 rounded-full bg-white shadow-sm flex items-center justify-center text-5xl">
-                          {option.icon}
-                        </div>
-                        <div className="space-y-1">
-                          <Label 
-                            htmlFor={option.value} 
-                            className="cursor-pointer font-bold text-base block"
-                          >
-                            {option.label}
-                          </Label>
-                          <p className="text-sm text-muted-foreground font-medium">{option.description}</p>
-                        </div>
-                      </div>
-                    </motion.div>
-                  );
-                })}
+            <Card className="p-8 max-w-3xl mx-auto space-y-8">
+              {/* Slider */}
+              <div className="space-y-6">
+                <Slider
+                  value={[timeSliderValue]}
+                  onValueChange={([v]) => {
+                    setTimeSliderValue(v);
+                    updateProjectData('urgency', timeOptions[v].urgency);
+                  }}
+                  max={4}
+                  step={1}
+                  className="w-full"
+                />
+
+                {/* Current Selection Display */}
+                <div className="text-center space-y-4">
+                  <Badge 
+                    className={cn(
+                      "text-lg px-6 py-3 font-bold text-white border-0",
+                      currentColor.badge
+                    )}
+                  >
+                    {currentOption.label}
+                  </Badge>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {currentOption.sublabel}
+                  </p>
+                </div>
+
+                {/* Legend */}
+                <div className="flex justify-between items-center text-sm pt-4 border-t">
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                    <span className="font-medium">Dringend</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                    <span className="font-medium">Mittel</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                    <span className="font-medium">Flexibel</span>
+                  </div>
+                </div>
               </div>
-            </RadioGroup>
+            </Card>
           </motion.div>
         );
 
@@ -1044,6 +1113,104 @@ export default function CreateProject() {
                 </p>
               </div>
             </Card>
+
+            {/* Guest Registration - Only if not logged in */}
+            {!userId && (
+              <Card className="p-6 max-w-2xl mx-auto space-y-4 bg-blue-50/30 border-blue-200">
+                <div className="flex items-start gap-3">
+                  <div className="p-2 rounded-lg bg-blue-100">
+                    <User className="h-5 w-5 text-blue-600" />
+                  </div>
+                  <div>
+                    <h3 className="font-semibold text-lg">Ihre Kontaktdaten</h3>
+                    <p className="text-sm text-muted-foreground">
+                      Um Ihren Auftrag zu veröffentlichen, benötigen wir Ihre Kontaktdaten. Ihr Konto wird automatisch erstellt.
+                    </p>
+                  </div>
+                </div>
+                
+                <div className="grid gap-4 md:grid-cols-2">
+                  <div className="space-y-2">
+                    <Label htmlFor="firstName">Vorname <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="firstName"
+                      value={guestData.firstName}
+                      onChange={(e) => setGuestData(prev => ({ ...prev, firstName: e.target.value }))}
+                      placeholder="Max"
+                      className="h-12"
+                    />
+                  </div>
+                  <div className="space-y-2">
+                    <Label htmlFor="lastName">Nachname <span className="text-destructive">*</span></Label>
+                    <Input
+                      id="lastName"
+                      value={guestData.lastName}
+                      onChange={(e) => setGuestData(prev => ({ ...prev, lastName: e.target.value }))}
+                      placeholder="Mustermann"
+                      className="h-12"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="email">E-Mail-Adresse <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    value={guestData.email}
+                    onChange={(e) => setGuestData(prev => ({ ...prev, email: e.target.value }))}
+                    placeholder="max@beispiel.at"
+                    className="h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="phone">Telefonnummer <span className="text-sm font-normal text-muted-foreground">(optional)</span></Label>
+                  <Input
+                    id="phone"
+                    type="tel"
+                    value={guestData.phone}
+                    onChange={(e) => setGuestData(prev => ({ ...prev, phone: e.target.value }))}
+                    placeholder="+43 660 1234567"
+                    className="h-12"
+                  />
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">Passwort wählen <span className="text-destructive">*</span></Label>
+                  <Input
+                    id="password"
+                    type="password"
+                    value={guestData.password}
+                    onChange={(e) => setGuestData(prev => ({ ...prev, password: e.target.value }))}
+                    placeholder="Mindestens 6 Zeichen"
+                    className="h-12"
+                  />
+                  <p className="text-xs text-muted-foreground">
+                    Mindestens 6 Zeichen
+                  </p>
+                </div>
+
+                <div className="flex items-start space-x-3 pt-2">
+                  <Checkbox 
+                    id="acceptTerms"
+                    checked={guestData.acceptTerms}
+                    onCheckedChange={(checked) => setGuestData(prev => ({ ...prev, acceptTerms: checked as boolean }))}
+                    className="mt-1"
+                  />
+                  <Label htmlFor="acceptTerms" className="text-sm cursor-pointer leading-relaxed">
+                    Ich akzeptiere die{" "}
+                    <a href="/agb" target="_blank" className="text-blue-600 hover:underline font-medium">
+                      AGB
+                    </a>
+                    {" "}und{" "}
+                    <a href="/datenschutz" target="_blank" className="text-blue-600 hover:underline font-medium">
+                      Datenschutzerklärung
+                    </a>
+                  </Label>
+                </div>
+              </Card>
+            )}
 
             {/* Summary Cards */}
             <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
