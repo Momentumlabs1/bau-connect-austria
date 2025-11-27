@@ -20,7 +20,8 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
-import { Slider } from "@/components/ui/slider";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { AuthDialog } from "@/components/AuthDialog";
 import { Calendar as CalendarComponent } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { format, differenceInDays } from "date-fns";
@@ -89,6 +90,8 @@ export default function CreateProject() {
   const [createdProjectId, setCreatedProjectId] = useState<string>("");
   const [matchedContractors, setMatchedContractors] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [showAuthDialog, setShowAuthDialog] = useState(false);
+  const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   
   // Guest data for inline registration
   const [guestData, setGuestData] = useState({
@@ -279,84 +282,120 @@ export default function CreateProject() {
     }
   };
 
-  const handleSubmit = async () => {
-    let finalUserId = userId;
-
-    // If user not logged in, create account first
+  const handlePublish = () => {
+    // Check if user is logged in
     if (!userId) {
-      // Validate guest data
-      if (!guestData.email || !guestData.password || !guestData.firstName) {
-        toast({
-          title: "Pflichtfelder fehlen",
-          description: "Bitte füllen Sie alle Kontaktdaten aus",
-          variant: "destructive",
-        });
-        return;
+      setShowAuthDialog(true);
+      return;
+    }
+    
+    // User is logged in, submit project
+    handleSubmit();
+  };
+
+  const handleAuthSuccess = async () => {
+    // After successful auth, close dialog and submit project
+    setShowAuthDialog(false);
+    
+    // Get the current user
+    const { data: { user } } = await supabase.auth.getUser();
+    if (user) {
+      setUserId(user.id);
+      // Submit project now that user is logged in
+      setTimeout(() => handleSubmit(), 500);
+    }
+  };
+
+  const handleLogin = async (email: string, password: string) => {
+    const { error } = await supabase.auth.signInWithPassword({
+      email,
+      password
+    });
+
+    if (error) {
+      toast({
+        title: "Anmeldung fehlgeschlagen",
+        description: error.message,
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    await handleAuthSuccess();
+    return true;
+  };
+
+  const handleRegister = async (email: string, password: string, firstName: string, lastName: string, phone: string, acceptTerms: boolean) => {
+    if (!acceptTerms) {
+      toast({
+        title: "AGB nicht akzeptiert",
+        description: "Bitte akzeptieren Sie die AGB und Datenschutzerklärung",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    if (password.length < 6) {
+      toast({
+        title: "Passwort zu kurz",
+        description: "Das Passwort muss mindestens 6 Zeichen lang sein",
+        variant: "destructive",
+      });
+      return false;
+    }
+
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email,
+      password,
+      options: {
+        emailRedirectTo: `${window.location.origin}/`,
+        data: { role: 'customer' }
       }
+    });
 
-      if (guestData.password.length < 6) {
-        toast({
-          title: "Passwort zu kurz",
-          description: "Das Passwort muss mindestens 6 Zeichen lang sein",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (authError) {
+      toast({
+        title: "Registrierung fehlgeschlagen",
+        description: authError.message,
+        variant: "destructive",
+      });
+      return false;
+    }
 
-      if (!guestData.acceptTerms) {
-        toast({
-          title: "AGB nicht akzeptiert",
-          description: "Bitte akzeptieren Sie die AGB und Datenschutzerklärung",
-          variant: "destructive",
-        });
-        return;
-      }
+    if (!authData.user) {
+      toast({
+        title: "Registrierung fehlgeschlagen",
+        description: "Konto konnte nicht erstellt werden",
+        variant: "destructive",
+      });
+      return false;
+    }
 
-      setLoading(true);
+    // Update profile
+    await supabase.from('profiles').update({
+      first_name: firstName,
+      last_name: lastName,
+      phone: phone
+    }).eq('id', authData.user.id);
 
-      try {
-        // Create account
-        const { data: authData, error: authError } = await supabase.auth.signUp({
-          email: guestData.email,
-          password: guestData.password,
-          options: {
-            emailRedirectTo: `${window.location.origin}/`,
-            data: { role: 'customer' }
-          }
-        });
+    // Set user role
+    await supabase.from('user_roles').insert({
+      user_id: authData.user.id,
+      role: 'customer'
+    });
 
-        if (authError) throw authError;
-        if (!authData.user) throw new Error("Konto konnte nicht erstellt werden");
+    await handleAuthSuccess();
+    return true;
+  };
 
-        // Update profile
-        await supabase.from('profiles').update({
-          first_name: guestData.firstName,
-          last_name: guestData.lastName,
-          phone: guestData.phone
-        }).eq('id', authData.user.id);
-
-        // Set user role
-        await supabase.from('user_roles').insert({
-          user_id: authData.user.id,
-          role: 'customer'
-        });
-
-        finalUserId = authData.user.id;
-        setUserId(finalUserId);
-
-        toast({
-          title: "Konto erstellt!",
-          description: "Ihr Projekt wird jetzt veröffentlicht...",
-        });
-      } catch (error: any) {
-        toast({
-          title: "Registrierung fehlgeschlagen",
-          description: error.message,
-          variant: "destructive",
-        });
-        setLoading(false);
-        return;
-      }
+  const handleSubmit = async () => {
+    if (!userId) {
+      toast({
+        title: "Fehler",
+        description: "Sie müssen angemeldet sein um ein Projekt zu erstellen",
+        variant: "destructive",
+      });
+      return;
     }
 
     if (!projectData.title) {
@@ -365,9 +404,10 @@ export default function CreateProject() {
         description: "Bitte geben Sie einen Projekttitel ein",
         variant: "destructive",
       });
-      setLoading(false);
       return;
     }
+
+    setLoading(true);
 
     try {
       // Generate comprehensive description from trade-specific answers
@@ -405,7 +445,7 @@ export default function CreateProject() {
       const { data: newProject, error } = await supabase
         .from("projects")
         .insert([{
-          customer_id: finalUserId,
+          customer_id: userId,
           title: projectData.title,
           description: generatedDescription,
           gewerk_id: projectData.gewerk_id,
@@ -1101,7 +1141,7 @@ export default function CreateProject() {
         );
 
       case 5:
-        // Summary
+        // Summary - NO registration fields here
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1138,104 +1178,6 @@ export default function CreateProject() {
                 </p>
               </div>
             </Card>
-
-            {/* Guest Registration - Only if not logged in */}
-            {!userId && (
-              <Card className="p-6 max-w-2xl mx-auto space-y-4 bg-blue-50/30 border-blue-200">
-                <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-blue-100">
-                    <User className="h-5 w-5 text-blue-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-lg">Ihre Kontaktdaten</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Um Ihren Auftrag zu veröffentlichen, benötigen wir Ihre Kontaktdaten. Ihr Konto wird automatisch erstellt.
-                    </p>
-                  </div>
-                </div>
-                
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="firstName">Vorname <span className="text-destructive">*</span></Label>
-                    <Input
-                      id="firstName"
-                      value={guestData.firstName}
-                      onChange={(e) => setGuestData(prev => ({ ...prev, firstName: e.target.value }))}
-                      placeholder="Max"
-                      className="h-12"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="lastName">Nachname <span className="text-destructive">*</span></Label>
-                    <Input
-                      id="lastName"
-                      value={guestData.lastName}
-                      onChange={(e) => setGuestData(prev => ({ ...prev, lastName: e.target.value }))}
-                      placeholder="Mustermann"
-                      className="h-12"
-                    />
-                  </div>
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="email">E-Mail-Adresse <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="email"
-                    type="email"
-                    value={guestData.email}
-                    onChange={(e) => setGuestData(prev => ({ ...prev, email: e.target.value }))}
-                    placeholder="max@beispiel.at"
-                    className="h-12"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="phone">Telefonnummer <span className="text-sm font-normal text-muted-foreground">(optional)</span></Label>
-                  <Input
-                    id="phone"
-                    type="tel"
-                    value={guestData.phone}
-                    onChange={(e) => setGuestData(prev => ({ ...prev, phone: e.target.value }))}
-                    placeholder="+43 660 1234567"
-                    className="h-12"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <Label htmlFor="password">Passwort wählen <span className="text-destructive">*</span></Label>
-                  <Input
-                    id="password"
-                    type="password"
-                    value={guestData.password}
-                    onChange={(e) => setGuestData(prev => ({ ...prev, password: e.target.value }))}
-                    placeholder="Mindestens 6 Zeichen"
-                    className="h-12"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Mindestens 6 Zeichen
-                  </p>
-                </div>
-
-                <div className="flex items-start space-x-3 pt-2">
-                  <Checkbox 
-                    id="acceptTerms"
-                    checked={guestData.acceptTerms}
-                    onCheckedChange={(checked) => setGuestData(prev => ({ ...prev, acceptTerms: checked as boolean }))}
-                    className="mt-1"
-                  />
-                  <Label htmlFor="acceptTerms" className="text-sm cursor-pointer leading-relaxed">
-                    Ich akzeptiere die{" "}
-                    <a href="/agb" target="_blank" className="text-blue-600 hover:underline font-medium">
-                      AGB
-                    </a>
-                    {" "}und{" "}
-                    <a href="/datenschutz" target="_blank" className="text-blue-600 hover:underline font-medium">
-                      Datenschutzerklärung
-                    </a>
-                  </Label>
-                </div>
-              </Card>
-            )}
 
             {/* Summary Cards */}
             <div className="grid gap-6 md:grid-cols-2 max-w-4xl mx-auto">
@@ -1462,7 +1404,7 @@ export default function CreateProject() {
               </Button>
             ) : (
               <Button 
-                onClick={handleSubmit} 
+                onClick={handlePublish} 
                 disabled={loading || !projectData.title}
                 className="gap-2 h-12 px-8"
                 size="lg"
@@ -1474,6 +1416,16 @@ export default function CreateProject() {
           </div>
         </div>
       </div>
+
+      {/* Auth Dialog */}
+      <AuthDialog
+        open={showAuthDialog}
+        onOpenChange={setShowAuthDialog}
+        onLogin={handleLogin}
+        onRegister={async (email, password, firstName, lastName, phone, acceptTerms) => {
+          return await handleRegister(email, password, firstName, lastName, phone, acceptTerms);
+        }}
+      />
     </div>
   );
 }
