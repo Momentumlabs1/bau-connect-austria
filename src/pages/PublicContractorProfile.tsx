@@ -25,7 +25,6 @@ interface Contractor {
   verified: boolean;
   team_size: number | null;
   rechtsform: string | null;
-  min_project_value: number | null;
   portfolio_images: string[] | null;
 }
 
@@ -97,54 +96,52 @@ export default function PublicContractorProfile() {
       
       <div className="container mx-auto px-4 py-8">
         {/* Header */}
-        <Card className="p-8 mb-6">
-          <div className="flex items-start gap-6">
-            <Avatar className="h-24 w-24">
+        <Card className="p-4 md:p-8 mb-6">
+          <div className="flex flex-col items-center text-center md:flex-row md:items-start md:text-left gap-4 md:gap-6">
+            <Avatar className="h-20 w-20 md:h-24 md:w-24">
               <AvatarImage src={contractor.profile_image_url || ''} />
               <AvatarFallback>{contractor.company_name[0]}</AvatarFallback>
             </Avatar>
             
-            <div className="flex-1">
-              <div className="flex items-start justify-between">
-                <div>
-                  <h1 className="text-3xl font-bold mb-2">{contractor.company_name}</h1>
-                  <div className="flex items-center gap-4 text-muted-foreground mb-4">
-                    <div className="flex items-center gap-1">
-                      <MapPin className="h-4 w-4" />
-                      {contractor.city}
-                    </div>
-                    {contractor.verified && (
-                      <Badge className="bg-green-500">
-                        <CheckCircle2 className="h-3 w-3 mr-1" />
-                        Verifiziert
-                      </Badge>
-                    )}
-                  </div>
-                  <div className="flex items-center gap-2 mb-4">
-                    <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                    <span className="font-semibold">{contractor.rating.toFixed(1)}</span>
-                    <span className="text-muted-foreground">
-                      ({contractor.total_reviews} Bewertungen)
-                    </span>
-                  </div>
+            <div className="flex-1 w-full">
+              <h1 className="text-xl md:text-3xl font-bold mb-2">{contractor.company_name}</h1>
+              
+              <div className="flex flex-wrap items-center justify-center md:justify-start gap-2 md:gap-4 text-muted-foreground mb-3">
+                <div className="flex items-center gap-1">
+                  <MapPin className="h-4 w-4" />
+                  {contractor.city}
                 </div>
-                
-                <Button size="lg" onClick={startConversation}>
-                  <MessageSquare className="h-4 w-4 mr-2" />
-                  Nachricht senden
-                </Button>
+                {contractor.verified && (
+                  <Badge className="bg-green-500">
+                    <CheckCircle2 className="h-3 w-3 mr-1" />
+                    Verifiziert
+                  </Badge>
+                )}
               </div>
               
+              <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
+                <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
+                <span className="font-semibold">{contractor.rating.toFixed(1)}</span>
+                <span className="text-muted-foreground">
+                  ({contractor.total_reviews} Bewertungen)
+                </span>
+              </div>
+              
+              <Button size="lg" onClick={startConversation} className="w-full md:w-auto mb-4">
+                <MessageSquare className="h-4 w-4 mr-2" />
+                Nachricht senden
+              </Button>
+              
               {contractor.description && (
-                <p className="text-muted-foreground">{contractor.description}</p>
+                <p className="text-muted-foreground text-sm md:text-base">{contractor.description}</p>
               )}
             </div>
           </div>
           
           {/* Trades */}
-          <div className="mt-6">
-            <h3 className="font-semibold mb-3">Gewerke</h3>
-            <div className="flex flex-wrap gap-2">
+          <div className="mt-4 md:mt-6">
+            <h3 className="font-semibold mb-3 text-center md:text-left">Gewerke</h3>
+            <div className="flex flex-wrap gap-2 justify-center md:justify-start">
               {contractor.trades.map(trade => (
                 <Badge key={trade} variant="secondary" className="text-sm">
                   {trade}
@@ -154,10 +151,10 @@ export default function PublicContractorProfile() {
           </div>
           
           {/* Service Area & Details */}
-          <div className="mt-6 grid md:grid-cols-2 gap-6">
+          <div className="mt-4 md:mt-6 grid grid-cols-1 md:grid-cols-2 gap-4 md:gap-6">
             <div>
               <h3 className="font-semibold mb-2">Service-Gebiet</h3>
-              <p className="text-muted-foreground">
+              <p className="text-sm md:text-base text-muted-foreground">
                 Bis {contractor.service_radius} km von {contractor.city}
               </p>
               <div className="flex flex-wrap gap-2 mt-2">
@@ -185,12 +182,6 @@ export default function PublicContractorProfile() {
                   <div className="flex justify-between">
                     <span className="text-muted-foreground">Rechtsform:</span>
                     <span>{contractor.rechtsform}</span>
-                  </div>
-                )}
-                {contractor.min_project_value && (
-                  <div className="flex justify-between">
-                    <span className="text-muted-foreground">Min. Auftragswert:</span>
-                    <span>€{contractor.min_project_value}</span>
                   </div>
                 )}
               </div>

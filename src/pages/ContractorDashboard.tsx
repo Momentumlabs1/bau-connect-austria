@@ -262,18 +262,26 @@ export default function ContractorDashboard() {
 
         {/* Tabs */}
         <Tabs defaultValue="available" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
-            <TabsTrigger value="available">
-              Verfügbare Leads ({availableLeads.length})
+          <TabsList className="w-full flex overflow-x-auto">
+            <TabsTrigger value="available" className="flex-1 min-w-[120px] whitespace-nowrap">
+              <span className="hidden md:inline">Verfügbare Leads</span>
+              <span className="md:hidden">Verfügbar</span>
+              <span className="ml-1">({availableLeads.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="purchased">
-              Gekaufte Leads ({purchasedLeads.length})
+            <TabsTrigger value="purchased" className="flex-1 min-w-[120px] whitespace-nowrap">
+              <span className="hidden md:inline">Gekaufte Leads</span>
+              <span className="md:hidden">Gekauft</span>
+              <span className="ml-1">({purchasedLeads.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="active">
-              Aktive Projekte ({activeProjects.length})
+            <TabsTrigger value="active" className="flex-1 min-w-[120px] whitespace-nowrap">
+              <span className="hidden md:inline">Aktive Projekte</span>
+              <span className="md:hidden">Aktiv</span>
+              <span className="ml-1">({activeProjects.length})</span>
             </TabsTrigger>
-            <TabsTrigger value="completed">
-              Abgeschlossen ({completedProjects.length})
+            <TabsTrigger value="completed" className="flex-1 min-w-[120px] whitespace-nowrap">
+              <span className="md:hidden">Fertig</span>
+              <span className="hidden md:inline">Abgeschlossen</span>
+              <span className="ml-1">({completedProjects.length})</span>
             </TabsTrigger>
           </TabsList>
 
