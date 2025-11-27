@@ -7,9 +7,11 @@ import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { OfferList } from "@/components/offers/OfferList";
-import { MapPin, Calendar, Euro, Star, MessageSquare, Loader2 } from "lucide-react";
+import { ReviewForm } from "@/components/reviews/ReviewForm";
+import { MapPin, Calendar, Euro, Star, MessageSquare, Loader2, CheckCircle } from "lucide-react";
 
 interface Project {
   id: string;
@@ -46,6 +48,9 @@ export default function CustomerProjectDetail() {
   const [project, setProject] = useState<Project | null>(null);
   const [matchedContractors, setMatchedContractors] = useState<Contractor[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showCompleteDialog, setShowCompleteDialog] = useState(false);
+  const [showReviewDialog, setShowReviewDialog] = useState(false);
+  const [selectedContractorId, setSelectedContractorId] = useState<string | null>(null);
 
   useEffect(() => {
     loadProjectDetails();
@@ -90,12 +95,17 @@ export default function CustomerProjectDetail() {
         setMatchedContractors(contractors || []);
         console.log(`📋 Loaded ${contractors?.length || 0} contractors (fallback)`);
       } else {
-        // Extract contractors from matches
+        // Extract contractors from matches and get their IDs
         const contractors = matchesData
           .map(match => match.contractor)
           .filter(Boolean);
         setMatchedContractors(contractors);
         console.log(`✅ Loaded ${contractors.length} matched contractors`);
+        
+        // Set first contractor as selected for review
+        if (contractors.length > 0) {
+          setSelectedContractorId(contractors[0].id);
+        }
       }
     } catch (error: any) {
       console.error('❌ Error loading project details:', error);
@@ -109,93 +119,88 @@ export default function CustomerProjectDetail() {
     }
   };
 
-  const startConversation = async (contractorId: string) => {
+  const handleCompleteProject = async () => {
     try {
-      console.log('💬 Starting conversation with contractor:', contractorId);
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      if (!session) {
-        console.error('❌ No session found');
-        toast({
-          title: "Anmeldung erforderlich",
-          description: "Bitte melden Sie sich an, um Nachrichten zu senden.",
-          variant: "destructive"
-        });
-        navigate('/login');
-        return;
-      }
+      const { error } = await supabase
+        .from('projects')
+        .update({ status: 'completed' })
+        .eq('id', id);
 
-      console.log('🔍 Checking for existing conversation...', { 
-        project_id: id, 
-        customer_id: session.user.id,
-        contractor_id: contractorId 
+      if (error) throw error;
+
+      toast({
+        title: 'Projekt abgeschlossen',
+        description: 'Sie können nun den Handwerker bewerten'
       });
 
-      // Check if conversation exists
-      const { data: existing, error: fetchError } = await supabase
+      setShowCompleteDialog(false);
+      setShowReviewDialog(true);
+      loadProjectDetails();
+    } catch (error: any) {
+      console.error('❌ Error completing project:', error);
+      toast({
+        title: 'Fehler',
+        description: 'Projekt konnte nicht abgeschlossen werden',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleReviewSuccess = () => {
+    setShowReviewDialog(false);
+    toast({
+      title: 'Vielen Dank!',
+      description: 'Ihre Bewertung wurde gespeichert'
+    });
+  };
+
+  const startConversation = async (contractorId: string) => {
+    const { data: { session } } = await supabase.auth.getSession();
+    
+    if (!session) {
+      toast({
+        title: 'Anmeldung erforderlich',
+        description: 'Bitte melden Sie sich an, um Nachrichten zu senden',
+        variant: 'destructive'
+      });
+      navigate('/login');
+      return;
+    }
+
+    try {
+      const { data: existingConv } = await supabase
         .from('conversations')
         .select('id')
         .eq('project_id', id)
-        .eq('contractor_id', contractorId)
         .eq('customer_id', session.user.id)
-        .maybeSingle();
+        .eq('contractor_id', contractorId)
+        .single();
 
-      if (fetchError) {
-        console.error('❌ Error checking conversation:', fetchError);
-        console.error('Details:', {
-          code: fetchError.code,
-          message: fetchError.message,
-          details: fetchError.details,
-          hint: fetchError.hint
-        });
-        throw fetchError;
+      if (existingConv) {
+        navigate(`/nachrichten?conversation=${existingConv.id}`);
+        return;
       }
 
-      if (existing) {
-        console.log('✅ Found existing conversation:', existing.id);
-        toast({
-          title: "Chat geöffnet",
-          description: "Sie werden zur bestehenden Unterhaltung weitergeleitet."
-        });
-        navigate(`/nachrichten?conversation=${existing.id}`);
-      } else {
-        // Create new conversation
-        console.log('➕ Creating new conversation...');
-        const { data: newConv, error: createError } = await supabase
-          .from('conversations')
-          .insert({
-            project_id: id,
-            customer_id: session.user.id,
-            contractor_id: contractorId,
-            last_message_at: new Date().toISOString()
-          })
-          .select()
-          .single();
+      const { data: newConv, error } = await supabase
+        .from('conversations')
+        .insert({
+          project_id: id,
+          customer_id: session.user.id,
+          contractor_id: contractorId,
+          last_message_at: new Date().toISOString()
+        })
+        .select()
+        .single();
 
-        if (createError) {
-          console.error('❌ Error creating conversation:', createError);
-          console.error('Details:', {
-            code: createError.code,
-            message: createError.message,
-            details: createError.details,
-            hint: createError.hint
-          });
-          throw createError;
-        }
+      if (error) throw error;
 
-        console.log('✅ Conversation created:', newConv.id);
-        toast({
-          title: "Chat erstellt",
-          description: "Sie können jetzt mit dem Handwerker chatten."
-        });
-        navigate(`/nachrichten?conversation=${newConv.id}`);
-      }
+      navigate(`/nachrichten?conversation=${newConv.id}`);
     } catch (error: any) {
-      console.error('💥 Start conversation failed:', error);
+      console.error('❌ Error starting conversation:', error);
       toast({
-        title: "Fehler beim Chat-Start",
-        description: error.message || "Chat konnte nicht gestartet werden. Bitte versuchen Sie es erneut.",
-        variant: "destructive"
+        title: 'Fehler',
+        description: 'Konversation konnte nicht gestartet werden',
+        variant: 'destructive'
       });
     }
   };
@@ -238,10 +243,34 @@ export default function CustomerProjectDetail() {
 
         {/* Project Details */}
         <Card className="p-6 mb-6">
-          <div className="flex items-start justify-between mb-4">
+          <div className="flex items-center justify-between mb-4">
             <h1 className="text-3xl font-bold">{project.title}</h1>
-            <Badge>{project.status === 'open' ? 'Offen' : 'Geschlossen'}</Badge>
+            <div className="flex gap-2">
+              <Badge className={
+                project.urgency === 'high' ? 'bg-red-500' :
+                project.urgency === 'medium' ? 'bg-yellow-500' :
+                'bg-green-500'
+              }>
+                {project.urgency === 'high' ? 'Dringend' :
+                 project.urgency === 'medium' ? 'Normal' :
+                 'Flexibel'}
+              </Badge>
+              <Badge variant="outline">
+                {project.status === 'open' ? 'Offen' : 
+                 project.status === 'in_progress' ? 'In Bearbeitung' : 
+                 'Abgeschlossen'}
+              </Badge>
+            </div>
           </div>
+
+          {project.status === 'in_progress' && (
+            <div className="mb-4">
+              <Button onClick={() => setShowCompleteDialog(true)} className="w-full md:w-auto">
+                <CheckCircle className="h-4 w-4 mr-2" />
+                Projekt abschließen
+              </Button>
+            </div>
+          )}
           
           <div className="grid md:grid-cols-2 gap-6">
             <div>
@@ -360,6 +389,46 @@ export default function CustomerProjectDetail() {
           </Tabs>
         </div>
       </div>
+
+      {/* Complete Project Dialog */}
+      <Dialog open={showCompleteDialog} onOpenChange={setShowCompleteDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Projekt abschließen?</DialogTitle>
+            <DialogDescription>
+              Möchten Sie dieses Projekt als abgeschlossen markieren? Sie können danach den Handwerker bewerten.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex gap-3 justify-end mt-4">
+            <Button variant="outline" onClick={() => setShowCompleteDialog(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleCompleteProject}>
+              Projekt abschließen
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Review Dialog */}
+      <Dialog open={showReviewDialog} onOpenChange={setShowReviewDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Handwerker bewerten</DialogTitle>
+            <DialogDescription>
+              Wie zufrieden waren Sie mit der Ausführung des Projekts?
+            </DialogDescription>
+          </DialogHeader>
+          {selectedContractorId && (
+            <ReviewForm
+              projectId={id!}
+              contractorId={selectedContractorId}
+              reviewerType="CUSTOMER"
+              onSuccess={handleReviewSuccess}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
