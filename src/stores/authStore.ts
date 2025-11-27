@@ -112,6 +112,7 @@ export const useAuth = () => {
     isCustomer: store.role === 'customer',
     isContractor: store.role === 'contractor',
     isAdmin: store.role === 'admin',
+    roleLoaded: store.role !== null, // Flag ob Rolle geladen wurde
     signOut: store.signOut,
     refreshUser: store.refreshUser
   };

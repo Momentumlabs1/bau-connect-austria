@@ -7,6 +7,7 @@ import { Badge } from "@/components/ui/badge";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Textarea } from "@/components/ui/textarea";
 import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/stores/authStore";
 import { Navbar } from "@/components/Navbar";
 import { Plus, Loader2, Briefcase, Users, MessageSquare, Send } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
@@ -35,6 +36,7 @@ interface Project {
 }
 
 export default function CustomerDashboard() {
+  const { user, role, loading: authLoading } = useAuth();
   const [loading, setLoading] = useState(true);
   const [projects, setProjects] = useState<Project[]>([]);
   const [bulkMessageDialog, setBulkMessageDialog] = useState(false);
@@ -50,26 +52,20 @@ export default function CustomerDashboard() {
   }, []);
 
   const checkAuth = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    if (!session) {
-      navigate("/login");
-      return;
-    }
-
-    const { data: userRoles } = await supabase
-      .from("user_roles")
-      .select("role")
-      .eq("user_id", session.user.id);
-
-    const roles = userRoles?.map(r => r.role) || [];
-    
-    if (!roles.includes("customer")) {
+    if (!user) {
       toast({
         title: "Zugriff verweigert",
-        description: "Sie haben keine Berechtigung für diese Seite",
+        description: "Bitte melde dich an, um dein Dashboard zu sehen.",
         variant: "destructive",
       });
-      navigate("/");
+      navigate('/login');
+      return;
+    }
+    
+    // Role-Guard: Redirect contractors to their dashboard
+    if (!authLoading && role && role !== 'customer') {
+      navigate('/handwerker/dashboard');
+      return;
     }
   };
 

@@ -10,7 +10,7 @@ import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 
 export const Navbar = () => {
   const navigate = useNavigate();
-  const { user, role, isAuthenticated, signOut } = useAuth();
+  const { user, role, roleLoaded, signOut } = useAuth();
   const [unreadCount, setUnreadCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
@@ -77,14 +77,21 @@ export const Navbar = () => {
           <div className="hidden md:flex items-center gap-3">
             {user ? (
               <>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={() => navigate(role === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard')}
-                >
-                  <User className="mr-2 h-4 w-4" />
-                  Dashboard
-                </Button>
+                {roleLoaded && role && (
+                  <Button
+                    variant="ghost"
+                    size="sm"
+                    onClick={() => navigate(role === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard')}
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Dashboard
+                  </Button>
+                )}
+                {!roleLoaded && (
+                  <Button variant="ghost" size="sm" disabled>
+                    Lädt...
+                  </Button>
+                )}
                 <Button
                   variant="ghost"
                   size="sm"
@@ -135,17 +142,24 @@ export const Navbar = () => {
               <div className="flex flex-col gap-4 mt-8">
                 {user ? (
                   <>
-                    <Button
-                      variant="ghost"
-                      className="w-full justify-start"
-                      onClick={() => {
-                        navigate(role === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard');
-                        setMobileMenuOpen(false);
-                      }}
-                    >
-                      <User className="mr-2 h-4 w-4" />
-                      Dashboard
-                    </Button>
+                    {roleLoaded && role && (
+                      <Button
+                        variant="ghost"
+                        className="w-full justify-start"
+                        onClick={() => {
+                          navigate(role === 'customer' ? '/kunde/dashboard' : '/handwerker/dashboard');
+                          setMobileMenuOpen(false);
+                        }}
+                      >
+                        <User className="mr-2 h-4 w-4" />
+                        Dashboard
+                      </Button>
+                    )}
+                    {!roleLoaded && (
+                      <Button disabled className="w-full justify-start">
+                        Lädt...
+                      </Button>
+                    )}
                     <Button
                       variant="ghost"
                       className="w-full justify-start relative"
