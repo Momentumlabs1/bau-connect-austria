@@ -8,7 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { Wrench, User } from "lucide-react";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -41,8 +41,19 @@ export default function Register() {
     }
   }, [searchParams]);
   
-  const { register, handleSubmit, formState: { errors } } = useForm<RegisterForm>({
+  const { 
+    register, 
+    handleSubmit, 
+    control,
+    formState: { errors } 
+  } = useForm<RegisterForm>({
     resolver: zodResolver(registerSchema),
+    defaultValues: {
+      firstName: "",
+      lastName: "",
+      email: "",
+      password: "",
+    },
   });
 
   const onSubmit = async (data: RegisterForm) => {
@@ -221,34 +232,41 @@ export default function Register() {
                     )}
                   </div>
 
-                  <div className="flex items-start space-x-2">
-                    <Checkbox
-                      id="acceptTerms"
-                      {...register("acceptTerms")}
-                      className="mt-1"
-                    />
-                    <Label
-                      htmlFor="acceptTerms"
-                      className="text-sm font-normal leading-relaxed cursor-pointer"
-                    >
-                      Ich akzeptiere die{" "}
-                      <Link
-                        to="/agb"
-                        target="_blank"
-                        className="text-primary hover:underline font-medium"
-                      >
-                        AGB
-                      </Link>{" "}
-                      und{" "}
-                      <Link
-                        to="/datenschutz"
-                        target="_blank"
-                        className="text-primary hover:underline font-medium"
-                      >
-                        Datenschutzerklärung
-                      </Link>
-                    </Label>
-                  </div>
+                  <Controller
+                    name="acceptTerms"
+                    control={control}
+                    render={({ field }) => (
+                      <div className="flex items-start space-x-2">
+                        <Checkbox
+                          id="acceptTerms"
+                          checked={field.value}
+                          onCheckedChange={field.onChange}
+                          className="mt-1"
+                        />
+                        <Label
+                          htmlFor="acceptTerms"
+                          className="text-sm font-normal leading-relaxed cursor-pointer"
+                        >
+                          Ich akzeptiere die{" "}
+                          <Link
+                            to="/agb"
+                            target="_blank"
+                            className="text-primary hover:underline font-medium"
+                          >
+                            AGB
+                          </Link>{" "}
+                          und{" "}
+                          <Link
+                            to="/datenschutz"
+                            target="_blank"
+                            className="text-primary hover:underline font-medium"
+                          >
+                            Datenschutzerklärung
+                          </Link>
+                        </Label>
+                      </div>
+                    )}
+                  />
                   {errors.acceptTerms && (
                     <p className="text-sm text-destructive">{errors.acceptTerms.message}</p>
                   )}
