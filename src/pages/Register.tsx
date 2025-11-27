@@ -75,13 +75,7 @@ export default function Register() {
           })
           .eq("id", authData.user.id);
 
-        // Insert role into user_roles table
-        await supabase
-          .from("user_roles")
-          .insert({
-            user_id: authData.user.id,
-            role: role,
-          });
+        // Note: user_roles is automatically created by handle_new_user() trigger
         
         // Create contractor profile if registering as contractor
         if (role === 'contractor' && authData.user) {

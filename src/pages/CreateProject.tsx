@@ -371,11 +371,7 @@ export default function CreateProject() {
       phone: phone
     }).eq('id', authData.user.id);
 
-    // Set user role and refresh authStore
-    await supabase.from('user_roles').insert({
-      user_id: authData.user.id,
-      role: 'customer'
-    });
+    // Note: user_roles is automatically created by handle_new_user() trigger
     
     // Force refresh authStore to load the new role
     const { refreshUser } = (await import('@/stores/authStore')).useAuthStore.getState();
