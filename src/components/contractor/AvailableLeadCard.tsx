@@ -19,8 +19,6 @@ interface AvailableLeadCardProps {
       gewerk_id: string;
       urgency: string;
       final_price: number;
-      budget_min?: number;
-      budget_max?: number;
     };
   };
   index: number;
@@ -58,32 +56,14 @@ export const AvailableLeadCard = ({ match, index }: AvailableLeadCardProps) => {
               {getUrgencyBadge(match.project.urgency)}
             </div>
 
-            <div className="grid grid-cols-2 gap-3 mt-4">
-              <div className="bg-muted/50 p-3 rounded-lg">
-                <div className="flex items-center gap-2 mb-1">
-                  <Euro className="h-4 w-4 text-primary" />
-                  <span className="text-sm font-medium text-muted-foreground">Lead-Preis</span>
-                </div>
-                <p className="text-lg font-bold text-primary">
-                  €{match.project.final_price.toFixed(2)}
-                </p>
+            <div className="bg-muted/50 p-3 rounded-lg w-fit">
+              <div className="flex items-center gap-2 mb-1">
+                <Euro className="h-4 w-4 text-primary" />
+                <span className="text-sm font-medium text-muted-foreground">Lead-Preis</span>
               </div>
-
-              {(match.project.budget_min || match.project.budget_max) && (
-                <div className="bg-muted/50 p-3 rounded-lg">
-                  <div className="flex items-center gap-2 mb-1">
-                    <Euro className="h-4 w-4 text-muted-foreground" />
-                    <span className="text-sm font-medium text-muted-foreground">Budget</span>
-                  </div>
-                  <p className="text-sm font-semibold">
-                    {match.project.budget_min && match.project.budget_max
-                      ? `€${match.project.budget_min} - €${match.project.budget_max}`
-                      : match.project.budget_min
-                      ? `ab €${match.project.budget_min}`
-                      : `bis €${match.project.budget_max}`}
-                  </p>
-                </div>
-              )}
+              <p className="text-lg font-bold text-primary">
+                €{match.project.final_price.toFixed(2)}
+              </p>
             </div>
           </div>
 

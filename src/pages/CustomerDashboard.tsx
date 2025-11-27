@@ -85,8 +85,6 @@ export default function CustomerDashboard() {
           title,
           gewerk_id,
           city,
-          budget_min,
-          budget_max,
           status,
           created_at,
           matches(

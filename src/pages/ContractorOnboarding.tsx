@@ -405,18 +405,6 @@ export default function ContractorOnboarding() {
       case 2:
         return (
           <div className="space-y-6">
-            <div>
-              <Label>Minimum Projektvolumen: €{minProjectValue[0].toLocaleString()}</Label>
-              <Slider
-                value={minProjectValue}
-                onValueChange={setMinProjectValue}
-                min={500}
-                max={50000}
-                step={500}
-                className="mt-2"
-              />
-            </div>
-
             <div className="flex items-center justify-between rounded-lg border p-4">
               <div>
                 <Label>Dringende Aufträge akzeptieren</Label>

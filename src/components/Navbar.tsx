@@ -70,7 +70,7 @@ export const Navbar = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           <Link to="/" className="flex items-center gap-2">
-            <img src={logo} alt="BauConnect" className="h-12 md:h-16" />
+            <img src={logo} alt="BauConnect" className="h-16 md:h-20" />
           </Link>
 
           {/* Desktop Navigation */}

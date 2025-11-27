@@ -106,15 +106,6 @@ export function LeadPreviewCard({
             <p className="text-sm line-clamp-3">{project.description}</p>
           </div>
 
-          {project.budget_min && project.budget_max && (
-            <div className="flex items-center gap-2">
-              <Euro className="h-4 w-4 text-muted-foreground" />
-              <span className="text-sm">
-                Budget: €{project.budget_min} - €{project.budget_max}
-              </span>
-            </div>
-          )}
-
           {project.images && project.images.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
