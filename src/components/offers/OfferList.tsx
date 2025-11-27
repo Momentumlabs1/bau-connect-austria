@@ -62,9 +62,15 @@ export const OfferList = ({ projectId, showActions = false, onOfferUpdate }: Off
 
       if (error) throw error;
 
+      // Update project status to in_progress
+      await supabase
+        .from('projects')
+        .update({ status: 'in_progress' })
+        .eq('id', projectId);
+
       toast({
         title: 'Angebot akzeptiert',
-        description: 'Das Projekt wurde dem Handwerker zugewiesen'
+        description: 'Das Projekt ist jetzt in Bearbeitung'
       });
 
       loadOffers();
