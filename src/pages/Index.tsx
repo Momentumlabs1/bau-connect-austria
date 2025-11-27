@@ -470,7 +470,7 @@ const Index = () => {
 
                       {/* Quick Category Selection */}
                       <div className="mb-8">
-                        <p className="text-sm md:text-base text-gray-600 mb-4 text-center font-medium">
+                        <p className="text-sm md:text-base text-white mb-4 text-center font-medium">
                           Oder wählen Sie direkt eine Kategorie:
                         </p>
                         <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
@@ -478,14 +478,14 @@ const Index = () => {
                             <button
                               key={cat.id}
                               onClick={() => navigate("/kunde/projekt-erstellen", { state: { selectedGewerk: cat.id } })}
-                              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-blue-600 hover:shadow-lg transition-all group"
+                              className="flex flex-col items-center gap-2 p-4 rounded-2xl hover:bg-white/10 transition-all group"
                             >
                               <div
                                 className={`w-12 h-12 md:w-14 md:h-14 ${cat.color} rounded-xl flex items-center justify-center text-2xl md:text-3xl shadow-md group-hover:scale-110 transition-transform`}
                               >
                                 {cat.emoji}
                               </div>
-                              <span className="text-xs md:text-sm font-semibold text-gray-700 text-center">{cat.name}</span>
+                              <span className="text-xs md:text-sm font-semibold text-white text-center">{cat.name}</span>
                             </button>
                           ))}
                         </div>
@@ -497,15 +497,15 @@ const Index = () => {
             </div>
 
             {/* Trust Signals - Mini Stats */}
-            <div className="flex flex-wrap justify-center gap-8 md:gap-16">
+            <div className="flex flex-nowrap justify-center items-center gap-12 md:gap-20">
               {trustSignals.map((signal, idx) => {
                 const Icon = signal.icon;
                 return (
-                  <div key={idx} className="flex items-center gap-3">
-                    <Icon className="h-6 w-6 text-blue-600" />
+                  <div key={idx} className="flex items-center gap-4">
+                    <Icon className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
                     <div>
-                      <div className="text-2xl md:text-3xl font-bold text-gray-900">{signal.value}</div>
-                      <div className="text-sm text-gray-600">{signal.label}</div>
+                      <div className="text-3xl md:text-4xl font-bold text-gray-900">{signal.value}</div>
+                      <div className="text-sm md:text-base text-gray-600 whitespace-nowrap">{signal.label}</div>
                     </div>
                   </div>
                 );
