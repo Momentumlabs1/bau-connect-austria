@@ -358,7 +358,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {/* Hero Section with Background Image Overlay */}
-            <div className="relative rounded-3xl overflow-hidden mb-0 h-[400px] md:h-[500px] lg:h-[550px] flex items-center bg-slate-900">
+            <div className="relative rounded-3xl overflow-hidden mb-0 h-[500px] md:h-[650px] lg:h-[750px] flex items-center bg-slate-900">
               {/* Background Image with Opacity */}
               <div className="absolute inset-0 bg-gradient-to-r from-gray-900/70 to-gray-900/50">
                 <img 
