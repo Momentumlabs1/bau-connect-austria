@@ -285,8 +285,8 @@ export default function ContractorOnboarding() {
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
                 placeholder="Experten für Heizung und Sanitär mit über 20 Jahren Erfahrung. Wir bieten professionelle Lösungen für Neubauten, Sanierungen und Wartungsarbeiten..."
-                className="min-h-[480px]"
-                rows={30}
+                className="min-h-[200px] md:min-h-[400px]"
+                rows={15}
               />
               <p className="mt-1 text-sm text-muted-foreground">
                 {description.split('\n').length} / 30 Zeilen

@@ -273,15 +273,17 @@ export default function CustomerDashboard() {
     <div className="min-h-screen bg-background">
       <Navbar />
       <div className="container mx-auto px-4 py-8">
-        <div className="mb-8 flex items-center justify-between">
-          <div>
-            <h1 className="text-3xl font-bold">Meine Aufträge</h1>
-            <p className="text-muted-foreground">Verwalten Sie Ihre Projekte und kommunizieren Sie mit interessierten Handwerkern</p>
+        <div className="mb-6 md:mb-8">
+          <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
+            <div>
+              <h1 className="text-2xl md:text-3xl font-bold">Meine Aufträge</h1>
+              <p className="text-sm md:text-base text-muted-foreground">Verwalten Sie Ihre Projekte und kommunizieren Sie mit interessierten Handwerkern</p>
+            </div>
+            <Button onClick={() => navigate("/kunde/projekt-erstellen")} className="w-full md:w-auto">
+              <Plus className="mr-2 h-4 w-4" />
+              Neues Projekt erstellen
+            </Button>
           </div>
-          <Button onClick={() => navigate("/kunde/projekt-erstellen")}>
-            <Plus className="mr-2 h-4 w-4" />
-            Neues Projekt erstellen
-          </Button>
         </div>
 
         <Tabs defaultValue="all" className="space-y-6">

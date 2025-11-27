@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
-import { Send, Loader2, MessageSquare, ExternalLink } from "lucide-react";
+import { Send, Loader2, MessageSquare, ExternalLink, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
 
 interface Conversation {
@@ -45,6 +45,7 @@ export default function Messages() {
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
+  const [showChat, setShowChat] = useState(false);
 
   useEffect(() => {
     checkAuthAndLoad();
@@ -268,11 +269,11 @@ export default function Messages() {
       <Navbar />
       
       <div className="container mx-auto px-4 py-8">
-        <h1 className="text-3xl font-bold mb-6">Nachrichten</h1>
+        <h1 className="text-2xl md:text-3xl font-bold mb-6">Nachrichten</h1>
         
-        <div className="grid lg:grid-cols-3 gap-6 h-[calc(100vh-250px)]">
-          {/* Conversations Sidebar */}
-          <Card className="p-4 overflow-y-auto">
+        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
+          {/* Conversations Sidebar - Hidden on mobile when chat shown */}
+          <Card className={`p-4 overflow-y-auto ${showChat ? 'hidden lg:block' : 'block'}`}>
             <h2 className="text-xl font-bold mb-4">Unterhaltungen</h2>
             <div className="space-y-2">
               {conversations.length === 0 ? (
@@ -293,7 +294,10 @@ export default function Messages() {
                         "p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors",
                         selectedConvId === conv.id && "bg-primary/10"
                       )}
-                      onClick={() => setSelectedConvId(conv.id)}
+                      onClick={() => {
+                        setSelectedConvId(conv.id);
+                        setShowChat(true);
+                      }}
                     >
                       <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
                       <Link 
@@ -312,15 +316,23 @@ export default function Messages() {
             </div>
           </Card>
           
-          {/* Messages Area */}
-          <Card className="lg:col-span-2 p-4 flex flex-col">
+          {/* Messages Area - Shown on mobile when chat selected */}
+          <Card className={`lg:col-span-2 p-4 flex flex-col ${!showChat && !selectedConvId ? 'hidden lg:flex' : 'flex'}`}>
             {selectedConvId && selectedConversation ? (
               <>
-                {/* Chat Header */}
+                {/* Chat Header with Back Button */}
                 <div className="border-b pb-3 mb-4">
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <h3 className="font-semibold text-lg">
+                  <div className="flex items-center gap-2">
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="lg:hidden"
+                      onClick={() => setShowChat(false)}
+                    >
+                      <ArrowLeft className="h-4 w-4" />
+                    </Button>
+                    <div className="flex-1">
+                      <h3 className="font-semibold text-base md:text-lg">
                         {isContractor ? (
                           <Link to={`/kunde/projekt/${selectedConversation.customer_id}`} className="hover:text-primary transition-colors">
                             {getConversationTitle(selectedConversation)}
@@ -333,7 +345,7 @@ export default function Messages() {
                       </h3>
                       <Link 
                         to={isContractor ? `/handwerker/projekt/${selectedConversation.project_id}` : `/kunde/projekt/${selectedConversation.project_id}`}
-                        className="text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+                        className="text-xs md:text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
                       >
                         {selectedConversation.project?.title || 'Projekt'}
                         <ExternalLink className="h-3 w-3" />
@@ -353,13 +365,13 @@ export default function Messages() {
                     >
                       <div
                         className={cn(
-                          "max-w-[70%] rounded-lg p-3",
+                          "max-w-[85%] md:max-w-[70%] rounded-lg p-3",
                           msg.sender_id === userId
                             ? "bg-primary text-primary-foreground"
                             : "bg-muted"
                         )}
                       >
-                        <p>{msg.message}</p>
+                        <p className="text-sm break-words">{msg.message}</p>
                         <p className="text-xs opacity-70 mt-1">
                           {new Date(msg.created_at).toLocaleTimeString('de-DE', {
                             hour: '2-digit',
@@ -378,8 +390,9 @@ export default function Messages() {
                     onChange={e => setNewMessage(e.target.value)}
                     onKeyPress={e => e.key === 'Enter' && sendMessage()}
                     placeholder="Nachricht eingeben..."
+                    className="text-sm md:text-base"
                   />
-                  <Button onClick={sendMessage}>
+                  <Button onClick={sendMessage} size="icon">
                     <Send className="h-4 w-4" />
                   </Button>
                 </div>
