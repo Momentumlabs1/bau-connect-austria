@@ -21,8 +21,6 @@ interface Project {
   postal_code: string;
   city: string;
   address: string | null;
-  budget_min: number | null;
-  budget_max: number | null;
   urgency: string;
   images: string[];
   created_at: string;
@@ -284,12 +282,6 @@ export default function CustomerProjectDetail() {
                 <MapPin className="h-4 w-4 text-muted-foreground" />
                 <span>{project.city}, {project.postal_code}</span>
               </div>
-              {project.budget_min && project.budget_max && (
-                <div className="flex items-center gap-2 text-sm">
-                  <Euro className="h-4 w-4 text-muted-foreground" />
-                  <span>€{project.budget_min} - €{project.budget_max}</span>
-                </div>
-              )}
               <div className="flex items-center gap-2 text-sm">
                 <Calendar className="h-4 w-4 text-muted-foreground" />
                 <span>Erstellt am {new Date(project.created_at).toLocaleDateString('de-DE')}</span>

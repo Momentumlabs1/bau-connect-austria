@@ -29,8 +29,6 @@ interface FullProjectDetailsProps {
     address?: string;
     description: string;
     urgency: string;
-    budget_min?: number;
-    budget_max?: number;
     preferred_start_date?: string;
     images?: string[];
     funnel_answers?: Record<string, any>;
@@ -203,19 +201,6 @@ export const FullProjectDetails = ({ project, customer, purchasedAt, categoryQue
                 <p className="flex items-center gap-2">
                   <Calendar className="h-4 w-4" />
                   {format(new Date(project.preferred_start_date), 'dd. MMMM yyyy', { locale: de })}
-                </p>
-              </div>
-            )}
-
-            {(project.budget_min || project.budget_max) && (
-              <div className="md:col-span-2">
-                <h4 className="font-medium text-muted-foreground mb-1">Budget</h4>
-                <p className="font-semibold text-xl text-primary">
-                  {project.budget_min && project.budget_max
-                    ? `€${project.budget_min} - €${project.budget_max}`
-                    : project.budget_min
-                    ? `ab €${project.budget_min}`
-                    : `bis €${project.budget_max}`}
                 </p>
               </div>
             )}

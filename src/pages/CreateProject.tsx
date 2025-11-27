@@ -72,8 +72,6 @@ interface ProjectData {
   postal_code: string;
   city: string;
   address: string;
-  budget_min?: number;
-  budget_max?: number;
   urgency: 'high' | 'medium' | 'low' | '';
   images: string[];
   tradeSpecificAnswers: Record<string, any>;
@@ -450,8 +448,6 @@ export default function CreateProject() {
           postal_code: projectData.postal_code,
           city: projectData.city,
           address: projectData.address || null,
-          budget_min: projectData.budget_min || null,
-          budget_max: projectData.budget_max || null,
           urgency: projectData.urgency || 'medium',
           images: projectData.images,
           keywords: keywords,
@@ -929,39 +925,6 @@ export default function CreateProject() {
                   Die genaue Adresse wird nur an beauftragte Handwerker weitergegeben
                 </p>
               </div>
-
-              <div className="border-t pt-6">
-                <Label className="text-base font-semibold mb-4 block">
-                  Budget <span className="text-sm font-normal text-muted-foreground">(optional)</span>
-                </Label>
-                <div className="grid gap-4 md:grid-cols-2">
-                  <div className="space-y-2">
-                    <Label htmlFor="budget_min" className="text-sm">Von (EUR)</Label>
-                    <Input
-                      id="budget_min"
-                      type="number"
-                      value={projectData.budget_min || ""}
-                      onChange={(e) => updateProjectData("budget_min", e.target.value ? parseInt(e.target.value) : undefined)}
-                      placeholder="1000"
-                      className="h-12"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="budget_max" className="text-sm">Bis (EUR)</Label>
-                    <Input
-                      id="budget_max"
-                      type="number"
-                      value={projectData.budget_max || ""}
-                      onChange={(e) => updateProjectData("budget_max", e.target.value ? parseInt(e.target.value) : undefined)}
-                      placeholder="5000"
-                      className="h-12"
-                    />
-                  </div>
-                </div>
-                <p className="text-xs text-muted-foreground mt-2">
-                  Die Budgetangabe hilft Handwerkern, passende Angebote zu erstellen
-                </p>
-              </div>
             </Card>
           </motion.div>
         );
@@ -1244,32 +1207,19 @@ export default function CreateProject() {
                 )}
               </Card>
 
-              {((projectData.budget_min || projectData.budget_max) || projectData.images.length > 0) && (
+              {projectData.images.length > 0 && (
                 <Card className="p-6 space-y-4">
                   <div className="flex items-center gap-3 mb-4">
                     <div className="p-2 rounded-lg bg-primary/10">
                       <ImageIcon className="h-5 w-5 text-primary" />
                     </div>
-                    <h3 className="font-semibold text-lg">Zusatzinformationen</h3>
+                    <h3 className="font-semibold text-lg">Bilder</h3>
                   </div>
 
-                  {(projectData.budget_min || projectData.budget_max) && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Budget</p>
-                      <p className="font-medium">
-                        {projectData.budget_min && `${projectData.budget_min.toLocaleString()} EUR`}
-                        {projectData.budget_min && projectData.budget_max && " - "}
-                        {projectData.budget_max && `${projectData.budget_max.toLocaleString()} EUR`}
-                      </p>
-                    </div>
-                  )}
-
-                  {projectData.images.length > 0 && (
-                    <div>
-                      <p className="text-sm text-muted-foreground mb-1">Bilder</p>
-                      <p className="font-medium">{projectData.images.length} Bild(er) hochgeladen</p>
-                    </div>
-                  )}
+                  <div>
+                    <p className="text-sm text-muted-foreground mb-1">Hochgeladene Bilder</p>
+                    <p className="font-medium">{projectData.images.length} Bild(er)</p>
+                  </div>
                 </Card>
               )}
             </div>

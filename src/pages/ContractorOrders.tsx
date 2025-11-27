@@ -23,8 +23,6 @@ interface Order {
     gewerk_id: string;
     city: string;
     postal_code: string;
-    budget_min: number | null;
-    budget_max: number | null;
     status: string;
     urgency: string;
     customer_id: string;
@@ -74,8 +72,6 @@ export default function ContractorOrders() {
             gewerk_id,
             city,
             postal_code,
-            budget_min,
-            budget_max,
             status,
             urgency,
             customer_id,
@@ -219,13 +215,6 @@ export default function ContractorOrders() {
             <MapPin className="h-4 w-4" />
             {order.project.postal_code} {order.project.city}
           </div>
-
-          {order.project.budget_min && order.project.budget_max && (
-            <div className="flex items-center gap-2 text-sm">
-              <Euro className="h-4 w-4 text-muted-foreground" />
-              €{order.project.budget_min} - €{order.project.budget_max}
-            </div>
-          )}
 
           <div className="flex items-center gap-2 text-sm text-muted-foreground">
             <Calendar className="h-4 w-4" />
