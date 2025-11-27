@@ -293,21 +293,14 @@ export default function CreateProject() {
     handleSubmit();
   };
 
-  const handleAuthSuccess = async () => {
-    // After successful auth, close dialog and submit project
+  const handleAuthSuccess = async (user: any) => {
     setShowAuthDialog(false);
-    
-    // Get the current user
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) {
-      setUserId(user.id);
-      // Submit project now that user is logged in
-      setTimeout(() => handleSubmit(), 500);
-    }
+    setUserId(user.id);
+    await handleSubmit(user);
   };
 
   const handleLogin = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabase.auth.signInWithPassword({
       email,
       password
     });
@@ -318,11 +311,13 @@ export default function CreateProject() {
         description: error.message,
         variant: "destructive",
       });
-      return false;
+      return { success: false };
     }
 
-    await handleAuthSuccess();
-    return true;
+    if (data.user) {
+      await handleAuthSuccess(data.user);
+    }
+    return { success: true, user: data.user };
   };
 
   const handleRegister = async (email: string, password: string, firstName: string, lastName: string, phone: string, acceptTerms: boolean) => {
@@ -332,7 +327,7 @@ export default function CreateProject() {
         description: "Bitte akzeptieren Sie die AGB und Datenschutzerklärung",
         variant: "destructive",
       });
-      return false;
+      return { success: false };
     }
 
     if (password.length < 6) {
@@ -341,7 +336,7 @@ export default function CreateProject() {
         description: "Das Passwort muss mindestens 6 Zeichen lang sein",
         variant: "destructive",
       });
-      return false;
+      return { success: false };
     }
 
     const { data: authData, error: authError } = await supabase.auth.signUp({
@@ -359,7 +354,7 @@ export default function CreateProject() {
         description: authError.message,
         variant: "destructive",
       });
-      return false;
+      return { success: false };
     }
 
     if (!authData.user) {
@@ -368,7 +363,7 @@ export default function CreateProject() {
         description: "Konto konnte nicht erstellt werden",
         variant: "destructive",
       });
-      return false;
+      return { success: false };
     }
 
     // Update profile
@@ -384,12 +379,14 @@ export default function CreateProject() {
       role: 'customer'
     });
 
-    await handleAuthSuccess();
-    return true;
+    await handleAuthSuccess(authData.user);
+    return { success: true, user: authData.user };
   };
 
-  const handleSubmit = async () => {
-    if (!userId) {
+  const handleSubmit = async (authenticatedUser?: any) => {
+    const currentUserId = authenticatedUser?.id || userId;
+    
+    if (!currentUserId) {
       toast({
         title: "Fehler",
         description: "Sie müssen angemeldet sein um ein Projekt zu erstellen",
@@ -445,7 +442,7 @@ export default function CreateProject() {
       const { data: newProject, error } = await supabase
         .from("projects")
         .insert([{
-          customer_id: userId,
+          customer_id: currentUserId,
           title: projectData.title,
           description: generatedDescription,
           gewerk_id: projectData.gewerk_id,

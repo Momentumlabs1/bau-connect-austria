@@ -9,8 +9,8 @@ import { Checkbox } from "@/components/ui/checkbox";
 interface AuthDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
-  onLogin: (email: string, password: string) => Promise<boolean>;
-  onRegister: (email: string, password: string, firstName: string, lastName: string, phone: string, acceptTerms: boolean) => Promise<boolean>;
+  onLogin: (email: string, password: string) => Promise<{ success: boolean; user?: any }>;
+  onRegister: (email: string, password: string, firstName: string, lastName: string, phone: string, acceptTerms: boolean) => Promise<{ success: boolean; user?: any }>;
 }
 
 export function AuthDialog({ open, onOpenChange, onLogin, onRegister }: AuthDialogProps) {
@@ -30,10 +30,10 @@ export function AuthDialog({ open, onOpenChange, onLogin, onRegister }: AuthDial
     if (!loginData.email || !loginData.password) return;
     
     setLoading(true);
-    const success = await onLogin(loginData.email, loginData.password);
+    const result = await onLogin(loginData.email, loginData.password);
     setLoading(false);
     
-    if (success) {
+    if (result.success) {
       onOpenChange(false);
     }
   };
@@ -48,7 +48,7 @@ export function AuthDialog({ open, onOpenChange, onLogin, onRegister }: AuthDial
     }
     
     setLoading(true);
-    const success = await onRegister(
+    const result = await onRegister(
       registerData.email,
       registerData.password,
       registerData.firstName,
@@ -58,7 +58,7 @@ export function AuthDialog({ open, onOpenChange, onLogin, onRegister }: AuthDial
     );
     setLoading(false);
     
-    if (success) {
+    if (result.success) {
       onOpenChange(false);
     }
   };
