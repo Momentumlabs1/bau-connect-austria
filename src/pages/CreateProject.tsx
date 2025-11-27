@@ -21,6 +21,10 @@ import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Slider } from "@/components/ui/slider";
+import { Calendar as CalendarComponent } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { format, differenceInDays } from "date-fns";
+import { de } from "date-fns/locale";
 
 // Icon mapping for service categories
 const iconMap: Record<string, any> = {
@@ -84,7 +88,7 @@ export default function CreateProject() {
   const [showSuccessDialog, setShowSuccessDialog] = useState(false);
   const [createdProjectId, setCreatedProjectId] = useState<string>("");
   const [matchedContractors, setMatchedContractors] = useState<any[]>([]);
-  const [timeSliderValue, setTimeSliderValue] = useState(2);
+  const [selectedDate, setSelectedDate] = useState<Date>();
   
   // Guest data for inline registration
   const [guestData, setGuestData] = useState({
@@ -253,9 +257,9 @@ export default function CreateProject() {
     }
 
     // Validation for Step 3
-    if (currentStep === 3 && !projectData.urgency) {
+    if (currentStep === 3 && !selectedDate) {
       toast({
-        title: "Bitte wählen Sie einen Zeitplan",
+        title: "Bitte wählen Sie ein Datum",
         description: "Wann soll die Arbeit erledigt werden?",
         variant: "destructive",
       });
@@ -926,23 +930,22 @@ export default function CreateProject() {
         );
 
       case 3:
-        // Timing - Slider Version
-        const timeOptions = [
-          { value: 0, label: "Sofort", sublabel: "Innerhalb 1 Woche", urgency: 'high' as const },
-          { value: 1, label: "1-2 Wochen", sublabel: "Zeitnah", urgency: 'high' as const },
-          { value: 2, label: "1 Monat", sublabel: "Normal", urgency: 'medium' as const },
-          { value: 3, label: "2-3 Monate", sublabel: "Nicht eilig", urgency: 'low' as const },
-          { value: 4, label: "Flexibel", sublabel: "Kein Zeitdruck", urgency: 'low' as const }
-        ];
-
-        const getUrgencyColor = (value: number) => {
-          if (value <= 1) return { slider: 'bg-red-500', badge: 'bg-red-500' };
-          if (value === 2) return { slider: 'bg-yellow-500', badge: 'bg-yellow-500' };
-          return { slider: 'bg-green-500', badge: 'bg-green-500' };
+        // Timing - Date Picker Version
+        const calculateUrgency = (date: Date | undefined) => {
+          if (!date) return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
+          
+          const daysUntil = differenceInDays(date, new Date());
+          
+          if (daysUntil <= 14) {
+            return { urgency: 'high' as const, label: 'Dringend', color: 'bg-red-500', textColor: 'text-red-600' };
+          } else if (daysUntil <= 60) {
+            return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
+          } else {
+            return { urgency: 'low' as const, label: 'Flexibel', color: 'bg-green-500', textColor: 'text-green-600' };
+          }
         };
 
-        const currentColor = getUrgencyColor(timeSliderValue);
-        const currentOption = timeOptions[timeSliderValue];
+        const urgencyInfo = calculateUrgency(selectedDate);
 
         return (
           <motion.div
@@ -963,36 +966,58 @@ export default function CreateProject() {
             </div>
 
             <Card className="p-8 max-w-3xl mx-auto space-y-8">
-              {/* Slider */}
               <div className="space-y-6">
-                <Slider
-                  value={[timeSliderValue]}
-                  onValueChange={([v]) => {
-                    setTimeSliderValue(v);
-                    updateProjectData('urgency', timeOptions[v].urgency);
-                  }}
-                  max={4}
-                  step={1}
-                  className="w-full"
-                />
-
-                {/* Current Selection Display */}
-                <div className="text-center space-y-4">
-                  <Badge 
-                    className={cn(
-                      "text-lg px-6 py-3 font-bold text-white border-0",
-                      currentColor.badge
-                    )}
-                  >
-                    {currentOption.label}
-                  </Badge>
-                  <p className="text-sm text-muted-foreground font-medium">
-                    {currentOption.sublabel}
-                  </p>
-                </div>
-
+                {/* Date Picker */}
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "w-full justify-start text-left font-normal h-auto py-6",
+                        !selectedDate && "text-muted-foreground"
+                      )}
+                    >
+                      <Calendar className="mr-3 h-6 w-6" />
+                      {selectedDate ? (
+                        <span className="text-xl font-semibold">{format(selectedDate, "PPP", { locale: de })}</span>
+                      ) : (
+                        <span className="text-xl">Datum auswählen</span>
+                      )}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="center">
+                    <CalendarComponent
+                      mode="single"
+                      selected={selectedDate}
+                      onSelect={(date) => {
+                        setSelectedDate(date);
+                        if (date) {
+                          const urgency = calculateUrgency(date);
+                          updateProjectData('urgency', urgency.urgency);
+                          updateProjectData('preferred_start_date', date.toISOString());
+                        }
+                      }}
+                      disabled={(date) => date < new Date()}
+                      initialFocus
+                      className="pointer-events-auto"
+                    />
+                  </PopoverContent>
+                </Popover>
+                
+                {/* Selected Date Display with Urgency */}
+                {selectedDate && (
+                  <div className="text-center space-y-4 animate-in fade-in-50">
+                    <Badge className={cn("text-xl px-8 py-3 font-bold text-white border-0", urgencyInfo.color)}>
+                      {urgencyInfo.label}
+                    </Badge>
+                    <p className="text-base text-muted-foreground font-medium">
+                      {differenceInDays(selectedDate, new Date())} Tage bis zum geplanten Start
+                    </p>
+                  </div>
+                )}
+                
                 {/* Legend */}
-                <div className="flex justify-between items-center text-sm pt-4 border-t">
+                <div className="flex justify-between items-center text-sm pt-6 border-t">
                   <div className="flex items-center gap-2">
                     <div className="w-3 h-3 rounded-full bg-red-500"></div>
                     <span className="font-medium">Dringend</span>
