@@ -381,98 +381,118 @@ const Index = () => {
                     <span className="text-white">zu finden.</span>
                   </h1>
 
-                  {/* Project Creation Box */}
-                  <div className="max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-6 border-2 border-gray-100">
-                    <div className="mb-3 md:mb-5">
-                      <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">Beschreiben Sie Ihren Auftrag</h2>
-                      <p className="text-xs md:text-base text-gray-600">
-                        z.B.: Malerarbeiten, Badezimmer renovieren, Elektroinstallation
+                  {/* Role-based content */}
+                  {role === 'contractor' ? (
+                    /* Contractor sees dashboard link */
+                    <div className="max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 border-2 border-gray-100 text-center space-y-4">
+                      <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Willkommen zurück!</h2>
+                      <p className="text-gray-600">
+                        Schauen Sie sich Ihre verfügbaren Leads an
                       </p>
-                    </div>
-
-                    <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
-                      <div className="flex-1 relative">
-                        <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-gray-400 z-10" />
-                        <Input
-                          type="text"
-                          placeholder="z.B.: Malerarbeiten"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                           onKeyPress={handleKeyPress}
-                           onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
-                          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                          className="pl-10 md:pl-12 h-11 md:h-14 text-sm md:text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
-                        />
-                        
-                        {/* Live Search Suggestions */}
-                        {showSuggestions && searchSuggestions.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-                            <div className="p-2 bg-gray-50 border-b border-gray-200">
-                              <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
-                            </div>
-                            {searchSuggestions.map((suggestion) => {
-                              // Get parent category name
-                              const parentCategory = suggestion.level === 2 
-                                ? quickCategories.find(cat => cat.id === suggestion.parent_id)?.name 
-                                : suggestion.name;
-                              
-                              return (
-                                <button
-                                  key={suggestion.id}
-                                  onClick={() => handleSuggestionClick(suggestion)}
-                                  className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                                >
-                                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <span className="text-xl">🔨</span>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-sm text-gray-900">
-                                      {parentCategory}{suggestion.level === 2 && ` / ${suggestion.name}`}
-                                    </p>
-                                    {suggestion.description && (
-                                      <p className="text-xs text-muted-foreground truncate">{suggestion.description}</p>
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
-                      </div>
                       <Button
                         size="lg"
-                        onClick={handleSearch}
-                        className="h-11 md:h-14 px-4 md:px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-sm md:text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 transition-all"
+                        onClick={() => navigate('/handwerker/dashboard')}
+                        className="h-14 px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 transition-all"
                       >
-                        <ArrowRight className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
-                        Auftrag erstellen
+                        <ArrowRight className="mr-2 h-5 w-5" />
+                        Zu meinen Leads
                       </Button>
                     </div>
-                  </div>
-                </div>
-              </div>
-            </div>
+                  ) : (
+                    /* Customer or unauthenticated user sees project creation */
+                    <>
+                      <div className="max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-6 border-2 border-gray-100">
+                        <div className="mb-3 md:mb-5">
+                          <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">Beschreiben Sie Ihren Auftrag</h2>
+                          <p className="text-xs md:text-base text-gray-600">
+                            z.B.: Malerarbeiten, Badezimmer renovieren, Elektroinstallation
+                          </p>
+                        </div>
 
-            {/* Quick Category Selection */}
-            <div className="mb-8">
-              <p className="text-sm md:text-base text-gray-600 mb-4 text-center font-medium">
-                Oder wählen Sie direkt eine Kategorie:
-              </p>
-              <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
-                {quickCategories.map((cat) => (
-                  <button
-                    key={cat.id}
-                    onClick={() => navigate("/kunde/projekt-erstellen", { state: { selectedGewerk: cat.id } })}
-                    className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-blue-600 hover:shadow-lg transition-all group"
-                  >
-                    <div
-                      className={`w-12 h-12 md:w-14 md:h-14 ${cat.color} rounded-xl flex items-center justify-center text-2xl md:text-3xl shadow-md group-hover:scale-110 transition-transform`}
-                    >
-                      {cat.emoji}
-                    </div>
-                    <span className="text-xs md:text-sm font-semibold text-gray-700 text-center">{cat.name}</span>
-                  </button>
-                ))}
+                        <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
+                          <div className="flex-1 relative">
+                            <Search className="absolute left-3 md:left-4 top-1/2 -translate-y-1/2 h-4 w-4 md:h-5 md:w-5 text-gray-400 z-10" />
+                            <Input
+                              type="text"
+                              placeholder="z.B.: Malerarbeiten"
+                              value={searchQuery}
+                              onChange={(e) => setSearchQuery(e.target.value)}
+                              onKeyPress={handleKeyPress}
+                              onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
+                              onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                              className="pl-10 md:pl-12 h-11 md:h-14 text-sm md:text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
+                            />
+                            
+                            {/* Live Search Suggestions */}
+                            {showSuggestions && searchSuggestions.length > 0 && (
+                              <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                                <div className="p-2 bg-gray-50 border-b border-gray-200">
+                                  <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
+                                </div>
+                                {searchSuggestions.map((suggestion) => {
+                                  const parentCategory = suggestion.level === 2 
+                                    ? quickCategories.find(cat => cat.id === suggestion.parent_id)?.name 
+                                    : suggestion.name;
+                                  
+                                  return (
+                                    <button
+                                      key={suggestion.id}
+                                      onClick={() => handleSuggestionClick(suggestion)}
+                                      className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                    >
+                                      <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                        <span className="text-xl">🔨</span>
+                                      </div>
+                                      <div className="flex-1 min-w-0">
+                                        <p className="font-semibold text-sm text-gray-900">
+                                          {parentCategory}{suggestion.level === 2 && ` / ${suggestion.name}`}
+                                        </p>
+                                        {suggestion.description && (
+                                          <p className="text-xs text-muted-foreground truncate">{suggestion.description}</p>
+                                        )}
+                                      </div>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            )}
+                          </div>
+                          <Button
+                            size="lg"
+                            onClick={handleSearch}
+                            className="h-11 md:h-14 px-4 md:px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-sm md:text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl hover:shadow-blue-600/40 transition-all"
+                          >
+                            <ArrowRight className="mr-1 md:mr-2 h-4 w-4 md:h-5 md:w-5" />
+                            Auftrag erstellen
+                          </Button>
+                        </div>
+                      </div>
+
+                      {/* Quick Category Selection */}
+                      <div className="mb-8">
+                        <p className="text-sm md:text-base text-gray-600 mb-4 text-center font-medium">
+                          Oder wählen Sie direkt eine Kategorie:
+                        </p>
+                        <div className="grid grid-cols-3 md:grid-cols-6 gap-3 md:gap-4">
+                          {quickCategories.map((cat) => (
+                            <button
+                              key={cat.id}
+                              onClick={() => navigate("/kunde/projekt-erstellen", { state: { selectedGewerk: cat.id } })}
+                              className="flex flex-col items-center gap-2 p-4 rounded-2xl bg-white border-2 border-gray-100 hover:border-blue-600 hover:shadow-lg transition-all group"
+                            >
+                              <div
+                                className={`w-12 h-12 md:w-14 md:h-14 ${cat.color} rounded-xl flex items-center justify-center text-2xl md:text-3xl shadow-md group-hover:scale-110 transition-transform`}
+                              >
+                                {cat.emoji}
+                              </div>
+                              <span className="text-xs md:text-sm font-semibold text-gray-700 text-center">{cat.name}</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    </>
+                  )}
+                </div>
               </div>
             </div>
 
