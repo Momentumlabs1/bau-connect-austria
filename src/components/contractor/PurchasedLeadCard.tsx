@@ -95,15 +95,23 @@ export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
                       {customer.first_name} {customer.last_name}
                     </p>
                   )}
-                  <p className="flex items-center gap-2 text-muted-foreground">
+                  <a 
+                    href={`mailto:${customer.email}`}
+                    className="flex items-center gap-2 text-primary hover:underline"
+                    onClick={(e) => e.stopPropagation()}
+                  >
                     <Mail className="h-3 w-3" />
                     {customer.email}
-                  </p>
+                  </a>
                   {customer.phone && (
-                    <p className="flex items-center gap-2 text-muted-foreground">
+                    <a 
+                      href={`tel:${customer.phone}`}
+                      className="flex items-center gap-2 text-primary hover:underline"
+                      onClick={(e) => e.stopPropagation()}
+                    >
                       <Phone className="h-3 w-3" />
                       {customer.phone}
-                    </p>
+                    </a>
                   )}
                 </div>
               ) : (

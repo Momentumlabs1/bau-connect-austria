@@ -163,7 +163,7 @@ export function TopContractors() {
             <Button
               size="lg"
               variant="outline"
-              onClick={() => navigate("/handwerker-suche")}
+              onClick={() => navigate("/handwerker-verzeichnis")}
               className="hover:bg-blue-600 hover:text-white hover:border-blue-600 transition-colors"
             >
               Alle Handwerker durchsuchen

@@ -7,8 +7,8 @@ import { Elements, PaymentElement, useStripe, useElements } from '@stripe/react-
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Loader2, CreditCard } from 'lucide-react';
 
-// Initialize Stripe
-const stripePromise = loadStripe('pk_test_51SVIA2Dqron6ccSWsZlFT1zs2v8cSPIY0Qy8jHAGhUtsVNyoHqjcWJIeANd9q2N6OWJJVXdBtNOAJxu3in8DudwH00THNfDTY3');
+// Initialize Stripe with LIVE keys
+const stripePromise = loadStripe('pk_live_51SVI9pDVRYU1lJbXHZ3d3uQzyyOSq6q7lxFk7lJn9wHlbBN7Mc1WDPIKRpbTzC67CwxyMEOkNN05L3ogNS0amuYs00l1swTGqA');
 
 interface LeadPurchaseButtonProps {
   leadId: string;

@@ -34,6 +34,7 @@ import Impressum from "./pages/Impressum";
 import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
 import Widerruf from "./pages/Widerruf";
+import HandwerkerDirectory from "./pages/HandwerkerDirectory";
 import { CookieBanner } from "@/components/CookieBanner";
 
 const queryClient = new QueryClient();
@@ -77,6 +78,7 @@ const App = () => {
           <Route path="/payment-success" element={<PaymentSuccess />} />
           <Route path="/seed-demo" element={<SeedDemo />} />
           <Route path="/seed-contractors" element={<SeedContractors />} />
+          <Route path="/handwerker-verzeichnis" element={<HandwerkerDirectory />} />
           <Route path="/impressum" element={<Impressum />} />
           <Route path="/datenschutz" element={<Datenschutz />} />
           <Route path="/agb" element={<AGB />} />
