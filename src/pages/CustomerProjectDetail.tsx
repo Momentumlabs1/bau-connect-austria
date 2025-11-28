@@ -126,6 +126,17 @@ export default function CustomerProjectDetail() {
 
       if (error) throw error;
 
+      // Update matches.status to 'won' for the assigned contractor
+      const { error: matchError } = await supabase
+        .from('matches')
+        .update({ status: 'won' })
+        .eq('project_id', id)
+        .eq('status', 'accepted');
+
+      if (matchError) {
+        console.error('❌ Failed to update match status:', matchError);
+      }
+
       toast({
         title: 'Projekt abgeschlossen',
         description: 'Sie können nun den Handwerker bewerten'

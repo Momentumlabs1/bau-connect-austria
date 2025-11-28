@@ -111,11 +111,12 @@ export default function ContractorDashboard() {
           project:projects(
             *,
             profiles(first_name, last_name, email, phone)
-          )
+          ),
+          offers!offers_project_id_fkey(status)
         `)
         .eq("contractor_id", userId)
         .eq("lead_purchased", true)
-        .in("status", ["contacted", "pending"])
+        .in("status", ["contacted", "pending", "lost"])
         .order("purchased_at", { ascending: false });
 
       setPurchasedLeads(purchasedData || []);
