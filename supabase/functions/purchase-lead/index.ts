@@ -122,7 +122,7 @@ Deno.serve(async (req) => {
 
     // 3.5. Check if a match exists for this contractor-project pair
     console.log('🔍 Checking if match exists...')
-    const { data: matchRecord, error: matchCheckError } = await supabase
+    let { data: matchRecord, error: matchCheckError } = await supabase
       .from('matches')
       .select('*')
       .eq('project_id', leadId)
@@ -135,15 +135,28 @@ Deno.serve(async (req) => {
     }
 
     if (!matchRecord) {
-      console.warn('⚠️ No match found for this contractor-project pair')
-      return new Response(
-        JSON.stringify({
-          error: 'No match found',
-          message: 'Sie können nur Leads kaufen, die Ihnen zugewiesen wurden.',
-          hint: 'Dieser Lead wurde Ihnen nicht angezeigt oder ist nicht mehr verfügbar.'
-        }),
-        { status: 403, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
-      )
+      console.log('📝 No match found - creating one automatically...')
+      // Handwerker will kaufen = Handwerker ist interessiert = Match erstellen!
+      const { data: newMatch, error: createMatchError } = await supabase
+        .from('matches')
+        .insert({
+          project_id: leadId,
+          contractor_id: user.id,
+          match_type: 'MANUAL',
+          score: 50,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        })
+        .select()
+        .single()
+      
+      if (createMatchError) {
+        console.error('❌ Failed to create match:', createMatchError)
+        throw new Error('Could not process lead purchase')
+      }
+      
+      console.log('✅ Auto-match created:', newMatch.id)
+      matchRecord = newMatch  // Use the new match for further processing
     }
 
     console.log('✅ Match exists:', matchRecord.id)
