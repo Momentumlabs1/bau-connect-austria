@@ -101,7 +101,33 @@ export default function ContractorDashboard() {
         .eq("lead_purchased", false)
         .order("created_at", { ascending: false });
 
-      setAvailableLeads(availableData || []);
+      // FALLBACK: If no matches, query projects directly
+      if (!availableData || availableData.length === 0) {
+        console.log('🔄 No matches found, falling back to direct project query...');
+        const { data: directProjects } = await supabase
+          .from("projects")
+          .select("*")
+          .eq("status", "open")
+          .eq("visibility", "public")
+          .in("gewerk_id", contractorData.trades || []);
+        
+        // Format as pseudo-matches
+        const pseudoMatches = (directProjects || []).map(project => ({
+          id: `pseudo-${project.id}`,
+          project_id: project.id,
+          contractor_id: userId,
+          match_type: 'DIRECT',
+          score: 0,
+          lead_purchased: false,
+          status: 'pending',
+          created_at: project.created_at,
+          project: project
+        }));
+        
+        setAvailableLeads(pseudoMatches);
+      } else {
+        setAvailableLeads(availableData);
+      }
 
       // Load purchased leads (contacted/pending)
       const { data: purchasedData } = await supabase

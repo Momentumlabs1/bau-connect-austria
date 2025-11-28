@@ -510,9 +510,37 @@ export default function CreateProject() {
         .order('score', { ascending: false })
         .limit(5);
 
-      const matchedContractorsList = matchesData
+      let matchedContractorsList = matchesData
         ?.map(match => match.contractor)
         .filter(Boolean) || [];
+
+      // CLIENT-SIDE FALLBACK: If no matches were created by Edge Function
+      if (matchedContractorsList.length === 0) {
+        console.log('🔄 No matches found, creating client-side fallback...');
+        const { data: contractors } = await supabase
+          .from('contractors')
+          .select('*')
+          .contains('trades', [newProject.gewerk_id])
+          .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
+          .limit(5);
+        
+        if (contractors && contractors.length > 0) {
+          const matchInserts = contractors.map(c => ({
+            project_id: newProject.id,
+            contractor_id: c.id,
+            match_type: 'CLIENT_FALLBACK',
+            score: 50,
+            status: 'pending',
+            lead_purchased: false
+          }));
+          
+          const { error: insertError } = await supabase.from('matches').insert(matchInserts);
+          if (!insertError) {
+            matchedContractorsList = contractors;
+            console.log(`✅ Client-side fallback: Created ${matchInserts.length} matches`);
+          }
+        }
+      }
 
       console.log(`✅ Loaded ${matchedContractorsList.length} matched contractors`);
       setMatchedContractors(matchedContractorsList);

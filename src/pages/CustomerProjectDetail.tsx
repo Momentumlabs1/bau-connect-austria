@@ -264,10 +264,14 @@ export default function CustomerProjectDetail() {
                  project.urgency === 'medium' ? 'Normal' :
                  'Flexibel'}
               </Badge>
-              <Badge variant="outline">
+              <Badge className={
+                project.status === 'open' ? 'bg-muted text-muted-foreground' :
+                project.status === 'in_progress' ? 'bg-yellow-100 text-yellow-800 border-yellow-300' :
+                'bg-green-100 text-green-800 border-green-300'
+              }>
                 {project.status === 'open' ? 'Offen' : 
                  project.status === 'in_progress' ? 'In Bearbeitung' : 
-                 'Abgeschlossen'}
+                 'Erledigt'}
               </Badge>
             </div>
           </div>
