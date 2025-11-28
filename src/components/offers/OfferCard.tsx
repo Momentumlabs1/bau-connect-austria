@@ -1,7 +1,9 @@
 import { Button } from '@/components/ui/button';
+import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { CheckCircle, XCircle, Clock } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, User, MessageCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 
 interface OfferCardProps {
   id: string;
@@ -11,6 +13,9 @@ interface OfferCardProps {
   createdAt: string;
   validUntil: string;
   contractorName?: string;
+  contractorId?: string;
+  contractorImageUrl?: string | null;
+  projectId?: string;
   onAccept?: (offerId: string) => void;
   onReject?: (offerId: string) => void;
   showActions?: boolean;
@@ -24,10 +29,14 @@ export const OfferCard = ({
   createdAt,
   validUntil,
   contractorName,
+  contractorId,
+  contractorImageUrl,
+  projectId,
   onAccept,
   onReject,
   showActions = false
 }: OfferCardProps) => {
+  const navigate = useNavigate();
   const statusConfig = {
     pending: {
       icon: Clock,
@@ -59,7 +68,18 @@ export const OfferCard = ({
 
   return (
     <div className="border rounded-lg p-4 space-y-3">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start gap-3">
+        {contractorId && (
+          <Avatar 
+            className="w-12 h-12 cursor-pointer hover:ring-2 hover:ring-primary transition-all"
+            onClick={() => navigate(`/handwerker/${contractorId}`)}
+          >
+            <AvatarImage src={contractorImageUrl || undefined} />
+            <AvatarFallback>
+              <User className="w-6 h-6" />
+            </AvatarFallback>
+          </Avatar>
+        )}
         <div className="flex-1">
           {contractorName && (
             <p className="font-medium text-sm mb-1">{contractorName}</p>
@@ -87,6 +107,29 @@ export const OfferCard = ({
       <div className="text-xs text-muted-foreground">
         Gültig bis: {new Date(validUntil).toLocaleDateString('de-DE')}
       </div>
+
+      {contractorId && (
+        <div className="flex gap-2 pt-2">
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/handwerker/${contractorId}`)}
+            className="flex items-center gap-2"
+          >
+            <User className="w-4 h-4" />
+            Profil ansehen
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={() => navigate(`/nachrichten?contractor=${contractorId}&project=${projectId}`)}
+            className="flex items-center gap-2"
+          >
+            <MessageCircle className="w-4 h-4" />
+            Nachricht senden
+          </Button>
+        </div>
+      )}
 
       {showActions && isPending && (
         <div className="flex gap-2 pt-2">

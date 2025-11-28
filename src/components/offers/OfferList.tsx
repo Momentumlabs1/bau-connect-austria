@@ -13,7 +13,9 @@ interface Offer {
   valid_until: string;
   contractor_id: string;
   contractors?: {
+    id: string;
     company_name: string;
+    profile_image_url: string | null;
   };
 }
 
@@ -38,7 +40,9 @@ export const OfferList = ({ projectId, showActions = false, onOfferUpdate }: Off
         .select(`
           *,
           contractors (
-            company_name
+            id,
+            company_name,
+            profile_image_url
           )
         `)
         .eq('project_id', projectId)
@@ -138,6 +142,9 @@ export const OfferList = ({ projectId, showActions = false, onOfferUpdate }: Off
           createdAt={offer.created_at}
           validUntil={offer.valid_until}
           contractorName={offer.contractors?.company_name}
+          contractorId={offer.contractors?.id}
+          contractorImageUrl={offer.contractors?.profile_image_url}
+          projectId={projectId}
           showActions={showActions}
           onAccept={handleAccept}
           onReject={handleReject}
