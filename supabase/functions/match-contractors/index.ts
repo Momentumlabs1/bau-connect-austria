@@ -25,7 +25,7 @@ interface Contractor {
   company_name: string
   trades: string[]
   city: string
-  postal_code: string
+  postal_codes: string[]
   service_radius: number
   min_project_value: number
   wallet_balance: number
@@ -266,7 +266,10 @@ Deno.serve(async (req) => {
 
     const scoredContractors = contractors
       .map(contractor => {
-        const contractorCoords = getCoordinatesFromPostalCode(contractor.postal_code)
+        const firstPostalCode = contractor.postal_codes?.[0]
+        if (!firstPostalCode) return null
+        
+        const contractorCoords = getCoordinatesFromPostalCode(firstPostalCode)
         if (!contractorCoords) return null
 
         const distance = calculateDistance(
