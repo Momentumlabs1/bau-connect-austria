@@ -90,11 +90,6 @@ function calculateRelevanceScore(
   // Quality score bonus
   score += contractor.quality_score * 0.3
   
-  // Wallet balance check
-  if (contractor.wallet_balance < leadPrice) {
-    return 0
-  }
-  
   // Budget match bonus
   const projectBudget = project.budget_max || project.estimated_value || contractor.min_project_value
   if (projectBudget >= contractor.min_project_value) {
@@ -236,7 +231,6 @@ Deno.serve(async (req) => {
       .select('*')
       .contains('trades', [project.gewerk_id])
       .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
-      .gte('wallet_balance', leadPrice)
 
     if (contractorsError) {
       throw new Error(`Error fetching contractors: ${contractorsError.message}`)
