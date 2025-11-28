@@ -10,7 +10,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, Di
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
-import { Loader2, Wallet, TrendingUp, Star, AlertCircle, Plus } from "lucide-react";
+import { Loader2, Wallet, TrendingUp, Star, AlertCircle, Plus, User } from "lucide-react";
 import { motion } from "framer-motion";
 import { AvailableLeadCard } from "@/components/contractor/AvailableLeadCard";
 import { PurchasedLeadCard } from "@/components/contractor/PurchasedLeadCard";
@@ -216,7 +216,13 @@ export default function ContractorDashboard() {
       <div className="container mx-auto px-4 py-8">
         {/* Header with Stats */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold mb-6">Dashboard</h1>
+          <div className="flex items-center justify-between mb-6">
+            <h1 className="text-3xl font-bold">Dashboard</h1>
+            <Button onClick={() => navigate("/handwerker/profil-bearbeiten")}>
+              <User className="h-4 w-4 mr-2" />
+              Profil bearbeiten
+            </Button>
+          </div>
           
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
             <Card className="p-6">
