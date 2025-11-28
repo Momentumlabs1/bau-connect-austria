@@ -111,6 +111,29 @@ Deno.serve(async (req) => {
         throw projectUpdateError;
       }
 
+      // Update matches.status to 'accepted' for winning contractor
+      const { error: matchAcceptError } = await supabaseClient
+        .from('matches')
+        .update({ status: 'accepted' })
+        .eq('project_id', offer.project_id)
+        .eq('contractor_id', offer.contractor_id);
+
+      if (matchAcceptError) {
+        console.error('❌ Failed to update match status:', matchAcceptError);
+      }
+
+      // Update matches.status to 'lost' for all other contractors who purchased the lead
+      const { error: matchLostError } = await supabaseClient
+        .from('matches')
+        .update({ status: 'lost' })
+        .eq('project_id', offer.project_id)
+        .eq('lead_purchased', true)
+        .neq('contractor_id', offer.contractor_id);
+
+      if (matchLostError) {
+        console.error('❌ Failed to update other matches:', matchLostError);
+      }
+
       // Reject all other pending offers for this project
       const { error: rejectOthersError } = await supabaseClient
         .from('offers')
@@ -121,7 +144,37 @@ Deno.serve(async (req) => {
 
       if (rejectOthersError) {
         console.error('❌ Failed to reject other offers:', rejectOthersError);
-        // Don't fail the whole operation
+      }
+
+      // Notify all other contractors who purchased the lead
+      const { data: otherMatches } = await supabaseClient
+        .from('matches')
+        .select('contractor_id')
+        .eq('project_id', offer.project_id)
+        .eq('lead_purchased', true)
+        .neq('contractor_id', offer.contractor_id);
+
+      if (otherMatches && otherMatches.length > 0) {
+        const notifications = otherMatches.map(match => ({
+          handwerker_id: match.contractor_id,
+          type: 'lead_lost',
+          title: 'Lead vergeben',
+          body: 'Dieser Lead wurde an einen anderen Handwerker vergeben. Das Projekt ist nicht mehr verfügbar.',
+          data: {
+            project_id: offer.project_id,
+            offer_id: offerId
+          }
+        }));
+
+        const { error: notificationError } = await supabaseClient
+          .from('notifications')
+          .insert(notifications);
+
+        if (notificationError) {
+          console.error('❌ Failed to send notifications to other contractors:', notificationError);
+        } else {
+          console.log(`✅ Sent notifications to ${otherMatches.length} other contractors`);
+        }
       }
     }
 

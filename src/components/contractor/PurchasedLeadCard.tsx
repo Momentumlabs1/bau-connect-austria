@@ -12,6 +12,7 @@ interface PurchasedLeadCardProps {
     id: string;
     project_id: string;
     purchased_at: string;
+    status?: string;
     project: {
       id: string;
       title: string;
@@ -19,6 +20,7 @@ interface PurchasedLeadCardProps {
       postal_code: string;
       final_price: number;
       customer_id: string;
+      status?: string;
       profiles?: {
         first_name?: string;
         last_name?: string;
@@ -26,6 +28,9 @@ interface PurchasedLeadCardProps {
         phone?: string;
       };
     };
+    offers?: Array<{
+      status: string;
+    }>;
   };
   index: number;
 }
@@ -33,6 +38,30 @@ interface PurchasedLeadCardProps {
 export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
   const navigate = useNavigate();
   const customer = match.project.profiles;
+  
+  // Determine status badge
+  const offerStatus = match.offers?.[0]?.status;
+  const projectStatus = match.project.status;
+  const matchStatus = match.status;
+  
+  const getStatusBadge = () => {
+    if (matchStatus === 'won') {
+      return <Badge className="bg-green-500">Gewonnen</Badge>;
+    }
+    if (matchStatus === 'accepted' && projectStatus === 'in_progress') {
+      return <Badge className="bg-blue-500">Aktiv</Badge>;
+    }
+    if (matchStatus === 'lost') {
+      return <Badge variant="destructive">Lead vergeben</Badge>;
+    }
+    if (offerStatus === 'rejected') {
+      return <Badge variant="destructive">Angebot abgelehnt</Badge>;
+    }
+    if (offerStatus === 'pending') {
+      return <Badge className="bg-yellow-500">Angebot ausstehend</Badge>;
+    }
+    return <Badge variant="default" className="bg-primary/10 text-primary">Gekauft</Badge>;
+  };
 
   return (
     <motion.div
@@ -51,9 +80,7 @@ export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
                   {match.project.postal_code} {match.project.city}
                 </p>
               </div>
-              <Badge variant="default" className="bg-primary/10 text-primary">
-                Gekauft
-              </Badge>
+              {getStatusBadge()}
             </div>
 
             <div className="bg-muted/50 p-4 rounded-lg mb-4">
