@@ -9,11 +9,12 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
 import { ImageUpload } from "@/components/ImageUpload";
-import { Loader2 } from "lucide-react";
+import { Loader2, Mail, Lock } from "lucide-react";
 
 const profileSchema = z.object({
   company_name: z.string().min(2, "Firmenname ist erforderlich"),
@@ -48,6 +49,14 @@ export default function ContractorProfileEdit() {
   const [postalCodes, setPostalCodes] = useState<string>("");
   const [profileImage, setProfileImage] = useState<string[]>([]);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
+  
+  // Email/Password change dialogs
+  const [emailDialogOpen, setEmailDialogOpen] = useState(false);
+  const [passwordDialogOpen, setPasswordDialogOpen] = useState(false);
+  const [newEmail, setNewEmail] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  
   const navigate = useNavigate();
   const { toast } = useToast();
 
@@ -106,6 +115,84 @@ export default function ContractorProfileEdit() {
       setSelectedTrades([...selectedTrades, trade]);
     } else {
       setSelectedTrades(selectedTrades.filter(t => t !== trade));
+    }
+  };
+
+  const handleEmailChange = async () => {
+    if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
+      toast({
+        title: "Fehler",
+        description: "Bitte geben Sie eine gültige E-Mail-Adresse ein",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ email: newEmail });
+      
+      if (error) throw error;
+
+      toast({
+        title: "E-Mail wird aktualisiert",
+        description: "Bitte bestätigen Sie die neue E-Mail-Adresse über den Link, den wir Ihnen gesendet haben.",
+      });
+      
+      setEmailDialogOpen(false);
+      setNewEmail("");
+    } catch (error: any) {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  const handlePasswordChange = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      toast({
+        title: "Fehler",
+        description: "Passwort muss mindestens 6 Zeichen lang sein",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    if (newPassword !== confirmPassword) {
+      toast({
+        title: "Fehler",
+        description: "Passwörter stimmen nicht überein",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    setSaving(true);
+    try {
+      const { error } = await supabase.auth.updateUser({ password: newPassword });
+      
+      if (error) throw error;
+
+      toast({
+        title: "Passwort aktualisiert",
+        description: "Ihr Passwort wurde erfolgreich geändert.",
+      });
+      
+      setPasswordDialogOpen(false);
+      setNewPassword("");
+      setConfirmPassword("");
+    } catch (error: any) {
+      toast({
+        title: "Fehler",
+        description: error.message,
+        variant: "destructive",
+      });
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -299,6 +386,30 @@ export default function ContractorProfileEdit() {
                   />
                 </div>
 
+                <div className="border-t pt-6 space-y-3">
+                  <h3 className="text-lg font-semibold">Sicherheitseinstellungen</h3>
+                  <div className="flex gap-3">
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setEmailDialogOpen(true)}
+                      className="flex-1"
+                    >
+                      <Mail className="mr-2 h-4 w-4" />
+                      E-Mail ändern
+                    </Button>
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      onClick={() => setPasswordDialogOpen(true)}
+                      className="flex-1"
+                    >
+                      <Lock className="mr-2 h-4 w-4" />
+                      Passwort ändern
+                    </Button>
+                  </div>
+                </div>
+
                 <div className="flex gap-3">
                   <Button 
                     type="button" 
@@ -324,6 +435,94 @@ export default function ContractorProfileEdit() {
           </Card>
         </div>
       </div>
+
+      {/* Email Change Dialog */}
+      <Dialog open={emailDialogOpen} onOpenChange={setEmailDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>E-Mail-Adresse ändern</DialogTitle>
+            <DialogDescription>
+              Geben Sie Ihre neue E-Mail-Adresse ein. Sie erhalten eine Bestätigungs-E-Mail.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newEmail">Neue E-Mail-Adresse</Label>
+              <Input
+                id="newEmail"
+                type="email"
+                value={newEmail}
+                onChange={(e) => setNewEmail(e.target.value)}
+                placeholder="neue-email@beispiel.at"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setEmailDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handleEmailChange} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird geändert...
+                </>
+              ) : (
+                "E-Mail ändern"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Password Change Dialog */}
+      <Dialog open={passwordDialogOpen} onOpenChange={setPasswordDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Passwort ändern</DialogTitle>
+            <DialogDescription>
+              Geben Sie ein neues Passwort ein (mindestens 6 Zeichen).
+            </DialogDescription>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="newPassword">Neues Passwort</Label>
+              <Input
+                id="newPassword"
+                type="password"
+                value={newPassword}
+                onChange={(e) => setNewPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="confirmPassword">Passwort bestätigen</Label>
+              <Input
+                id="confirmPassword"
+                type="password"
+                value={confirmPassword}
+                onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="••••••••"
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setPasswordDialogOpen(false)}>
+              Abbrechen
+            </Button>
+            <Button onClick={handlePasswordChange} disabled={saving}>
+              {saving ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Wird geändert...
+                </>
+              ) : (
+                "Passwort ändern"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

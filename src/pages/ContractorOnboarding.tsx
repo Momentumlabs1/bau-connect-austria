@@ -141,9 +141,8 @@ export default function ContractorOnboarding() {
           toast({ title: "Fehler", description: "Firmenname ist erforderlich", variant: "destructive" });
           return false;
         }
-        const lineCount = description.split('\n').length;
-        if (lineCount < 30) {
-          toast({ title: "Fehler", description: `Beschreibung muss mindestens 30 Zeilen haben (aktuell: ${lineCount})`, variant: "destructive" });
+        if (description.length < 30) {
+          toast({ title: "Fehler", description: `Beschreibung muss mindestens 30 Zeichen haben (aktuell: ${description.length})`, variant: "destructive" });
           return false;
         }
         return true;
@@ -279,7 +278,7 @@ export default function ContractorOnboarding() {
             </div>
 
             <div>
-              <Label htmlFor="description">Unternehmensbeschreibung * (min. 30 Zeilen)</Label>
+              <Label htmlFor="description">Unternehmensbeschreibung * (min. 30 Zeichen)</Label>
               <Textarea
                 id="description"
                 value={description}
@@ -289,7 +288,7 @@ export default function ContractorOnboarding() {
                 rows={15}
               />
               <p className="mt-1 text-sm text-muted-foreground">
-                {description.split('\n').length} / 30 Zeilen
+                {description.length} / 30 Zeichen
               </p>
             </div>
 
