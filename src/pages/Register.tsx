@@ -20,8 +20,8 @@ const registerSchema = z.object({
   password: z.string().min(6, "Passwort muss mindestens 6 Zeichen lang sein"),
   firstName: z.string().min(2, "Vorname ist erforderlich"),
   lastName: z.string().min(2, "Nachname ist erforderlich"),
-  acceptTerms: z.literal(true, {
-    errorMap: () => ({ message: "Sie müssen die AGB und Datenschutzerklärung akzeptieren" }),
+  acceptTerms: z.boolean().refine(val => val === true, {
+    message: "Sie müssen die AGB und Datenschutzerklärung akzeptieren",
   }),
 });
 
@@ -53,6 +53,7 @@ export default function Register() {
       lastName: "",
       email: "",
       password: "",
+      acceptTerms: false,
     },
   });
 
