@@ -281,6 +281,16 @@ export default function CreateProject() {
   };
 
   const handlePublish = () => {
+    // Check terms acceptance first
+    if (!guestData.acceptTerms) {
+      toast({
+        title: "Bestätigung erforderlich",
+        description: "Bitte bestätigen Sie die rechtlichen Bedingungen",
+        variant: "destructive",
+      });
+      return;
+    }
+    
     // Check if user is logged in
     if (!userId) {
       setShowAuthDialog(true);
@@ -457,7 +467,9 @@ export default function CreateProject() {
           fotos: projectData.images,
           funnel_answers: projectData.tradeSpecificAnswers,
           status: "open",
-          visibility: "public"
+          visibility: "public",
+          terms_accepted: true,
+          confirmed_at: new Date().toISOString()
         }])
         .select()
         .single();
@@ -958,7 +970,7 @@ export default function CreateProject() {
         );
 
       case 3:
-        // Timing - Date Picker Version
+        // Timing - Simplified with Quick Buttons + Optional Date Picker
         const calculateUrgency = (date: Date | undefined) => {
           if (!date) return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
           
@@ -974,6 +986,16 @@ export default function CreateProject() {
         };
 
         const urgencyInfo = calculateUrgency(selectedDate);
+        const [showDatePicker, setShowDatePicker] = useState(false);
+
+        const handleQuickSelect = (urgency: 'low' | 'medium' | 'high', weeks: number) => {
+          const date = new Date();
+          date.setDate(date.getDate() + (weeks * 7));
+          setSelectedDate(date);
+          updateProjectData('urgency', urgency);
+          updateProjectData('preferred_start_date', date.toISOString());
+          setShowDatePicker(false);
+        };
 
         return (
           <motion.div
@@ -987,79 +1009,120 @@ export default function CreateProject() {
                   <Calendar className="h-8 w-8 text-primary" />
                 </div>
               </div>
-              <h2 className="text-3xl font-bold">Wann soll die Arbeit erledigt werden?</h2>
+              <h2 className="text-3xl font-bold">Wann soll der Auftrag starten?</h2>
               <p className="text-muted-foreground">
                 Dies hilft Handwerkern bei der Planung
               </p>
             </div>
 
             <Card className="p-8 max-w-3xl mx-auto space-y-8">
-              <div className="space-y-6">
-                {/* Date Picker */}
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal h-auto py-6",
-                        !selectedDate && "text-muted-foreground"
-                      )}
-                    >
-                      <Calendar className="mr-3 h-6 w-6" />
-                      {selectedDate ? (
-                        <span className="text-xl font-semibold">{format(selectedDate, "PPP", { locale: de })}</span>
-                      ) : (
-                        <span className="text-xl">Datum auswählen</span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="center">
-                    <CalendarComponent
-                      mode="single"
-                      selected={selectedDate}
-                      onSelect={(date) => {
-                        setSelectedDate(date);
-                        if (date) {
-                          const urgency = calculateUrgency(date);
-                          updateProjectData('urgency', urgency.urgency);
-                          updateProjectData('preferred_start_date', date.toISOString());
-                        }
-                      }}
-                      disabled={(date) => date < new Date()}
-                      initialFocus
-                      className="pointer-events-auto"
-                    />
-                  </PopoverContent>
-                </Popover>
-                
-                {/* Selected Date Display with Urgency */}
-                {selectedDate && (
-                  <div className="text-center space-y-4 animate-in fade-in-50">
-                    <Badge className={cn("text-xl px-8 py-3 font-bold text-white border-0", urgencyInfo.color)}>
-                      {urgencyInfo.label}
-                    </Badge>
-                    <p className="text-base text-muted-foreground font-medium">
-                      {differenceInDays(selectedDate, new Date())} Tage bis zum geplanten Start
-                    </p>
+              {/* Quick Selection Buttons */}
+              <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+                <button
+                  onClick={() => handleQuickSelect('low', 4)}
+                  className={cn(
+                    "p-6 rounded-xl border-2 transition-all hover:shadow-lg",
+                    !selectedDate || projectData.urgency === 'low'
+                      ? "border-green-500 bg-green-50"
+                      : "border-gray-200 hover:border-green-300"
+                  )}
+                >
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl">🟢</div>
+                    <h3 className="font-bold text-lg">Flexibel</h3>
+                    <p className="text-sm text-muted-foreground">4+ Wochen</p>
                   </div>
-                )}
-                
-                {/* Legend */}
-                <div className="flex justify-between items-center text-sm pt-6 border-t">
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-red-500"></div>
-                    <span className="font-medium">Dringend</span>
+                </button>
+
+                <button
+                  onClick={() => handleQuickSelect('medium', 2)}
+                  className={cn(
+                    "p-6 rounded-xl border-2 transition-all hover:shadow-lg",
+                    projectData.urgency === 'medium'
+                      ? "border-yellow-500 bg-yellow-50"
+                      : "border-gray-200 hover:border-yellow-300"
+                  )}
+                >
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl">🟡</div>
+                    <h3 className="font-bold text-lg">Bald</h3>
+                    <p className="text-sm text-muted-foreground">~2 Wochen</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
-                    <span className="font-medium">Mittel</span>
+                </button>
+
+                <button
+                  onClick={() => handleQuickSelect('high', 1)}
+                  className={cn(
+                    "p-6 rounded-xl border-2 transition-all hover:shadow-lg",
+                    projectData.urgency === 'high'
+                      ? "border-red-500 bg-red-50"
+                      : "border-gray-200 hover:border-red-300"
+                  )}
+                >
+                  <div className="text-center space-y-2">
+                    <div className="text-3xl">🔴</div>
+                    <h3 className="font-bold text-lg">Dringend</h3>
+                    <p className="text-sm text-muted-foreground">~1 Woche</p>
                   </div>
-                  <div className="flex items-center gap-2">
-                    <div className="w-3 h-3 rounded-full bg-green-500"></div>
-                    <span className="font-medium">Flexibel</span>
-                  </div>
-                </div>
+                </button>
               </div>
+
+              {/* Optional: Exact Date Picker */}
+              <div className="space-y-4">
+                <div className="text-center">
+                  <p className="text-sm text-muted-foreground mb-3">Oder:</p>
+                  <Button
+                    variant="outline"
+                    onClick={() => setShowDatePicker(!showDatePicker)}
+                    className="gap-2"
+                  >
+                    <Calendar className="h-4 w-4" />
+                    Genaues Datum auswählen
+                  </Button>
+                </div>
+
+                {showDatePicker && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="flex justify-center"
+                  >
+                    <Popover open={true}>
+                      <PopoverContent className="w-auto p-0" align="center">
+                        <CalendarComponent
+                          mode="single"
+                          selected={selectedDate}
+                          onSelect={(date) => {
+                            setSelectedDate(date);
+                            if (date) {
+                              const urgency = calculateUrgency(date);
+                              updateProjectData('urgency', urgency.urgency);
+                              updateProjectData('preferred_start_date', date.toISOString());
+                            }
+                          }}
+                          disabled={(date) => date < new Date()}
+                          initialFocus
+                          className="pointer-events-auto"
+                        />
+                      </PopoverContent>
+                    </Popover>
+                  </motion.div>
+                )}
+              </div>
+                
+              {/* Selected Date Display with Urgency */}
+              {selectedDate && (
+                <div className="text-center space-y-4 animate-in fade-in-50 pt-6 border-t">
+                  <p className="text-sm text-muted-foreground">Ausgewähltes Datum:</p>
+                  <p className="text-lg font-semibold">{format(selectedDate, "PPP", { locale: de })}</p>
+                  <Badge className={cn("text-base px-6 py-2 font-bold text-white border-0", urgencyInfo.color)}>
+                    {urgencyInfo.label}
+                  </Badge>
+                  <p className="text-sm text-muted-foreground font-medium">
+                    {differenceInDays(selectedDate, new Date())} Tage bis zum geplanten Start
+                  </p>
+                </div>
+              )}
             </Card>
           </motion.div>
         );
@@ -1129,7 +1192,7 @@ export default function CreateProject() {
         );
 
       case 5:
-        // Summary - NO registration fields here
+        // Summary with Terms & Conditions
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1251,6 +1314,32 @@ export default function CreateProject() {
                 </Card>
               )}
             </div>
+
+            {/* Terms & Conditions Checkbox */}
+            <Card className="p-6 max-w-4xl mx-auto border-2 border-primary/20 bg-primary/5">
+              <div className="space-y-4">
+                <h3 className="font-semibold text-lg">Rechtliche Bestätigung</h3>
+                <div className="flex items-start space-x-3">
+                  <Checkbox 
+                    id="accept-terms"
+                    checked={guestData.acceptTerms}
+                    onCheckedChange={(checked) => setGuestData(prev => ({ ...prev, acceptTerms: checked as boolean }))}
+                    className="mt-1"
+                  />
+                  <div className="space-y-1 flex-1">
+                    <Label htmlFor="accept-terms" className="text-sm font-normal cursor-pointer leading-relaxed">
+                      Hiermit bestätige ich, dass:
+                      <ul className="mt-2 space-y-1 pl-4">
+                        <li>• Die angegebenen Informationen korrekt sind</li>
+                        <li>• Handwerker mich kontaktieren dürfen</li>
+                        <li>• Ich die <button type="button" onClick={() => window.open('/agb', '_blank')} className="text-primary hover:underline">AGB</button> gelesen und akzeptiert habe</li>
+                        <li>• Ich auf mein <button type="button" onClick={() => window.open('/widerruf', '_blank')} className="text-primary hover:underline">Widerrufsrecht</button> verzichte, da die Vermittlung sofort beginnt (FAGG §18 Abs. 1 Z 9)</li>
+                      </ul>
+                    </Label>
+                  </div>
+                </div>
+              </div>
+            </Card>
           </motion.div>
         );
 
@@ -1380,11 +1469,11 @@ export default function CreateProject() {
             ) : (
               <Button 
                 onClick={handlePublish} 
-                disabled={loading || !projectData.title}
+                disabled={loading || !projectData.title || !guestData.acceptTerms}
                 className="gap-2 h-12 px-8"
                 size="lg"
               >
-                {loading ? "Wird erstellt..." : "Projekt jetzt veröffentlichen"}
+                {loading ? "Wird erstellt..." : "Anfrage verbindlich absenden"}
                 <CheckCircle2 className="h-4 w-4" />
               </Button>
             )}

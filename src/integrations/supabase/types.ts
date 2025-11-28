@@ -570,6 +570,7 @@ export type Database = {
           budget_max: number | null
           budget_min: number | null
           city: string
+          confirmed_at: string | null
           created_at: string
           customer_id: string
           description: string
@@ -589,6 +590,7 @@ export type Database = {
           spam_score: number | null
           status: string | null
           subcategory_id: string | null
+          terms_accepted: boolean | null
           title: string
           updated_at: string
           urgency: string | null
@@ -601,6 +603,7 @@ export type Database = {
           budget_max?: number | null
           budget_min?: number | null
           city: string
+          confirmed_at?: string | null
           created_at?: string
           customer_id: string
           description: string
@@ -620,6 +623,7 @@ export type Database = {
           spam_score?: number | null
           status?: string | null
           subcategory_id?: string | null
+          terms_accepted?: boolean | null
           title: string
           updated_at?: string
           urgency?: string | null
@@ -632,6 +636,7 @@ export type Database = {
           budget_max?: number | null
           budget_min?: number | null
           city?: string
+          confirmed_at?: string | null
           created_at?: string
           customer_id?: string
           description?: string
@@ -651,6 +656,7 @@ export type Database = {
           spam_score?: number | null
           status?: string | null
           subcategory_id?: string | null
+          terms_accepted?: boolean | null
           title?: string
           updated_at?: string
           urgency?: string | null

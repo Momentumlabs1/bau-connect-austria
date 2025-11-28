@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -8,6 +8,8 @@ import { supabase } from '@/integrations/supabase/client';
 import { toast } from '@/hooks/use-toast';
 import { Card } from '@/components/ui/card';
 import { MessageSquare, Send, Edit } from 'lucide-react';
+import { format } from 'date-fns';
+import { de } from 'date-fns/locale';
 
 interface OfferFormProps {
   projectId: string;
@@ -46,6 +48,62 @@ export const OfferForm = ({ projectId, projectTitle = 'dieses Projekt', projectC
   const [selectedTemplate, setSelectedTemplate] = useState('professional');
   const [customMessage, setCustomMessage] = useState('');
   const [loading, setLoading] = useState(false);
+  const [existingOffer, setExistingOffer] = useState<any>(null);
+  const [checkingExisting, setCheckingExisting] = useState(true);
+
+  // Check for existing offer on mount
+  useEffect(() => {
+    checkExistingOffer();
+  }, [projectId]);
+
+  const checkExistingOffer = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const { data, error } = await supabase
+        .from('offers')
+        .select('*')
+        .eq('project_id', projectId)
+        .eq('contractor_id', user.id)
+        .maybeSingle();
+
+      if (!error && data) {
+        setExistingOffer(data);
+      }
+    } catch (error) {
+      console.error('Error checking existing offer:', error);
+    } finally {
+      setCheckingExisting(false);
+    }
+  };
+
+  // Show message if offer already exists
+  if (checkingExisting) {
+    return (
+      <div className="text-center py-8">
+        <div className="animate-spin h-8 w-8 border-4 border-primary border-t-transparent rounded-full mx-auto"></div>
+        <p className="text-muted-foreground mt-4">Prüfe bestehende Angebote...</p>
+      </div>
+    );
+  }
+
+  if (existingOffer) {
+    return (
+      <Card className="p-6 bg-yellow-50 border-yellow-200">
+        <div className="text-center space-y-4">
+          <div className="text-4xl">✓</div>
+          <h3 className="text-lg font-semibold">Angebot bereits gesendet</h3>
+          <p className="text-sm text-muted-foreground">
+            Sie haben bereits am {format(new Date(existingOffer.created_at), 'dd.MM.yyyy', { locale: de })} ein Angebot über <strong>€{existingOffer.amount.toFixed(2)}</strong> abgegeben.
+          </p>
+          <p className="text-sm text-muted-foreground">
+            Der Kunde wird sich bei Interesse bei Ihnen melden.
+          </p>
+        </div>
+      </Card>
+    );
+  }
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
