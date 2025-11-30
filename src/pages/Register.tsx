@@ -107,16 +107,13 @@ export default function Register() {
 
       toast({
         title: "Registrierung erfolgreich!",
-        description: "Sie werden weitergeleitet...",
+        description: "Bitte bestätigen Sie Ihre E-Mail-Adresse. Wir haben Ihnen eine Bestätigungs-E-Mail gesendet.",
+        duration: 10000,
       });
 
       setTimeout(() => {
-        if (role === "customer") {
-          navigate("/kunde/dashboard");
-        } else {
-          navigate("/handwerker/onboarding");
-        }
-      }, 1000);
+        navigate("/login?registered=true");
+      }, 2000);
     } catch (error: any) {
       toast({
         title: "Fehler bei der Registrierung",
