@@ -207,45 +207,54 @@ export const FullProjectDetails = ({ project, customer, purchasedAt, categoryQue
           </div>
 
           {/* Funnel Answers Section */}
-          {project.funnel_answers && Object.keys(project.funnel_answers).length > 0 && questions.length > 0 ? (
+          {project.funnel_answers && Object.keys(project.funnel_answers).length > 0 ? (
             <div className="border-t pt-6 mt-6">
               <h4 className="font-semibold text-lg mb-4 flex items-center gap-2">
                 <span>📋</span>
-                Projektanforderungen
+                Detaillierte Projektanforderungen
               </h4>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {questions.map((question) => {
-                  const answer = project.funnel_answers?.[question.id];
-                  if (!answer) return null;
-                  
-                  return (
-                    <div key={question.id} className="bg-muted/30 p-4 rounded-lg border hover:border-primary/20 transition-colors">
+                {questions.length > 0 ? (
+                  // Show with question labels if available
+                  questions.map((question) => {
+                    const answer = project.funnel_answers?.[question.id];
+                    if (!answer) return null;
+                    
+                    return (
+                      <div key={question.id} className="bg-muted/30 p-4 rounded-lg border hover:border-primary/20 transition-colors">
+                        <p className="text-sm font-medium text-muted-foreground mb-2">
+                          {question.question_text}
+                        </p>
+                        <p className="text-foreground font-semibold">
+                          {formatAnswer(question.id, answer)}
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  // Show raw answers if questions not loaded
+                  Object.entries(project.funnel_answers).map(([key, value]) => (
+                    <div key={key} className="bg-muted/30 p-4 rounded-lg border hover:border-primary/20 transition-colors">
                       <p className="text-sm font-medium text-muted-foreground mb-2">
-                        {question.question_text}
+                        {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
                       </p>
                       <p className="text-foreground font-semibold">
-                        {formatAnswer(question.id, answer)}
+                        {Array.isArray(value) ? value.join(', ') : String(value)}
                       </p>
                     </div>
-                  );
-                })}
+                  ))
+                )}
               </div>
             </div>
-          ) : (
-            <div className="border-t pt-6 mt-6">
-              <h4 className="font-semibold text-lg mb-3">Projektbeschreibung</h4>
-              <p className="text-foreground whitespace-pre-wrap leading-relaxed bg-muted/20 p-4 rounded-lg">
-                {project.description}
-              </p>
-            </div>
-          )}
+          ) : null}
 
-          {project.funnel_answers && Object.keys(project.funnel_answers).length > 0 && (
-            <div>
-              <h4 className="font-medium text-muted-foreground mb-2">Zusätzliche Beschreibung</h4>
-              <p className="text-foreground whitespace-pre-wrap">{project.description}</p>
-            </div>
-          )}
+          {/* Description Section - always show */}
+          <div className="border-t pt-6 mt-6">
+            <h4 className="font-semibold text-lg mb-3">Zusätzliche Projektbeschreibung</h4>
+            <p className="text-foreground whitespace-pre-wrap leading-relaxed bg-muted/20 p-4 rounded-lg">
+              {project.description || 'Keine zusätzliche Beschreibung vorhanden.'}
+            </p>
+          </div>
 
           {project.images && project.images.length > 0 && (
             <div>

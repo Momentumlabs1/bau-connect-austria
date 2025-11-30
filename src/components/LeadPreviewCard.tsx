@@ -12,6 +12,7 @@ interface LeadPreviewCardProps {
     id: string;
     title: string;
     gewerk_id: string;
+    subcategory_id?: string;
     city: string;
     postal_code: string;
     description: string;
@@ -22,6 +23,8 @@ interface LeadPreviewCardProps {
     final_price: number;
     images?: string[];
     created_at: string;
+    preferred_start_date?: string;
+    funnel_answers?: Record<string, any>;
   };
   leadPrice: number;
   onPurchase?: (voucherCode?: string) => void;
@@ -30,6 +33,7 @@ interface LeadPreviewCardProps {
   currentBalance?: number;
   useStripePayment?: boolean;
   onPurchaseSuccess?: () => void;
+  subcategoryName?: string;
 }
 
 export function LeadPreviewCard({ 
@@ -40,9 +44,11 @@ export function LeadPreviewCard({
   insufficientBalance = false, 
   currentBalance = 0,
   useStripePayment = false,
-  onPurchaseSuccess
+  onPurchaseSuccess,
+  subcategoryName
 }: LeadPreviewCardProps) {
   const [voucherCode, setVoucherCode] = useState("");
+  
   const getUrgencyColor = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
       case 'high': return 'destructive';
@@ -95,16 +101,46 @@ export function LeadPreviewCard({
               <h4 className="font-semibold text-xl">{project.title}</h4>
               <Badge variant="outline">{getGewerkLabel(project.gewerk_id)}</Badge>
             </div>
+            {subcategoryName && (
+              <p className="text-sm text-muted-foreground mb-2">📂 {subcategoryName}</p>
+            )}
             <div className="flex items-center gap-2 text-muted-foreground mb-3">
               <MapPin className="h-4 w-4" />
               <span>{project.city} (PLZ: {project.postal_code.substring(0, 2)}**)</span>
             </div>
+            {project.preferred_start_date && (
+              <div className="flex items-center gap-2 text-sm text-muted-foreground">
+                <Clock className="h-4 w-4" />
+                <span>Start: {new Date(project.preferred_start_date).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+              </div>
+            )}
           </div>
 
           <div className="bg-muted/50 p-4 rounded-lg">
             <p className="text-sm text-muted-foreground mb-2">Beschreibung:</p>
             <p className="text-sm line-clamp-3">{project.description}</p>
           </div>
+
+          {project.funnel_answers && Object.keys(project.funnel_answers).length > 0 && (
+            <div className="bg-muted/30 p-4 rounded-lg border">
+              <p className="text-sm font-medium mb-3 flex items-center gap-2">
+                <span>📋</span>
+                Erste Projekt-Details (mehr nach Kauf)
+              </p>
+              <div className="space-y-2">
+                {Object.entries(project.funnel_answers).slice(0, 2).map(([key, value]) => (
+                  <div key={key} className="text-sm">
+                    <span className="text-muted-foreground">•</span> {Array.isArray(value) ? value.join(', ') : String(value)}
+                  </div>
+                ))}
+                {Object.keys(project.funnel_answers).length > 2 && (
+                  <p className="text-xs text-muted-foreground italic mt-2">
+                    + {Object.keys(project.funnel_answers).length - 2} weitere Details nach Kauf sichtbar
+                  </p>
+                )}
+              </div>
+            </div>
+          )}
 
           {project.images && project.images.length > 0 && (
             <div className="space-y-2">

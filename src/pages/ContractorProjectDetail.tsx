@@ -37,6 +37,7 @@ export default function ContractorProjectDetail() {
   const [project, setProject] = useState<Project | null>(null);
   const [customerData, setCustomerData] = useState<any>(null);
   const [categoryQuestions, setCategoryQuestions] = useState<any[]>([]);
+  const [subcategoryName, setSubcategoryName] = useState<string>("");
   const [loading, setLoading] = useState(true);
   const [purchasing, setPurchasing] = useState(false);
   const [hasPurchasedLead, setHasPurchasedLead] = useState(false);
@@ -115,7 +116,7 @@ export default function ContractorProjectDetail() {
         setCustomerData(typedProject.profiles);
       }
 
-      // Load category questions if subcategory_id exists
+      // Load category questions and name if subcategory_id exists
       if (typedProject.subcategory_id) {
         const { data: questionsData } = await supabase
           .from('category_questions')
@@ -125,6 +126,16 @@ export default function ContractorProjectDetail() {
         
         if (questionsData) {
           setCategoryQuestions(questionsData);
+        }
+
+        const { data: categoryData } = await supabase
+          .from('service_categories')
+          .select('name')
+          .eq('id', typedProject.subcategory_id)
+          .maybeSingle();
+        
+        if (categoryData) {
+          setSubcategoryName(categoryData.name);
         }
       }
 
@@ -376,6 +387,7 @@ export default function ContractorProjectDetail() {
             insufficientBalance={insufficientBalance}
             currentBalance={walletBalance}
             useStripePayment={false}
+            subcategoryName={subcategoryName}
             onPurchaseSuccess={() => {
               setHasPurchasedLead(true);
               loadProject();
