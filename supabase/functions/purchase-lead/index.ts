@@ -142,7 +142,7 @@ Deno.serve(async (req) => {
         .insert({
           project_id: leadId,
           contractor_id: user.id,
-          match_type: 'MANUAL',
+          match_type: 'applied',
           score: 50,
           status: 'pending',
           created_at: new Date().toISOString()
@@ -158,9 +158,9 @@ Deno.serve(async (req) => {
       console.log('✅ Auto-match created:', newMatch.id)
       matchRecord = newMatch  // Use the new match for further processing
     }
-
+ 
     console.log('✅ Match exists:', matchRecord.id)
-
+ 
     // 4. Check if contractor already purchased this lead
     if (matchRecord.lead_purchased === true) {
       console.warn('⚠️ Lead already purchased')
@@ -176,16 +176,16 @@ Deno.serve(async (req) => {
         }
       )
     }
-
+ 
     // 5. Check if lead is still available (max 3 contractors)
     const { data: purchases, error: purchasesError } = await supabase
       .from('matches')
       .select('contractor_id')
       .eq('project_id', leadId)
       .eq('lead_purchased', true)
-
+ 
     if (purchasesError) throw purchasesError
-
+ 
     if (purchases && purchases.length >= 3) {
       return new Response(
         JSON.stringify({
@@ -198,7 +198,7 @@ Deno.serve(async (req) => {
         }
       )
     }
-
+ 
     // 6. Deduct from wallet and update stats
     const newBalance = Number(contractor.wallet_balance) - leadPrice
     
@@ -209,9 +209,9 @@ Deno.serve(async (req) => {
         leads_bought: (contractor.leads_bought || 0) + 1
       })
       .eq('id', user.id)
-
+ 
     if (updateError) throw updateError
-
+ 
     // 7. Create transaction record
     const { error: transactionError } = await supabase
       .from('transactions')
@@ -229,9 +229,9 @@ Deno.serve(async (req) => {
           project_city: lead.city
         }
       })
-
+ 
     if (transactionError) throw transactionError
-
+ 
     // 8. Update match record with UPSERT
     console.log('📝 Updating match record with UPSERT...')
     const { data: updatedMatch, error: matchError } = await supabase
@@ -242,21 +242,21 @@ Deno.serve(async (req) => {
         lead_purchased: true,
         purchased_at: new Date().toISOString(),
         status: 'contacted',
-        match_type: matchRecord?.match_type || 'MANUAL',
+        match_type: matchRecord?.match_type || 'applied',
         score: matchRecord?.score || 0
       }, {
         onConflict: 'project_id,contractor_id'
       })
       .select()
       .single()
-
+ 
     if (matchError) {
       console.error('❌ Failed to update match:', matchError)
       throw matchError
     }
-
+ 
     console.log('✅ Match updated successfully:', updatedMatch)
-
+ 
     // 9. Mark notification as read
     await supabase
       .from('notifications')
