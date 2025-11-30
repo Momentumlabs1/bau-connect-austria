@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -11,6 +11,8 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Footer } from "@/components/Footer";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Mail } from "lucide-react";
 
 const loginSchema = z.object({
   email: z.string().email("Bitte geben Sie eine gültige E-Mail ein"),
@@ -23,6 +25,8 @@ export default function Login() {
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [searchParams] = useSearchParams();
+  const justRegistered = searchParams.get("registered") === "true";
   
   const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
@@ -89,6 +93,15 @@ export default function Login() {
               </CardDescription>
             </CardHeader>
             <CardContent>
+              {justRegistered && (
+                <Alert className="mb-4 bg-blue-50 border-blue-200 dark:bg-blue-950 dark:border-blue-800">
+                  <Mail className="h-4 w-4" />
+                  <AlertDescription>
+                    Bitte bestätigen Sie Ihre E-Mail-Adresse bevor Sie sich anmelden.
+                    Überprüfen Sie Ihren Posteingang.
+                  </AlertDescription>
+                </Alert>
+              )}
               <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="email">E-Mail</Label>
