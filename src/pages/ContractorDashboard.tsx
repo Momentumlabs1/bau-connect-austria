@@ -130,22 +130,38 @@ export default function ContractorDashboard() {
       }
 
       // Load purchased leads (contacted/pending)
-      const { data: purchasedData } = await supabase
+      const { data: purchasedData, error: purchasedError } = await supabase
         .from("matches")
         .select(`
           *,
           project:projects(
             *,
             profiles(first_name, last_name, email, phone)
-          ),
-          offers!offers_project_id_fkey(status)
+          )
         `)
         .eq("contractor_id", userId)
         .eq("lead_purchased", true)
         .in("status", ["contacted", "pending", "lost"])
         .order("purchased_at", { ascending: false });
 
-      setPurchasedLeads(purchasedData || []);
+      if (purchasedError) {
+        console.error('Error loading purchased leads:', purchasedError);
+      }
+
+      // Fetch offers separately for each purchased lead
+      const purchasedWithOffers = await Promise.all(
+        (purchasedData || []).map(async (match) => {
+          const { data: offerData } = await supabase
+            .from("offers")
+            .select("status")
+            .eq("project_id", match.project_id)
+            .eq("contractor_id", userId)
+            .maybeSingle();
+          return { ...match, offer: offerData };
+        })
+      );
+
+      setPurchasedLeads(purchasedWithOffers);
 
       // Load active projects
       const { data: activeData } = await supabase
