@@ -75,16 +75,24 @@ serve(async (req) => {
 
     console.log('Project created:', project.id);
 
-    // Trigger contractor matching
+    // Trigger contractor matching with proper authentication
     try {
-      const matchResponse = await supabase.functions.invoke('match-contractors', {
-        body: { projectId: project.id }
+      const matchResponse = await fetch(`${supabaseUrl}/functions/v1/match-contractors`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+          'apikey': supabaseServiceKey
+        },
+        body: JSON.stringify({ projectId: project.id })
       });
 
-      if (matchResponse.error) {
-        console.error('Matching error:', matchResponse.error);
+      if (!matchResponse.ok) {
+        const errorText = await matchResponse.text();
+        console.error('Matching error:', matchResponse.status, errorText);
       } else {
-        console.log('Contractor matching triggered:', matchResponse.data);
+        const matchData = await matchResponse.json();
+        console.log('Contractor matching triggered:', matchData);
       }
     } catch (matchError) {
       console.error('Failed to trigger matching:', matchError);
