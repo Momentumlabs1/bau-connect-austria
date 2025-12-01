@@ -88,6 +88,7 @@ export default function CreateProject() {
   const [createdProjectId, setCreatedProjectId] = useState<string>("");
   const [matchedContractors, setMatchedContractors] = useState<any[]>([]);
   const [selectedDate, setSelectedDate] = useState<Date>();
+  const [showDatePicker, setShowDatePicker] = useState(false);
   const [showAuthDialog, setShowAuthDialog] = useState(false);
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
   
@@ -986,7 +987,6 @@ export default function CreateProject() {
         };
 
         const urgencyInfo = calculateUrgency(selectedDate);
-        const [showDatePicker, setShowDatePicker] = useState(false);
 
         const handleQuickSelect = (urgency: 'low' | 'medium' | 'high', weeks: number) => {
           const date = new Date();
