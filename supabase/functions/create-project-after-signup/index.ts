@@ -76,26 +76,8 @@ serve(async (req) => {
 
     console.log('Project created:', project.id);
 
-    // Trigger contractor matching
-    console.log('Triggering contractor matching...');
-    try {
-      const matchResponse = await fetch(`${supabaseUrl}/functions/v1/match-contractors`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-        },
-        body: JSON.stringify({ projectId: project.id }),
-      });
-
-      if (!matchResponse.ok) {
-        console.error('Matching failed:', await matchResponse.text());
-      } else {
-        console.log('Matching triggered successfully');
-      }
-    } catch (matchError) {
-      console.error('Failed to trigger matching:', matchError);
-    }
+    // Matching wird aktuell nicht im Backend ausgelöst,
+    // sondern clientseitig nach der Registrierung im Funnel.
 
     return new Response(
       JSON.stringify({ 
