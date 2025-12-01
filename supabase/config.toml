@@ -1,5 +1,8 @@
 project_id = "emfijlgxorugiuvykszg"
 
+[functions.create-project-after-signup]
+verify_jwt = false
+
 [functions.match-contractors]
 verify_jwt = true
 

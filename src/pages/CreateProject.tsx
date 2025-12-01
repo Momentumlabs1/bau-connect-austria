@@ -375,20 +375,73 @@ export default function CreateProject() {
       return { success: false };
     }
 
+    console.log('User registered, creating project via Edge Function:', authData.user.id);
+
     // Update profile
-    await supabase.from('profiles').update({
-      first_name: firstName,
-      last_name: lastName,
-      phone: phone
-    }).eq('id', authData.user.id);
+    try {
+      await supabase.from('profiles').update({
+        first_name: firstName,
+        last_name: lastName,
+        phone: phone
+      }).eq('id', authData.user.id);
+    } catch (error) {
+      console.error('Profile update failed:', error);
+    }
 
-    // Note: user_roles is automatically created by handle_new_user() trigger
+    // Prepare project data for Edge Function
+    const projectPayload = {
+      title: projectData.title,
+      description: projectData.description,
+      gewerk_id: projectData.gewerk_id,
+      subcategory_id: projectData.subcategory_id,
+      postal_code: projectData.postal_code,
+      city: projectData.city,
+      address: projectData.address,
+      urgency: projectData.urgency,
+      preferred_start_date: projectData.preferred_start_date,
+      images: projectData.images || [],
+      funnel_answers: projectData.tradeSpecificAnswers || {},
+      terms_accepted: true,
+    };
+
+    console.log('Calling create-project-after-signup Edge Function');
+
+    // Call Edge Function to create project (bypasses RLS since user isn't logged in yet)
+    const { data: projectResult, error: projectError } = await supabase.functions.invoke(
+      'create-project-after-signup',
+      {
+        body: {
+          userId: authData.user.id,
+          projectData: projectPayload,
+        },
+      }
+    );
+
+    if (projectError || !projectResult?.success) {
+      console.error('Project creation error:', projectError);
+      toast({
+        title: "Projekt konnte nicht erstellt werden",
+        description: "Bitte versuchen Sie es später erneut",
+        variant: "destructive",
+      });
+      return { success: false };
+    }
+
+    console.log('Project created successfully:', projectResult.projectId);
+
+    // Update state
+    setUserId(authData.user.id);
+    setCreatedProjectId(projectResult.projectId);
+    setShowAuthDialog(false);
     
-    // Force refresh authStore to load the new role
-    const { refreshUser } = (await import('@/stores/authStore')).useAuthStore.getState();
-    await refreshUser();
+    // Show success dialog
+    setShowSuccessDialog(true);
+    
+    toast({
+      title: "Registrierung und Projekt erfolgreich erstellt!",
+      description: "Bitte bestätigen Sie Ihre E-Mail-Adresse, um alle Funktionen nutzen zu können.",
+    });
 
-    await handleAuthSuccess(authData.user);
     return { success: true, user: authData.user };
   };
 
