@@ -14,21 +14,6 @@ export const Navbar = () => {
   const [unreadCount, setUnreadCount] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  // Loading guard AFTER all hooks
-  if (!initialized) {
-    return (
-      <nav className="border-b bg-card">
-        <div className="container mx-auto px-4 py-4">
-          <div className="flex items-center justify-between">
-            <Link to="/">
-              <img src={logo} alt="BauConnect" className="h-16 md:h-20" />
-            </Link>
-            <div className="animate-pulse bg-gray-200 h-8 w-24 rounded"></div>
-          </div>
-        </div>
-      </nav>
-    );
-  }
 
   useEffect(() => {
     if (user?.id) {
