@@ -49,6 +49,7 @@ export default function CustomerDashboard() {
   useEffect(() => {
     checkAuth();
     fetchProjects();
+    activateDraftProjects();
   }, []);
 
   const checkAuth = async () => {
@@ -66,6 +67,48 @@ export default function CustomerDashboard() {
     if (!authLoading && role && role !== 'customer') {
       navigate('/handwerker/dashboard');
       return;
+    }
+  };
+
+  const activateDraftProjects = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      // Find all draft projects for this user
+      const { data: draftProjects } = await supabase
+        .from('projects')
+        .select('id, title')
+        .eq('customer_id', session.user.id)
+        .eq('status', 'draft');
+
+      if (draftProjects && draftProjects.length > 0) {
+        console.log('Activating draft projects:', draftProjects);
+
+        // Activate all draft projects
+        for (const project of draftProjects) {
+          // Update status to open
+          await supabase
+            .from('projects')
+            .update({ status: 'open' })
+            .eq('id', project.id);
+
+          // Trigger contractor matching
+          await supabase.functions.invoke('match-contractors', {
+            body: { projectId: project.id }
+          });
+        }
+
+        toast({
+          title: "Projekt ist jetzt online!",
+          description: `${draftProjects.length} ${draftProjects.length === 1 ? 'Projekt wurde' : 'Projekte wurden'} veröffentlicht. Handwerker werden benachrichtigt.`,
+        });
+
+        // Refresh projects list after activation
+        fetchProjects();
+      }
+    } catch (error: any) {
+      console.error('Error activating draft projects:', error);
     }
   };
 

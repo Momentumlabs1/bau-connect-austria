@@ -58,7 +58,7 @@ serve(async (req) => {
         preferred_start_date: projectData.preferred_start_date,
         images: projectData.images || [],
         funnel_answers: projectData.funnel_answers || {},
-        status: 'open',
+        status: 'draft',  // Project stays as draft until email is confirmed
         visibility: 'public',
         terms_accepted: projectData.terms_accepted || false,
       })
@@ -73,31 +73,9 @@ serve(async (req) => {
       );
     }
 
-    console.log('Project created:', project.id);
+    console.log('Project created as draft:', project.id);
 
-    // Trigger contractor matching with proper authentication
-    try {
-      const matchResponse = await fetch(`${supabaseUrl}/functions/v1/match-contractors`, {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${supabaseServiceKey}`,
-          'apikey': supabaseServiceKey
-        },
-        body: JSON.stringify({ projectId: project.id })
-      });
-
-      if (!matchResponse.ok) {
-        const errorText = await matchResponse.text();
-        console.error('Matching error:', matchResponse.status, errorText);
-      } else {
-        const matchData = await matchResponse.json();
-        console.log('Contractor matching triggered:', matchData);
-      }
-    } catch (matchError) {
-      console.error('Failed to trigger matching:', matchError);
-      // Don't fail the whole request if matching fails
-    }
+    // Do NOT trigger contractor matching yet - wait until email is confirmed
 
     return new Response(
       JSON.stringify({ 
