@@ -434,18 +434,33 @@ export default function CreateProject() {
     setCreatedProjectId(projectResult.projectId);
     setShowAuthDialog(false);
     
-    // Don't show success dialog - project is draft and waiting for email confirmation
-    setShowSuccessDialog(false);
-    
     toast({
-      title: "Registrierung erfolgreich!",
-      description: "Bitte bestätigen Sie Ihre E-Mail-Adresse. Nach der Bestätigung wird Ihr Projekt online gestellt und Handwerker werden benachrichtigt.",
+      title: "🎉 Registrierung erfolgreich!",
+      description: "Ihr Projekt wurde erstellt und Handwerker werden benachrichtigt.",
     });
-    
-    // Redirect to login page with registration notice
-    setTimeout(() => {
-      navigate('/login?registered=true');
-    }, 2000);
+
+    // Wait a moment for matches to be created
+    await new Promise(resolve => setTimeout(resolve, 1500));
+
+    // Load MATCHED contractors from matches table
+    console.log('📋 Loading matched contractors from matches...');
+    const { data: matchesData } = await supabase
+      .from('matches')
+      .select(`
+        *,
+        contractor:contractors(*)
+      `)
+      .eq('project_id', projectResult.projectId)
+      .order('score', { ascending: false })
+      .limit(5);
+
+    let matchedContractorsList = matchesData
+      ?.map(match => match.contractor)
+      .filter(Boolean) || [];
+
+    console.log(`✅ Loaded ${matchedContractorsList.length} matched contractors`);
+    setMatchedContractors(matchedContractorsList);
+    setShowSuccessDialog(true);
 
     return { success: true, user: authData.user };
   };
