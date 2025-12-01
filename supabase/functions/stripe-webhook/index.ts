@@ -86,6 +86,53 @@ serve(async (req) => {
       }
     }
 
+    // Handle checkout.session.completed (Wallet Recharge)
+    if (event.type === 'checkout.session.completed') {
+      const session = event.data.object as Stripe.Checkout.Session;
+      
+      // Nur WALLET_RECHARGE verarbeiten
+      if (session.metadata?.type === 'WALLET_RECHARGE') {
+        const userId = session.metadata.userId;
+        const amount = parseFloat(session.metadata.amount);
+        
+        console.log(`💰 Processing wallet recharge for user ${userId}, amount: €${amount}`);
+        
+        // Aktuelle Balance holen
+        const { data: contractor } = await supabaseAdmin
+          .from('contractors')
+          .select('wallet_balance')
+          .eq('id', userId)
+          .single();
+        
+        if (contractor) {
+          const newBalance = Number(contractor.wallet_balance) + amount;
+          
+          // Wallet-Balance aktualisieren
+          await supabaseAdmin
+            .from('contractors')
+            .update({ wallet_balance: newBalance })
+            .eq('id', userId);
+          
+          // Transaktion loggen
+          await supabaseAdmin
+            .from('transactions')
+            .insert({
+              handwerker_id: userId,
+              type: 'WALLET_RECHARGE',
+              amount: amount,
+              balance_after: newBalance,
+              description: `Wallet-Aufladung via Stripe Checkout`,
+              metadata: { 
+                stripe_session_id: session.id,
+                payment_status: session.payment_status 
+              }
+            });
+          
+          console.log(`✅ Wallet recharged. New balance: €${newBalance}`);
+        }
+      }
+    }
+
     return new Response(
       JSON.stringify({ received: true }),
       {

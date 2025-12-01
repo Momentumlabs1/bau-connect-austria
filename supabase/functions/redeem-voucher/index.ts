@@ -40,7 +40,7 @@ Deno.serve(async (req) => {
       );
     }
 
-    const { code } = await req.json();
+    const { code, amount } = await req.json();
 
     if (!code || typeof code !== 'string') {
       return new Response(
@@ -100,12 +100,18 @@ Deno.serve(async (req) => {
 
     // Calculate discount amount
     let discountAmount = 0;
+    let discountPercentage = 0;
+    
     if (promoCode.discount_type === 'fixed') {
       discountAmount = promoCode.discount_value;
     } else if (promoCode.discount_type === 'percentage') {
-      // For percentage, we just add a fixed amount for now
-      // In a real system, you might apply percentage to next purchase
-      discountAmount = 50; // Default bonus for percentage codes
+      discountPercentage = promoCode.discount_value;
+      // Bei 100% Rabatt: gewünschten Betrag gutschreiben
+      if (discountPercentage === 100 && amount) {
+        discountAmount = amount;
+      } else {
+        discountAmount = 50; // Default bonus für Teil-Rabatte
+      }
     }
 
     const newBalance = Number(contractor.wallet_balance) + discountAmount;
@@ -155,6 +161,7 @@ Deno.serve(async (req) => {
       JSON.stringify({
         success: true,
         amount: discountAmount,
+        discountPercentage: discountPercentage,
         newBalance: newBalance,
         message: `Gutschein erfolgreich eingelöst! €${discountAmount} wurden deinem Guthaben hinzugefügt.`
       }),
