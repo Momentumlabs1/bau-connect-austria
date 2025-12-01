@@ -30,7 +30,7 @@ import { useAuth } from "@/stores/authStore";
 
 const Index = () => {
   const navigate = useNavigate();
-  const { user, role, signOut } = useAuth();
+  const { user, role, signOut, initialized } = useAuth();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
@@ -43,6 +43,22 @@ const Index = () => {
     totalContractors: 0,
     averageRating: 0,
   });
+
+  // Loading guard AFTER all hooks
+  if (!initialized) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-white">
+        <div className="text-center space-y-4">
+          <img src={logoNew} alt="BauConnect24 Logo" className="h-24 w-auto mx-auto animate-pulse" />
+          <div className="flex items-center justify-center gap-2">
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
+            <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   const handleLogout = async () => {
     await signOut();
