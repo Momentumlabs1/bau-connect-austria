@@ -23,8 +23,13 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   initialized: false,
 
   initialize: async () => {
+    // Prevent multiple initializations
+    if (get().initialized) {
+      console.log('Auth already initialized, skipping');
+      return;
+    }
+
     try {
-      // Helper function to fetch user role
       const fetchUserRole = async (userId: string) => {
         const { data: roleData } = await supabase
           .from('user_roles')
@@ -37,10 +42,35 @@ export const useAuthStore = create<AuthState>((set, get) => ({
         });
       };
 
-      // Get initial session
+      // 1. FIRST: Set up auth state listener
+      const { data: { subscription } } = supabase.auth.onAuthStateChange(
+        (event, session) => {
+          console.log('Auth event:', event, session?.user?.email);
+          
+          // Synchronous state updates only
+          set({
+            user: session?.user ?? null,
+            session: session,
+            loading: false,
+            initialized: true
+          });
+          
+          // Defer database calls
+          if (session?.user) {
+            setTimeout(() => {
+              fetchUserRole(session.user.id);
+            }, 0);
+          } else {
+            set({ role: null });
+          }
+        }
+      );
+
+      // 2. THEN: Check for existing session
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session?.user) {
+        console.log('Existing session found:', session.user.email);
         set({
           user: session.user,
           session: session,
@@ -48,31 +78,21 @@ export const useAuthStore = create<AuthState>((set, get) => ({
           initialized: true
         });
         
-        // Fetch role separately
+        // Fetch role
         await fetchUserRole(session.user.id);
       } else {
-        set({ user: null, session: null, role: null, loading: false, initialized: true });
+        console.log('No existing session');
+        set({ 
+          user: null, 
+          session: null, 
+          role: null, 
+          loading: false, 
+          initialized: true 
+        });
       }
 
-      // Listen for auth changes - ONLY synchronous updates in callback
-      supabase.auth.onAuthStateChange((event, session) => {
-        // Only synchronous state updates here
-        set({
-          user: session?.user ?? null,
-          session: session,
-          loading: false
-        });
-        
-        // Defer Supabase calls with setTimeout to prevent deadlock
-        if (session?.user) {
-          setTimeout(() => {
-            fetchUserRole(session.user.id);
-          }, 0);
-        } else {
-          set({ role: null });
-        }
-      });
     } catch (error) {
+      console.error('Auth initialization error:', error);
       set({ loading: false, initialized: true });
     }
   },
