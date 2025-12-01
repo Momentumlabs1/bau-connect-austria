@@ -39,7 +39,9 @@ export default function ContractorDashboard() {
   
   // Wallet dialog
   const [showWalletDialog, setShowWalletDialog] = useState(false);
-  const [rechargeAmount, setRechargeAmount] = useState<number | string>(100);
+  const [rechargeAmount, setRechargeAmount] = useState<number | string>(50);
+  const [voucherCode, setVoucherCode] = useState("");
+  const [applyingVoucher, setApplyingVoucher] = useState(false);
 
   useEffect(() => {
     checkAuth();
@@ -213,30 +215,67 @@ export default function ContractorDashboard() {
   const handleRecharge = async () => {
     const amount = typeof rechargeAmount === 'string' ? parseFloat(rechargeAmount) : rechargeAmount;
     
-    if (!amount || amount < 10) {
+    if (!amount || amount < 50) {
       toast({
         title: "Ungültiger Betrag",
-        description: "Mindestbetrag: €10",
+        description: "Mindestbetrag: €50",
         variant: "destructive"
       });
       return;
     }
 
-    toast({
-      title: "Test-Modus",
-      description: `€${amount} wurden Ihrem Guthaben hinzugefügt (Demo)`,
-    });
+    // Wenn Gutschein-Code eingegeben wurde
+    if (voucherCode.trim()) {
+      setApplyingVoucher(true);
+      try {
+        const { data, error } = await supabase.functions.invoke('redeem-voucher', {
+          body: { code: voucherCode, amount }
+        });
+        
+        if (error) throw error;
+        
+        if (data.success && data.discountPercentage === 100) {
+          // 100% Rabatt - kostenlos!
+          toast({
+            title: "Gutschein eingelöst! 🎉",
+            description: `€${amount} wurden Ihrem Guthaben hinzugefügt (kostenlos)`,
+          });
+          setWalletBalance(data.newBalance);
+          setShowWalletDialog(false);
+          setVoucherCode("");
+          setRechargeAmount(50);
+          await loadDashboardData(); // Reload to show updated balance
+          return;
+        }
+      } catch (err: any) {
+        toast({
+          title: "Gutschein ungültig",
+          description: err.message || "Gutschein konnte nicht eingelöst werden",
+          variant: "destructive"
+        });
+      } finally {
+        setApplyingVoucher(false);
+      }
+      return;
+    }
 
-    const newBalance = walletBalance + amount;
-    setWalletBalance(newBalance);
-    
-    await supabase
-      .from("contractors")
-      .update({ wallet_balance: newBalance })
-      .eq("id", userId);
+    // Ohne Gutschein: Stripe Checkout
+    try {
+      const { data, error } = await supabase.functions.invoke('create-wallet-checkout', {
+        body: { amount }
+      });
 
-    setShowWalletDialog(false);
-    setRechargeAmount(100);
+      if (error) throw error;
+      if (data?.url) {
+        window.location.href = data.url;
+      }
+    } catch (err: any) {
+      toast({
+        title: "Fehler",
+        description: err.message || "Zahlung konnte nicht gestartet werden",
+        variant: "destructive"
+      });
+    }
   };
 
   if (loading) {
@@ -400,33 +439,56 @@ export default function ContractorDashboard() {
           <DialogHeader>
             <DialogTitle>Guthaben aufladen</DialogTitle>
             <DialogDescription>
-              Laden Sie Ihr Wallet auf, um Leads kaufen zu können
+              Mindesteinzahlung: €50
             </DialogDescription>
           </DialogHeader>
           
           <div className="space-y-4">
             <div className="grid grid-cols-3 gap-2">
-              <Button variant="outline" onClick={() => setRechargeAmount(100)}>
+              <Button 
+                variant={rechargeAmount === 50 ? "default" : "outline"} 
+                onClick={() => setRechargeAmount(50)}
+              >
+                €50
+              </Button>
+              <Button 
+                variant={rechargeAmount === 100 ? "default" : "outline"} 
+                onClick={() => setRechargeAmount(100)}
+              >
                 €100
               </Button>
-              <Button variant="outline" onClick={() => setRechargeAmount(250)}>
+              <Button 
+                variant={rechargeAmount === 250 ? "default" : "outline"} 
+                onClick={() => setRechargeAmount(250)}
+              >
                 €250
-              </Button>
-              <Button variant="outline" onClick={() => setRechargeAmount(500)}>
-                €500
               </Button>
             </div>
             
             <div>
-              <Label htmlFor="custom-amount">Oder eigener Betrag</Label>
+              <Label htmlFor="custom-amount">Oder eigener Betrag (min. €50)</Label>
               <Input
                 id="custom-amount"
                 type="number"
-                min="10"
+                min="50"
                 value={rechargeAmount}
                 onChange={(e) => setRechargeAmount(e.target.value)}
                 placeholder="Betrag eingeben"
               />
+            </div>
+
+            <div>
+              <Label htmlFor="voucher-code">Gutschein-Code (optional)</Label>
+              <Input
+                id="voucher-code"
+                value={voucherCode}
+                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
+                placeholder="z.B. BAUCONNECT2025"
+                className="font-mono"
+              />
+              <p className="text-xs text-muted-foreground mt-1">
+                Mit gültigem 100%-Code ist die Aufladung kostenlos!
+              </p>
             </div>
           </div>
 
@@ -434,8 +496,17 @@ export default function ContractorDashboard() {
             <Button variant="outline" onClick={() => setShowWalletDialog(false)}>
               Abbrechen
             </Button>
-            <Button onClick={handleRecharge}>
-              Aufladen (Test-Modus)
+            <Button onClick={handleRecharge} disabled={applyingVoucher}>
+              {applyingVoucher ? (
+                <>
+                  <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+                  Prüfe...
+                </>
+              ) : voucherCode ? (
+                "Gutschein einlösen"
+              ) : (
+                "Jetzt bezahlen"
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>

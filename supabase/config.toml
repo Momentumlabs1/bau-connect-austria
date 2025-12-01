@@ -26,3 +26,6 @@ verify_jwt = true
 
 [functions.redeem-voucher]
 verify_jwt = true
+
+[functions.create-wallet-checkout]
+verify_jwt = true
