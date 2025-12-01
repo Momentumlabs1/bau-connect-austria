@@ -7,6 +7,7 @@ import { ErrorBoundary } from "@/components/ErrorBoundary";
 import { NotificationToast } from "@/components/notifications/NotificationToast";
 import { useEffect } from "react";
 import { useAuthStore } from "@/stores/authStore";
+import { useAuth } from "@/stores/authStore";
 import Index from "./pages/Index";
 import Register from "./pages/Register";
 import Login from "./pages/Login";
@@ -40,23 +41,17 @@ import { CookieBanner } from "@/components/CookieBanner";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const initialize = useAuthStore((state) => state.initialize);
-
-  useEffect(() => {
-    initialize();
-  }, [initialize]);
-
+const AppContent = () => {
+  const { user, initialized } = useAuth();
+  
   return (
-    <ErrorBoundary>
-      <QueryClientProvider client={queryClient}>
-        <TooltipProvider>
-          <Toaster />
-          <Sonner />
-          <NotificationToast />
-          <CookieBanner />
-          <BrowserRouter>
-            <Routes>
+    <>
+      <Toaster />
+      <Sonner />
+      {initialized && user && <NotificationToast />}
+      <CookieBanner />
+      <BrowserRouter>
+        <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
@@ -87,11 +82,27 @@ const App = () => {
           <Route path="/widerruf" element={<Widerruf />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
-          </Routes>
-        </BrowserRouter>
-      </TooltipProvider>
-    </QueryClientProvider>
-  </ErrorBoundary>
+        </Routes>
+      </BrowserRouter>
+    </>
+  );
+};
+
+const App = () => {
+  const initialize = useAuthStore((state) => state.initialize);
+
+  useEffect(() => {
+    initialize();
+  }, [initialize]);
+
+  return (
+    <ErrorBoundary>
+      <QueryClientProvider client={queryClient}>
+        <TooltipProvider>
+          <AppContent />
+        </TooltipProvider>
+      </QueryClientProvider>
+    </ErrorBoundary>
   );
 };
 
