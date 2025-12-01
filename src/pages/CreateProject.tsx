@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -128,6 +128,21 @@ export default function CreateProject() {
   const { toast } = useToast();
   const location = useLocation();
 
+  // Memoized update functions to prevent infinite loops
+  const updateProjectData = useCallback((key: string, value: any) => {
+    setProjectData(prev => ({ ...prev, [key]: value }));
+  }, []);
+
+  const updateTradeSpecificAnswer = useCallback((questionId: string, value: any) => {
+    setProjectData(prev => ({
+      ...prev,
+      tradeSpecificAnswers: {
+        ...prev.tradeSpecificAnswers,
+        [questionId]: value
+      }
+    }));
+  }, []);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) setUserId(data.user.id);
@@ -160,19 +175,13 @@ export default function CreateProject() {
       setSelectedMainCategory(firstCategory.id);
       updateProjectData("gewerk_id", firstCategory.id);
     }
-  }, [mainCategories]);
+  }, [mainCategories, selectedMainCategory, updateProjectData]);
 
   useEffect(() => {
     if (selectedMainCategory) {
       loadSubCategories(selectedMainCategory);
     }
   }, [selectedMainCategory]);
-
-  useEffect(() => {
-    if (projectData.subcategory_id) {
-      loadCategoryQuestions(projectData.subcategory_id);
-    }
-  }, [projectData.subcategory_id]);
 
   useEffect(() => {
     if (projectData.subcategory_id) {
@@ -429,7 +438,7 @@ export default function CreateProject() {
 
     console.log('Project created successfully:', projectResult.projectId);
 
-    // Update state
+    // Update state - check if component is still mounted
     setUserId(authData.user.id);
     setCreatedProjectId(projectResult.projectId);
     setShowAuthDialog(false);
@@ -444,23 +453,27 @@ export default function CreateProject() {
 
     // Load MATCHED contractors from matches table
     console.log('📋 Loading matched contractors from matches...');
-    const { data: matchesData } = await supabase
-      .from('matches')
-      .select(`
-        *,
-        contractor:contractors(*)
-      `)
-      .eq('project_id', projectResult.projectId)
-      .order('score', { ascending: false })
-      .limit(5);
+    try {
+      const { data: matchesData } = await supabase
+        .from('matches')
+        .select(`
+          *,
+          contractor:contractors(*)
+        `)
+        .eq('project_id', projectResult.projectId)
+        .order('score', { ascending: false })
+        .limit(5);
 
-    let matchedContractorsList = matchesData
-      ?.map(match => match.contractor)
-      .filter(Boolean) || [];
+      const matchedContractorsList = matchesData
+        ?.map(match => match.contractor)
+        .filter(Boolean) || [];
 
-    console.log(`✅ Loaded ${matchedContractorsList.length} matched contractors`);
-    setMatchedContractors(matchedContractorsList);
-    setShowSuccessDialog(true);
+      console.log(`✅ Loaded ${matchedContractorsList.length} matched contractors`);
+      setMatchedContractors(matchedContractorsList);
+      setShowSuccessDialog(true);
+    } catch (error) {
+      console.error('Error loading contractors:', error);
+    }
 
     return { success: true, user: authData.user };
   };
@@ -641,20 +654,6 @@ export default function CreateProject() {
     } finally {
       setLoading(false);
     }
-  };
-
-  const updateProjectData = (key: string, value: any) => {
-    setProjectData(prev => ({ ...prev, [key]: value }));
-  };
-
-  const updateTradeSpecificAnswer = (questionId: string, value: any) => {
-    setProjectData(prev => ({
-      ...prev,
-      tradeSpecificAnswers: {
-        ...prev.tradeSpecificAnswers,
-        [questionId]: value
-      }
-    }));
   };
 
   const startConversation = async (contractorId: string) => {
