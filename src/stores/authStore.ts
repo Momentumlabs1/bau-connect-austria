@@ -119,28 +119,22 @@ export const useAuthStore = create<AuthState>((set, get) => ({
   }
 }));
 
-// Convenience hook with stable selectors to prevent unnecessary re-renders
+// Convenience hook with single store call to prevent hook count changes
 export const useAuth = () => {
-  const user = useAuthStore((state) => state.user);
-  const session = useAuthStore((state) => state.session);
-  const role = useAuthStore((state) => state.role);
-  const loading = useAuthStore((state) => state.loading);
-  const initialized = useAuthStore((state) => state.initialized);
-  const signOut = useAuthStore((state) => state.signOut);
-  const refreshUser = useAuthStore((state) => state.refreshUser);
+  const store = useAuthStore();
   
   return {
-    user,
-    session,
-    role,
-    loading,
-    initialized,
-    isAuthenticated: !!user,
-    isCustomer: role === 'customer',
-    isContractor: role === 'contractor',
-    isAdmin: role === 'admin',
-    roleLoaded: role !== null,
-    signOut,
-    refreshUser
+    user: store.user,
+    session: store.session,
+    role: store.role,
+    loading: store.loading,
+    initialized: store.initialized,
+    isAuthenticated: !!store.user,
+    isCustomer: store.role === 'customer',
+    isContractor: store.role === 'contractor',
+    isAdmin: store.role === 'admin',
+    roleLoaded: store.role !== null,
+    signOut: store.signOut,
+    refreshUser: store.refreshUser
   };
 };
