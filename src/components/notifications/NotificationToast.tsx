@@ -69,9 +69,11 @@ export const NotificationToast = () => {
       )
       .subscribe();
 
-    // Subscribe to new matches (for contractors)
+    // Subscribe to new matches (for contractors) - always initialize but conditionally subscribe
+    let matchesChannel: ReturnType<typeof supabase.channel> | null = null;
+    
     if (isContractor) {
-      const matchesChannel = supabase
+      matchesChannel = supabase
         .channel('matches')
         .on(
           'postgres_changes',
@@ -91,17 +93,15 @@ export const NotificationToast = () => {
           }
         )
         .subscribe();
-
-      return () => {
-        supabase.removeChannel(channel);
-        supabase.removeChannel(messagesChannel);
-        supabase.removeChannel(matchesChannel);
-      };
     }
 
+    // Always use the same cleanup pattern regardless of isContractor
     return () => {
       supabase.removeChannel(channel);
       supabase.removeChannel(messagesChannel);
+      if (matchesChannel) {
+        supabase.removeChannel(matchesChannel);
+      }
     };
   }, [user, isContractor]);
 
