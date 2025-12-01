@@ -244,8 +244,14 @@ export default function ContractorDashboard() {
           setShowWalletDialog(false);
           setVoucherCode("");
           setRechargeAmount(50);
-          await loadDashboardData(); // Reload to show updated balance
+          await loadDashboardData();
           return;
+        } else if (data.success && data.discountPercentage < 100) {
+          // Teil-Rabatt: Weiter zu Stripe mit Gutschein-Code
+          setApplyingVoucher(false);
+          // Fahre fort zu Stripe Checkout mit voucherCode
+        } else {
+          throw new Error("Ungültiger Gutschein");
         }
       } catch (err: any) {
         toast({
@@ -253,16 +259,18 @@ export default function ContractorDashboard() {
           description: err.message || "Gutschein konnte nicht eingelöst werden",
           variant: "destructive"
         });
-      } finally {
         setApplyingVoucher(false);
+        return;
       }
-      return;
     }
 
-    // Ohne Gutschein: Stripe Checkout
+    // Stripe Checkout (mit oder ohne Gutschein für Teil-Rabatt)
     try {
       const { data, error } = await supabase.functions.invoke('create-wallet-checkout', {
-        body: { amount }
+        body: { 
+          amount,
+          voucherCode: voucherCode.trim() || undefined
+        }
       });
 
       if (error) throw error;

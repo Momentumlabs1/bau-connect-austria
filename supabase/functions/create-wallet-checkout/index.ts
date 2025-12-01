@@ -29,14 +29,54 @@ serve(async (req) => {
     const user = data.user;
     if (!user?.email) throw new Error("Nicht authentifiziert");
 
-    const { amount } = await req.json();
+    const { amount, voucherCode } = await req.json();
 
     // Validierung: Mindestbetrag €50
     if (!amount || amount < 50) {
       throw new Error("Mindestbetrag: €50");
     }
 
-    console.log(`💳 Creating wallet checkout for user ${user.id}, amount: €${amount}`);
+    let finalAmount = amount;
+    let discountApplied = 0;
+    let voucherInfo = null;
+
+    // Gutschein-Code prüfen (falls vorhanden)
+    if (voucherCode) {
+      const { data: promo } = await supabaseClient
+        .from('promo_codes')
+        .select('*')
+        .eq('code', voucherCode.toUpperCase())
+        .eq('active', true)
+        .single();
+
+      if (promo) {
+        // Gültigkeit prüfen
+        const now = new Date();
+        const validFrom = promo.valid_from ? new Date(promo.valid_from) : null;
+        const validUntil = promo.valid_until ? new Date(promo.valid_until) : null;
+        
+        const isValid = 
+          (!validFrom || now >= validFrom) &&
+          (!validUntil || now <= validUntil) &&
+          (!promo.max_uses || promo.used_count < promo.max_uses);
+
+        if (isValid && promo.discount_type === 'percentage') {
+          discountApplied = (amount * promo.discount_value) / 100;
+          finalAmount = amount - discountApplied;
+          voucherInfo = {
+            code: promo.code,
+            discount_percentage: promo.discount_value,
+            original_amount: amount,
+            discount_amount: discountApplied,
+            final_amount: finalAmount
+          };
+          
+          console.log(`💎 Voucher applied: ${promo.code} (${promo.discount_value}% off) - Final: €${finalAmount}`);
+        }
+      }
+    }
+
+    console.log(`💳 Creating wallet checkout for user ${user.id}, amount: €${amount}, final: €${finalAmount}`);
 
     const stripe = new Stripe(Deno.env.get("STRIPE_SECRET_KEY") || "", {
       apiVersion: "2025-08-27.basil",
@@ -56,10 +96,14 @@ serve(async (req) => {
       line_items: [{
         price_data: {
           currency: 'eur',
-          unit_amount: amount * 100, // Cents
+          unit_amount: Math.round(finalAmount * 100), // Cents - reduzierter Betrag
           product_data: { 
-            name: `BauConnect Wallet-Aufladung`,
-            description: `€${amount} Guthaben`
+            name: voucherInfo 
+              ? `BauConnect Wallet-Aufladung (${voucherInfo.discount_percentage}% Rabatt)`
+              : `BauConnect Wallet-Aufladung`,
+            description: voucherInfo
+              ? `€${amount} Guthaben - Gutschein: ${voucherInfo.code} (${voucherInfo.discount_percentage}% Rabatt)`
+              : `€${amount} Guthaben`
           }
         },
         quantity: 1,
@@ -70,7 +114,9 @@ serve(async (req) => {
       metadata: {
         type: 'WALLET_RECHARGE',
         userId: user.id,
-        amount: amount.toString()
+        amount: amount.toString(), // Voller Betrag für Wallet (nicht reduziert!)
+        voucherCode: voucherCode || '',
+        discountApplied: discountApplied.toString()
       }
     });
 

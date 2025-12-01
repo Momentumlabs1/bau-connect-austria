@@ -93,9 +93,11 @@ serve(async (req) => {
       // Nur WALLET_RECHARGE verarbeiten
       if (session.metadata?.type === 'WALLET_RECHARGE') {
         const userId = session.metadata.userId;
-        const amount = parseFloat(session.metadata.amount);
+        const amount = parseFloat(session.metadata.amount); // Voller Betrag aus Metadata!
+        const voucherCode = session.metadata.voucherCode || '';
+        const discountApplied = parseFloat(session.metadata.discountApplied || '0');
         
-        console.log(`💰 Processing wallet recharge for user ${userId}, amount: €${amount}`);
+        console.log(`💰 Processing wallet recharge for user ${userId}, full amount: €${amount}, discount: €${discountApplied}`);
         
         // Aktuelle Balance holen
         const { data: contractor } = await supabaseAdmin
@@ -105,7 +107,7 @@ serve(async (req) => {
           .single();
         
         if (contractor) {
-          const newBalance = Number(contractor.wallet_balance) + amount;
+          const newBalance = Number(contractor.wallet_balance) + amount; // Voller Betrag ins Wallet!
           
           // Wallet-Balance aktualisieren
           await supabaseAdmin
@@ -114,6 +116,10 @@ serve(async (req) => {
             .eq('id', userId);
           
           // Transaktion loggen
+          const description = voucherCode 
+            ? `Wallet-Aufladung via Stripe (Code: ${voucherCode}, Rabatt: €${discountApplied.toFixed(2)})`
+            : `Wallet-Aufladung via Stripe Checkout`;
+            
           await supabaseAdmin
             .from('transactions')
             .insert({
@@ -121,14 +127,32 @@ serve(async (req) => {
               type: 'WALLET_RECHARGE',
               amount: amount,
               balance_after: newBalance,
-              description: `Wallet-Aufladung via Stripe Checkout`,
+              description: description,
               metadata: { 
                 stripe_session_id: session.id,
-                payment_status: session.payment_status 
+                payment_status: session.payment_status,
+                voucher_code: voucherCode,
+                discount_applied: discountApplied
               }
             });
           
-          console.log(`✅ Wallet recharged. New balance: €${newBalance}`);
+          // Gutschein-Verwendung erhöhen (falls verwendet)
+          if (voucherCode) {
+            const { data: promo } = await supabaseAdmin
+              .from('promo_codes')
+              .select('used_count')
+              .eq('code', voucherCode)
+              .single();
+            
+            if (promo) {
+              await supabaseAdmin
+                .from('promo_codes')
+                .update({ used_count: promo.used_count + 1 })
+                .eq('code', voucherCode);
+            }
+          }
+          
+          console.log(`✅ Wallet recharged. New balance: €${newBalance} (paid: €${(amount - discountApplied).toFixed(2)})`);
         }
       }
     }
