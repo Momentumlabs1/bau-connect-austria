@@ -36,6 +36,19 @@ const iconMap: Record<string, any> = {
   'Hammer': Hammer
 };
 
+// Calculate urgency helper (moved outside component to prevent re-renders)
+const calculateUrgency = (startDate?: string): 'high' | 'medium' | 'low' | '' => {
+  if (!startDate) return '';
+  
+  const today = new Date();
+  const start = new Date(startDate);
+  const diffDays = differenceInDays(start, today);
+  
+  if (diffDays <= 7) return 'high';
+  if (diffDays <= 30) return 'medium';
+  return 'low';
+};
+
 const steps = [
   { id: 0, label: "Kategorie" },
   { id: 1, label: "Details" },

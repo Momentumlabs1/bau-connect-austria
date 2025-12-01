@@ -70,7 +70,7 @@ const Index = () => {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Intersection Observer für Timeline
+  // Intersection Observer für Timeline - memoized to prevent re-renders
   useEffect(() => {
     const observerOptions = {
       threshold: 0.2,
@@ -78,20 +78,38 @@ const Index = () => {
     };
 
     const observerCallback = (entries: IntersectionObserverEntry[]) => {
+      const updates: { add: number[], remove: number[] } = { add: [], remove: [] };
+      
       entries.forEach((entry) => {
         const index = parseInt(entry.target.getAttribute("data-index") || "0");
-
+        
         if (entry.isIntersecting) {
-          setVisibleItems((prev) => {
-            if (!prev.includes(index)) {
-              return [...prev, index].sort((a, b) => a - b);
-            }
-            return prev;
-          });
+          updates.add.push(index);
         } else {
-          setVisibleItems((prev) => prev.filter((i) => i !== index));
+          updates.remove.push(index);
         }
       });
+
+      // Batch state updates
+      if (updates.add.length > 0 || updates.remove.length > 0) {
+        setVisibleItems((prev) => {
+          let next = [...prev];
+          
+          // Remove items
+          if (updates.remove.length > 0) {
+            next = next.filter(i => !updates.remove.includes(i));
+          }
+          
+          // Add new items
+          updates.add.forEach(index => {
+            if (!next.includes(index)) {
+              next.push(index);
+            }
+          });
+          
+          return next.sort((a, b) => a - b);
+        });
+      }
     };
 
     const observer = new IntersectionObserver(observerCallback, observerOptions);
