@@ -23,12 +23,15 @@ type LoginForm = z.infer<typeof loginSchema>;
 
 export default function Login() {
   const [loading, setLoading] = useState(false);
+  const [emailNotConfirmed, setEmailNotConfirmed] = useState(false);
+  const [emailForResend, setEmailForResend] = useState("");
+  const [resending, setResending] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
   const [searchParams] = useSearchParams();
   const justRegistered = searchParams.get("registered") === "true";
   
-  const { register, handleSubmit, formState: { errors } } = useForm<LoginForm>({
+  const { register, handleSubmit, formState: { errors }, watch } = useForm<LoginForm>({
     resolver: zodResolver(loginSchema),
   });
 
@@ -68,15 +71,56 @@ export default function Login() {
         }
       }, 500);
     } catch (error: any) {
+      // Check for email not confirmed error
+      if (error.message.includes('Email not confirmed') || error.message.includes('email_not_confirmed')) {
+        setEmailNotConfirmed(true);
+        setEmailForResend(data.email);
+        toast({
+          title: "E-Mail nicht bestätigt",
+          description: "Bitte bestätigen Sie zuerst Ihre E-Mail-Adresse.",
+          variant: "destructive",
+        });
+      } else {
+        toast({
+          title: "Anmeldefehler",
+          description: error.message === "Invalid login credentials"
+            ? "E-Mail oder Passwort ist falsch"
+            : error.message,
+          variant: "destructive",
+        });
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleResendConfirmation = async () => {
+    if (!emailForResend) return;
+    
+    setResending(true);
+    try {
+      const { error } = await supabase.auth.resend({
+        type: 'signup',
+        email: emailForResend,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`
+        }
+      });
+      
+      if (error) throw error;
+      
       toast({
-        title: "Anmeldefehler",
-        description: error.message === "Invalid login credentials"
-          ? "E-Mail oder Passwort ist falsch"
-          : error.message,
+        title: "Bestätigungsmail gesendet!",
+        description: "Bitte überprüfen Sie Ihren Posteingang.",
+      });
+    } catch (error: any) {
+      toast({
+        title: "Fehler",
+        description: error.message,
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setResending(false);
     }
   };
 
@@ -132,6 +176,18 @@ export default function Login() {
                 <Button type="submit" disabled={loading} className="w-full">
                   {loading ? "Wird angemeldet..." : "Anmelden"}
                 </Button>
+
+                {emailNotConfirmed && (
+                  <Button 
+                    type="button"
+                    variant="outline"
+                    onClick={handleResendConfirmation}
+                    disabled={resending}
+                    className="w-full"
+                  >
+                    {resending ? "Wird gesendet..." : "Bestätigungsmail erneut senden"}
+                  </Button>
+                )}
 
                 <div className="text-center text-sm text-muted-foreground">
                   <a href="#" className="hover:text-primary">

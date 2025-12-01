@@ -434,13 +434,18 @@ export default function CreateProject() {
     setCreatedProjectId(projectResult.projectId);
     setShowAuthDialog(false);
     
-    // Show success dialog
-    setShowSuccessDialog(true);
+    // Don't show success dialog - project is draft and waiting for email confirmation
+    setShowSuccessDialog(false);
     
     toast({
-      title: "Registrierung und Projekt erfolgreich erstellt!",
-      description: "Bitte bestätigen Sie Ihre E-Mail-Adresse, um alle Funktionen nutzen zu können.",
+      title: "Registrierung erfolgreich!",
+      description: "Bitte bestätigen Sie Ihre E-Mail-Adresse. Nach der Bestätigung wird Ihr Projekt online gestellt und Handwerker werden benachrichtigt.",
     });
+    
+    // Redirect to login page with registration notice
+    setTimeout(() => {
+      navigate('/login?registered=true');
+    }, 2000);
 
     return { success: true, user: authData.user };
   };
