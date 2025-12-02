@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from "react";
+import { useState, useEffect, useCallback, useMemo, useRef } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -183,15 +183,20 @@ export default function CreateProject() {
     }
   }, [selectedDate]);
 
+  const hasInitializedFromLocation = useRef(false);
+
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
       if (data.user) setUserId(data.user.id);
     });
     loadCategories();
     
-    // Check for pre-selected category from search
+    // Process pre-selected category from search only once
+    if (hasInitializedFromLocation.current) return;
+
     const state = location.state as any;
     if (state?.selectedGewerk && state?.selectedSubcategoryId) {
+      hasInitializedFromLocation.current = true;
       setProjectData(prev => ({
         ...prev,
         gewerk_id: state.selectedGewerk,
@@ -200,11 +205,12 @@ export default function CreateProject() {
       setSelectedMainCategory(state.selectedGewerk);
       setCurrentStep(1); // Skip to details step
     } else if (state?.selectedGewerk) {
+      hasInitializedFromLocation.current = true;
       setProjectData(prev => ({ ...prev, gewerk_id: state.selectedGewerk }));
       setSelectedMainCategory(state.selectedGewerk);
       setCurrentStep(0); // Show subcategory selection with tab pre-selected
     }
-  }, [location]);
+  }, [location.state]);
 
   // Auto-select first category when categories load (only if no category is pre-selected)
   useEffect(() => {
