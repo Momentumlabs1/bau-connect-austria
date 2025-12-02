@@ -62,6 +62,13 @@ const Index = () => {
       // Still show page even if image fails to load
       setHeroImageLoaded(true);
     };
+    
+    // Force loading screen to disappear after 1.5 seconds max
+    const timeout = setTimeout(() => {
+      setHeroImageLoaded(true);
+    }, 1500);
+    
+    return () => clearTimeout(timeout);
   }, []);
 
   useEffect(() => {
