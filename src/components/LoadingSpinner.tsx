@@ -24,33 +24,40 @@ export const LoadingSpinner = ({ size = 'md', className }: LoadingSpinnerProps) 
 
 export const LoadingScreen = ({ message }: { message?: string }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-white">
-      <div className="relative">
-        {/* Rotating gradient ring */}
-        <motion.div
-          className="absolute -inset-6 md:-inset-8"
-          animate={{ rotate: 360 }}
-          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
-        >
-          <div 
-            className="w-full h-full rounded-full"
-            style={{
-              background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.6), hsl(var(--primary))) border-box',
-              border: '3px solid transparent'
-            }}
-          />
-        </motion.div>
-        
-        {/* Logo - large and clear */}
+    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white">
+      {/* Animated gradient background */}
+      <motion.div
+        className="absolute inset-0"
+        animate={{
+          background: [
+            'radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)',
+            'radial-gradient(circle at 80% 50%, hsl(var(--primary) / 0.15) 0%, transparent 50%), radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)',
+            'radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)',
+          ],
+        }}
+        transition={{
+          duration: 4,
+          repeat: Infinity,
+          ease: "easeInOut"
+        }}
+      />
+
+      {/* Breathing logo */}
+      <motion.div className="relative z-10">
         <motion.img 
           src={logo} 
           alt="BauConnect24" 
-          className="h-40 md:h-48 w-auto relative z-10"
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ duration: 0.4 }}
+          className="h-32 md:h-40 w-auto"
+          animate={{
+            scale: [1, 1.08, 1],
+          }}
+          transition={{
+            duration: 2,
+            repeat: Infinity,
+            ease: "easeInOut"
+          }}
         />
-      </div>
+      </motion.div>
     </div>
   );
 };
