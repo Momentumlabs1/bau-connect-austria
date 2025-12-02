@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useMemo } from "react";
 import { useNavigate, useLocation } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -155,6 +155,33 @@ export default function CreateProject() {
       }
     }));
   }, []);
+
+  // Quick selection handler for timing step
+  const handleQuickSelect = useCallback((urgency: 'low' | 'medium' | 'high', weeks: number) => {
+    const date = new Date();
+    date.setDate(date.getDate() + weeks * 7);
+    setSelectedDate(date);
+    updateProjectData('urgency', urgency);
+    updateProjectData('preferred_start_date', date.toISOString());
+    setShowDatePicker(false);
+  }, [updateProjectData]);
+
+  // Urgency info derived from selected date
+  const urgencyInfo = useMemo(() => {
+    if (!selectedDate) {
+      return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
+    }
+
+    const daysUntil = differenceInDays(selectedDate, new Date());
+
+    if (daysUntil <= 14) {
+      return { urgency: 'high' as const, label: 'Dringend', color: 'bg-red-500', textColor: 'text-red-600' };
+    } else if (daysUntil <= 60) {
+      return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
+    } else {
+      return { urgency: 'low' as const, label: 'Flexibel', color: 'bg-green-500', textColor: 'text-green-600' };
+    }
+  }, [selectedDate]);
 
   useEffect(() => {
     supabase.auth.getUser().then(({ data }) => {
@@ -894,7 +921,7 @@ export default function CreateProject() {
 
                 {question.question_type === "radio" && question.options && (
                   <RadioGroup
-                    value={projectData.tradeSpecificAnswers[question.id] ?? ''}
+                    value={projectData.tradeSpecificAnswers[question.id] || ''}
                     onValueChange={(value) => updateTradeSpecificAnswer(question.id, value)}
                   >
                     <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -1057,31 +1084,6 @@ export default function CreateProject() {
 
       case 3:
         // Timing - Simplified with Quick Buttons + Optional Date Picker
-        const calculateUrgency = (date: Date | undefined) => {
-          if (!date) return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
-          
-          const daysUntil = differenceInDays(date, new Date());
-          
-          if (daysUntil <= 14) {
-            return { urgency: 'high' as const, label: 'Dringend', color: 'bg-red-500', textColor: 'text-red-600' };
-          } else if (daysUntil <= 60) {
-            return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
-          } else {
-            return { urgency: 'low' as const, label: 'Flexibel', color: 'bg-green-500', textColor: 'text-green-600' };
-          }
-        };
-
-        const urgencyInfo = calculateUrgency(selectedDate);
-
-        const handleQuickSelect = (urgency: 'low' | 'medium' | 'high', weeks: number) => {
-          const date = new Date();
-          date.setDate(date.getDate() + (weeks * 7));
-          setSelectedDate(date);
-          updateProjectData('urgency', urgency);
-          updateProjectData('preferred_start_date', date.toISOString());
-          setShowDatePicker(false);
-        };
-
         return (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -1180,8 +1182,16 @@ export default function CreateProject() {
                           onSelect={(date) => {
                             setSelectedDate(date);
                             if (date) {
-                              const urgency = calculateUrgency(date);
-                              updateProjectData('urgency', urgency.urgency);
+                              const daysUntil = differenceInDays(date, new Date());
+                              let urgency: 'low' | 'medium' | 'high' = 'medium';
+
+                              if (daysUntil <= 14) {
+                                urgency = 'high';
+                              } else if (daysUntil > 60) {
+                                urgency = 'low';
+                              }
+
+                              updateProjectData('urgency', urgency);
                               updateProjectData('preferred_start_date', date.toISOString());
                             }
                           }}
