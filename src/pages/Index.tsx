@@ -27,6 +27,7 @@ import contractorHero from "@/assets/contractor-hero.png";
 import { TopContractors } from "@/components/TopContractors";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/stores/authStore";
+import { LoadingScreen } from "@/components/LoadingSpinner";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -241,15 +242,8 @@ const Index = () => {
     <div className="min-h-screen bg-white">
       {/* Loading Screen - Show until hero image loads */}
       {!heroImageLoaded && (
-        <div className="fixed inset-0 z-[100] bg-white flex items-center justify-center">
-          <div className="text-center space-y-4">
-            <img src={logoNew} alt="BauConnect24 Logo" className="h-24 w-auto mx-auto animate-pulse" />
-            <div className="flex items-center gap-2">
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></div>
-              <div className="w-2 h-2 bg-primary rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></div>
-            </div>
-          </div>
+        <div className="fixed inset-0 z-[100]">
+          <LoadingScreen message="BauConnect24 lädt..." />
         </div>
       )}
 
