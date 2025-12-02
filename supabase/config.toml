@@ -32,3 +32,6 @@ verify_jwt = true
 
 [functions.create-wallet-checkout]
 verify_jwt = true
+
+[functions.cleanup-test-users]
+verify_jwt = false
