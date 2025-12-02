@@ -191,7 +191,9 @@ export const FullProjectDetails = ({ project, customer, purchasedAt, categoryQue
               <p className="flex items-center gap-2">
                 <MapPin className="h-4 w-4" />
                 {project.postal_code} {project.city}
-                {project.address && `, ${project.address}`}
+              </p>
+              <p className="text-sm text-muted-foreground mt-1">
+                📍 Genaue Adresse bitte direkt mit dem Kunden vereinbaren
               </p>
             </div>
 

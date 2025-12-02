@@ -25,6 +25,14 @@ interface Project {
   images: string[];
   created_at: string;
   status: string;
+  funnel_answers?: any;
+  subcategory_id?: string;
+}
+
+interface CategoryQuestion {
+  id: string;
+  question_text: string;
+  question_type: string;
 }
 
 interface Contractor {
@@ -49,6 +57,7 @@ export default function CustomerProjectDetail() {
   const [showCompleteDialog, setShowCompleteDialog] = useState(false);
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const [selectedContractorId, setSelectedContractorId] = useState<string | null>(null);
+  const [categoryQuestions, setCategoryQuestions] = useState<CategoryQuestion[]>([]);
 
   useEffect(() => {
     loadProjectDetails();
@@ -67,6 +76,17 @@ export default function CustomerProjectDetail() {
       if (projectError) throw projectError;
       setProject(projectData);
       console.log('✅ Project loaded:', projectData.title);
+
+      // Load category questions for funnel answers
+      if (projectData.subcategory_id) {
+        const { data: questionsData } = await supabase
+          .from('category_questions')
+          .select('id, question_text, question_type')
+          .eq('category_id', projectData.subcategory_id)
+          .order('sort_order');
+        
+        if (questionsData) setCategoryQuestions(questionsData);
+      }
 
       // Load MATCHED contractors from matches table
       console.log('🎯 Loading matched contractors...');
@@ -316,6 +336,44 @@ export default function CustomerProjectDetail() {
                     className="rounded-lg w-full h-32 object-cover"
                   />
                 ))}
+              </div>
+            </div>
+          )}
+
+          {/* Funnel Answers / Projektanforderungen */}
+          {project.funnel_answers && Object.keys(project.funnel_answers).length > 0 && (
+            <div className="mt-6 border-t pt-6">
+              <h3 className="font-semibold text-lg mb-4 flex items-center gap-2">
+                <span>📋</span> Ihre Projektanforderungen
+              </h3>
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {categoryQuestions.length > 0 ? (
+                  categoryQuestions.map((question) => {
+                    const answer = project.funnel_answers?.[question.id];
+                    if (!answer) return null;
+                    return (
+                      <div key={question.id} className="bg-muted/30 p-4 rounded-lg border">
+                        <p className="text-sm font-medium text-muted-foreground mb-1">
+                          {question.question_text}
+                        </p>
+                        <p className="font-semibold">
+                          {Array.isArray(answer) ? answer.join(', ') : String(answer)}
+                        </p>
+                      </div>
+                    );
+                  })
+                ) : (
+                  Object.entries(project.funnel_answers).map(([key, value]) => (
+                    <div key={key} className="bg-muted/30 p-4 rounded-lg border">
+                      <p className="text-sm font-medium text-muted-foreground mb-1">
+                        {key.replace(/_/g, ' ').replace(/\b\w/g, l => l.toUpperCase())}
+                      </p>
+                      <p className="font-semibold">
+                        {Array.isArray(value) ? value.join(', ') : String(value)}
+                      </p>
+                    </div>
+                  ))
+                )}
               </div>
             </div>
           )}

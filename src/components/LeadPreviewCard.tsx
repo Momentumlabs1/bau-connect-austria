@@ -121,43 +121,39 @@ export function LeadPreviewCard({
             <p className="text-sm line-clamp-3">{project.description}</p>
           </div>
 
+          {/* ALL Funnel Answers - no slicing */}
           {project.funnel_answers && Object.keys(project.funnel_answers).length > 0 && (
             <div className="bg-muted/30 p-4 rounded-lg border">
               <p className="text-sm font-medium mb-3 flex items-center gap-2">
                 <span>📋</span>
-                Erste Projekt-Details (mehr nach Kauf)
+                Projekt-Details
               </p>
-              <div className="space-y-2">
-                {Object.entries(project.funnel_answers).slice(0, 2).map(([key, value]) => (
-                  <div key={key} className="text-sm">
-                    <span className="text-muted-foreground">•</span> {Array.isArray(value) ? value.join(', ') : String(value)}
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {Object.entries(project.funnel_answers).map(([key, value]) => (
+                  <div key={key} className="text-sm bg-background/50 p-2 rounded">
+                    <span className="text-muted-foreground">• </span>
+                    {Array.isArray(value) ? value.join(', ') : String(value)}
                   </div>
                 ))}
-                {Object.keys(project.funnel_answers).length > 2 && (
-                  <p className="text-xs text-muted-foreground italic mt-2">
-                    + {Object.keys(project.funnel_answers).length - 2} weitere Details nach Kauf sichtbar
-                  </p>
-                )}
               </div>
             </div>
           )}
 
+          {/* Real images - not blurred */}
           {project.images && project.images.length > 0 && (
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <ImageIcon className="h-4 w-4" />
-                <span>{project.images.length} Foto{project.images.length > 1 ? 's' : ''} verfügbar</span>
+                <span>{project.images.length} Foto{project.images.length > 1 ? 's' : ''}</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                {project.images.slice(0, 3).map((_, index) => (
-                  <div 
+                {project.images.slice(0, 6).map((img, index) => (
+                  <img
                     key={index}
-                    className="aspect-square bg-muted rounded-lg backdrop-blur-xl relative overflow-hidden"
-                  >
-                    <div className="absolute inset-0 flex items-center justify-center bg-muted/80">
-                      <AlertCircle className="h-8 w-8 text-muted-foreground" />
-                    </div>
-                  </div>
+                    src={img}
+                    alt={`Projektfoto ${index + 1}`}
+                    className="aspect-square object-cover rounded-lg border"
+                  />
                 ))}
               </div>
             </div>
@@ -192,8 +188,6 @@ export function LeadPreviewCard({
               </p>
               <ul className="text-sm space-y-1 ml-6">
                 <li>✓ Vollständige Kontaktdaten des Kunden</li>
-                <li>✓ Exakte Adresse für Besichtigung</li>
-                <li>✓ Alle Projektdetails und Fotos</li>
                 <li>✓ Direkte Chat-Funktion zum Kunden</li>
               </ul>
             </div>
