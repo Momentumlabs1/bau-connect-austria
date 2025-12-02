@@ -28,6 +28,7 @@ import { TopContractors } from "@/components/TopContractors";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/stores/authStore";
 import { LoadingScreen } from "@/components/LoadingSpinner";
+import { AnimatePresence, motion } from "framer-motion";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -248,14 +249,25 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-white">
       {/* Loading Screen - Show until hero image loads */}
-      {!heroImageLoaded && (
-        <div className="fixed inset-0 z-[100]">
-          <LoadingScreen message="BauConnect24 lädt..." />
-        </div>
-      )}
+      <AnimatePresence>
+        {!heroImageLoaded && (
+          <motion.div 
+            className="fixed inset-0 z-[100]"
+            initial={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+          >
+            <LoadingScreen />
+          </motion.div>
+        )}
+      </AnimatePresence>
 
-      {/* Main Content - Hidden until hero image loads */}
-      <div className={heroImageLoaded ? 'opacity-100' : 'opacity-0'}>
+      {/* Main Content - Fade in smoothly */}
+      <motion.div 
+        initial={{ opacity: 0 }}
+        animate={{ opacity: heroImageLoaded ? 1 : 0 }}
+        transition={{ duration: 0.4, delay: 0.2 }}
+      >
       {/* Minimalist Navbar */}
       <nav
         className={`fixed top-0 left-0 right-0 z-50 transition-all duration-300 ${
@@ -856,7 +868,7 @@ const Index = () => {
       </section>
 
       <Footer />
-      </div> {/* End of heroImageLoaded wrapper */}
+      </motion.div> {/* End of heroImageLoaded wrapper */}
     </div>
   );
 };
