@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
+
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { useToast } from "@/hooks/use-toast";
@@ -920,52 +920,53 @@ export default function CreateProject() {
                 )}
 
                 {question.question_type === "radio" && question.options && (
-                  <RadioGroup
-                    value={projectData.tradeSpecificAnswers[question.id] || ''}
-                    onValueChange={(value) => updateTradeSpecificAnswer(question.id, value)}
-                  >
-                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
-                      {question.options.map((option: any) => {
-                        const isSelected = projectData.tradeSpecificAnswers[question.id] === option.value;
-                        
-                        return (
-                          <motion.div
-                            key={option.value}
-                            whileHover={{ scale: 1.02 }}
-                            whileTap={{ scale: 0.98 }}
-                            className={cn(
-                              "relative cursor-pointer rounded-xl border-2 p-6 transition-all hover:shadow-lg",
-                              isSelected
-                                ? "border-primary bg-primary/5 shadow-md"
-                                : "border-gray-200 hover:border-primary/50 bg-white"
-                            )}
-                            onClick={() => updateTradeSpecificAnswer(question.id, option.value)}
-                          >
-                            <RadioGroupItem
-                              value={option.value}
-                              id={option.value}
-                              className="absolute top-4 right-4"
-                            />
-                            <div className="flex flex-col items-center text-center space-y-3">
-                              <div className={cn(
-                                "w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-colors",
-                                isSelected ? "bg-primary/10" : "bg-gray-100"
-                              )}>
-                                {option.icon || "📋"}
-                              </div>
-                              <Label 
-                                htmlFor={option.value} 
-                                className="font-semibold text-base cursor-pointer"
-                              >
-                                {option.label}
-                              </Label>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+                    {question.options.map((option: any) => {
+                      const isSelected = projectData.tradeSpecificAnswers[question.id] === option.value;
+
+                      return (
+                        <motion.div
+                          key={option.value}
+                          whileHover={{ scale: 1.02 }}
+                          whileTap={{ scale: 0.98 }}
+                          className={cn(
+                            "relative cursor-pointer rounded-xl border-2 p-6 transition-all hover:shadow-lg",
+                            isSelected
+                              ? "border-primary bg-primary/5 shadow-md"
+                              : "border-gray-200 hover:border-primary/50 bg-white"
+                          )}
+                          onClick={() => updateTradeSpecificAnswer(question.id, option.value)}
+                        >
+                          <div className="absolute top-4 right-4">
+                            <div
+                              className={cn(
+                                "h-4 w-4 rounded-full border-2 flex items-center justify-center",
+                                isSelected ? "border-primary bg-primary" : "border-gray-300 bg-white"
+                              )}
+                            >
+                              {isSelected && <div className="h-2 w-2 rounded-full bg-white" />}
                             </div>
-                          </motion.div>
-                        );
-                      })}
-                    </div>
-                  </RadioGroup>
+                          </div>
+                          <div className="flex flex-col items-center text-center space-y-3">
+                            <div className={cn(
+                              "w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-colors",
+                              isSelected ? "bg-primary/10" : "bg-gray-100"
+                            )}>
+                              {option.icon || "📋"}
+                            </div>
+                            <Label 
+                              htmlFor={option.value} 
+                              className="font-semibold text-base cursor-pointer"
+                            >
+                              {option.label}
+                            </Label>
+                          </div>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
                 )}
+
 
                 {question.question_type === "number" && (
                   <Input
