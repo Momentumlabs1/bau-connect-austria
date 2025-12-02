@@ -22,67 +22,35 @@ export const LoadingSpinner = ({ size = 'md', className }: LoadingSpinnerProps) 
   );
 };
 
-export const LoadingScreen = ({ message = 'Lädt...' }: { message?: string }) => {
+export const LoadingScreen = ({ message }: { message?: string }) => {
   return (
-    <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-b from-background via-background to-muted/20">
-      <motion.div
-        initial={{ opacity: 0, scale: 0.8 }}
-        animate={{ opacity: 1, scale: 1 }}
-        transition={{ duration: 0.5, ease: "easeOut" }}
-        className="flex flex-col items-center gap-8"
-      >
-        {/* Logo with pulse animation */}
+    <div className="min-h-screen flex items-center justify-center bg-white">
+      <div className="relative">
+        {/* Rotating gradient ring */}
         <motion.div
-          animate={{ 
-            scale: [1, 1.05, 1],
-            opacity: [0.9, 1, 0.9]
-          }}
-          transition={{ 
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
-          className="relative"
+          className="absolute -inset-6 md:-inset-8"
+          animate={{ rotate: 360 }}
+          transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
         >
-          <img 
-            src={logo} 
-            alt="BauConnect24" 
-            className="h-20 md:h-24 w-auto object-contain"
+          <div 
+            className="w-full h-full rounded-full"
+            style={{
+              background: 'linear-gradient(white, white) padding-box, linear-gradient(90deg, hsl(var(--primary)), hsl(var(--primary) / 0.6), hsl(var(--primary))) border-box',
+              border: '3px solid transparent'
+            }}
           />
-          {/* Glow effect */}
-          <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full -z-10" />
         </motion.div>
-
-        {/* Modern loading dots */}
-        <div className="flex items-center gap-2">
-          {[0, 1, 2].map((i) => (
-            <motion.div
-              key={i}
-              animate={{
-                y: [0, -12, 0],
-                opacity: [0.4, 1, 0.4]
-              }}
-              transition={{
-                duration: 1.2,
-                repeat: Infinity,
-                delay: i * 0.15,
-                ease: "easeInOut"
-              }}
-              className="w-3 h-3 rounded-full bg-primary"
-            />
-          ))}
-        </div>
-
-        {/* Loading message */}
-        <motion.p
-          initial={{ opacity: 0 }}
-          animate={{ opacity: 1 }}
-          transition={{ delay: 0.3 }}
-          className="text-lg text-muted-foreground font-medium"
-        >
-          {message}
-        </motion.p>
-      </motion.div>
+        
+        {/* Logo - large and clear */}
+        <motion.img 
+          src={logo} 
+          alt="BauConnect24" 
+          className="h-40 md:h-48 w-auto relative z-10"
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          transition={{ duration: 0.4 }}
+        />
+      </div>
     </div>
   );
 };
