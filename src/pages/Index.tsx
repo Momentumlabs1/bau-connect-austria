@@ -143,16 +143,16 @@ const Index = () => {
           reviews && reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 4.9;
 
         setStats({
-          totalProjects: projectsCount || 3,
-          totalContractors: contractorsCount || 156,
-          averageRating: Number(avgRating.toFixed(1)),
+          totalProjects: projectsCount || 0,
+          totalContractors: contractorsCount || 0,
+          averageRating: reviews && reviews.length > 0 ? Number(avgRating.toFixed(1)) : 0,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
         setStats({
-          totalProjects: 3,
-          totalContractors: 156,
-          averageRating: 4.9,
+          totalProjects: 0,
+          totalContractors: 0,
+          averageRating: 0,
         });
       }
     };
@@ -241,10 +241,8 @@ const Index = () => {
     { id: "bau", name: "Bau / Rohbau", emoji: "🧱", color: "bg-red-500" },
   ];
 
-  const trustSignals = [
-    { label: "Projekte vermittelt", value: "6.075+", icon: Hammer },
-    { label: "Verifizierte Handwerker", value: "156+", icon: Users },
-  ];
+  // Trust signals now use real stats - only shown if data exists
+  const hasRealStats = stats.totalProjects > 0 || stats.totalContractors > 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -531,21 +529,29 @@ const Index = () => {
                 ))}
               </div>
 
-              {/* Trust Signals - Mini Stats */}
-              <div className="flex flex-nowrap justify-center items-center gap-12 md:gap-20">
-                {trustSignals.map((signal, idx) => {
-                  const Icon = signal.icon;
-                  return (
-                    <div key={idx} className="flex items-center gap-4">
-                      <Icon className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
+              {/* Trust Signals - Only show if real data exists */}
+              {hasRealStats && (
+                <div className="flex flex-nowrap justify-center items-center gap-12 md:gap-20">
+                  {stats.totalProjects > 0 && (
+                    <div className="flex items-center gap-4">
+                      <Hammer className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
                       <div>
-                        <div className="text-3xl md:text-4xl font-bold text-gray-900">{signal.value}</div>
-                        <div className="text-sm md:text-base text-gray-600 whitespace-nowrap">{signal.label}</div>
+                        <div className="text-3xl md:text-4xl font-bold text-gray-900">{stats.totalProjects}</div>
+                        <div className="text-sm md:text-base text-gray-600 whitespace-nowrap">Projekte</div>
                       </div>
                     </div>
-                  );
-                })}
-              </div>
+                  )}
+                  {stats.totalContractors > 0 && (
+                    <div className="flex items-center gap-4">
+                      <Users className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
+                      <div>
+                        <div className="text-3xl md:text-4xl font-bold text-gray-900">{stats.totalContractors}</div>
+                        <div className="text-sm md:text-base text-gray-600 whitespace-nowrap">Handwerker</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         </section>
