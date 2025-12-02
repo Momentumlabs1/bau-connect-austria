@@ -17,6 +17,7 @@ import { PurchasedLeadCard } from "@/components/contractor/PurchasedLeadCard";
 import { ActiveProjectCard } from "@/components/contractor/ActiveProjectCard";
 import { CompletedProjectCard } from "@/components/contractor/CompletedProjectCard";
 import { Footer } from "@/components/Footer";
+import { LeadPreviewCard } from "@/components/LeadPreviewCard";
 
 export default function ContractorDashboard() {
   const { user, role, loading: authLoading } = useAuth();
@@ -41,6 +42,10 @@ export default function ContractorDashboard() {
   const [showWalletDialog, setShowWalletDialog] = useState(false);
   const [rechargeAmount, setRechargeAmount] = useState<number | string>(50);
   const [voucherCode, setVoucherCode] = useState("");
+  
+  // Lead preview dialog
+  const [selectedLead, setSelectedLead] = useState<any>(null);
+  const [showLeadDialog, setShowLeadDialog] = useState(false);
   const [applyingVoucher, setApplyingVoucher] = useState(false);
 
   useEffect(() => {
@@ -396,7 +401,15 @@ export default function ContractorDashboard() {
               </Card>
             ) : (
               availableLeads.map((match, index) => (
-                <AvailableLeadCard key={match.id} match={match} index={index} />
+                <AvailableLeadCard 
+                  key={match.id} 
+                  match={match} 
+                  index={index}
+                  onSelect={(m) => {
+                    setSelectedLead(m);
+                    setShowLeadDialog(true);
+                  }}
+                />
               ))
             )}
           </TabsContent>
@@ -517,6 +530,31 @@ export default function ContractorDashboard() {
               )}
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Lead Preview Dialog */}
+      <Dialog open={showLeadDialog} onOpenChange={setShowLeadDialog}>
+        <DialogContent className="max-w-4xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>{selectedLead?.project?.title || 'Lead Details'}</DialogTitle>
+            <DialogDescription>
+              Alle Projektdetails auf einen Blick
+            </DialogDescription>
+          </DialogHeader>
+          
+          {selectedLead?.project && (
+            <LeadPreviewCard 
+              project={selectedLead.project}
+              leadPrice={selectedLead.project.final_price || 5}
+              useStripePayment={true}
+              onPurchaseSuccess={() => {
+                setShowLeadDialog(false);
+                setSelectedLead(null);
+                loadDashboardData();
+              }}
+            />
+          )}
         </DialogContent>
       </Dialog>
     </div>

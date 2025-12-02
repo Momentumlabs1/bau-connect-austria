@@ -19,12 +19,18 @@ interface AvailableLeadCardProps {
       gewerk_id: string;
       urgency: string;
       final_price: number;
+      description?: string;
+      images?: string[];
+      funnel_answers?: Record<string, any>;
+      preferred_start_date?: string;
+      subcategory_id?: string;
     };
   };
   index: number;
+  onSelect?: (match: any) => void;
 }
 
-export const AvailableLeadCard = ({ match, index }: AvailableLeadCardProps) => {
+export const AvailableLeadCard = ({ match, index, onSelect }: AvailableLeadCardProps) => {
   const navigate = useNavigate();
 
   const getUrgencyBadge = (urgency: string) => {
@@ -42,7 +48,7 @@ export const AvailableLeadCard = ({ match, index }: AvailableLeadCardProps) => {
       animate={{ opacity: 1, y: 0 }}
       transition={{ delay: index * 0.05 }}
     >
-      <Card className="p-6 hover:shadow-lg transition-all cursor-pointer border-2 hover:border-primary" onClick={() => navigate(`/handwerker/projekt/${match.project.id}`)}>
+      <Card className="p-6 hover:shadow-lg transition-all cursor-pointer border-2 hover:border-primary" onClick={() => onSelect ? onSelect(match) : navigate(`/handwerker/projekt/${match.project.id}`)}>
         <div className="flex flex-col md:flex-row md:items-start md:justify-between gap-4">
           <div className="flex-1">
             <div className="flex items-start gap-3 mb-3">
@@ -83,11 +89,11 @@ export const AvailableLeadCard = ({ match, index }: AvailableLeadCardProps) => {
               className="w-full"
               onClick={(e) => {
                 e.stopPropagation();
-                navigate(`/handwerker/projekt/${match.project.id}`);
+                onSelect ? onSelect(match) : navigate(`/handwerker/projekt/${match.project.id}`);
               }}
             >
               <Eye className="h-4 w-4 mr-2" />
-              Vorschau & Kaufen
+              Details & Kaufen
             </Button>
             {match.score && (
               <p className="text-xs text-center text-muted-foreground">
