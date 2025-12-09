@@ -1390,10 +1390,15 @@ export default function CreateProject() {
                   <div>
                     <p className="text-sm text-muted-foreground mb-1">Zeitplan</p>
                     <p className="font-medium">
-                      {projectData.urgency === 'high' ? 'Sofort / Notfall' : 
-                       projectData.urgency === 'medium' ? 'Normal (1-2 Wochen)' : 
-                       'Flexibel'}
+                      {projectData.urgency === 'high' ? '🔴 Dringend (~1 Woche)' : 
+                       projectData.urgency === 'medium' ? '🟡 Bald (~2 Wochen)' : 
+                       '🟢 Flexibel (4+ Wochen)'}
                     </p>
+                    {selectedDate && (
+                      <p className="text-sm text-muted-foreground mt-1">
+                        Gewünschter Start: {format(selectedDate, "PPP", { locale: de })}
+                      </p>
+                    )}
                   </div>
                 )}
               </Card>
