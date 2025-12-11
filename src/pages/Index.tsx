@@ -440,11 +440,8 @@ const Index = () => {
                   ) : (
                     /* Customer or unauthenticated user sees project creation */
                     <div className="max-w-xl bg-white/70 backdrop-blur-md rounded-2xl shadow-2xl p-4 md:p-6 border border-white/50 md:ml-[8%]">
-                      <div className="mb-3 md:mb-5">
-                        <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">Beschreiben Sie Ihren Auftrag</h2>
-                        <p className="text-xs md:text-base text-gray-600">
-                          z.B.: Malerarbeiten, Badezimmer renovieren, Elektroinstallation
-                        </p>
+                      <div className="mb-3 md:mb-4">
+                        <h2 className="text-lg md:text-2xl font-bold text-gray-900">Beschreiben Sie Ihren Auftrag</h2>
                       </div>
 
                       <div className="flex flex-col sm:flex-row gap-2 md:gap-3">
