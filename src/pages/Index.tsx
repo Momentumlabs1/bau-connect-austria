@@ -407,12 +407,12 @@ const Index = () => {
               {/* Content Overlay - zentriert für besseren goldenen Schnitt */}
               <div className="relative z-10 w-full px-6 md:px-12 pt-10 md:pt-16 flex justify-center md:justify-start">
                 <div className="max-w-4xl md:ml-[8%]">
-                  {/* Headline - 3 Zeilen auf Mobile */}
-                  <h1 className="text-2xl sm:text-3xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-center md:text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
-                    <span className="text-white">Der einfachste Weg,</span><br />
+                  {/* Headline - 2 Zeilen auf Mobile */}
+                  <h1 className="text-xl sm:text-2xl md:text-5xl lg:text-6xl font-extrabold leading-tight text-center md:text-left drop-shadow-[0_2px_8px_rgba(0,0,0,0.9)]">
+                    <span className="text-white">Der einfachste Weg, </span>
                     <span className="text-blue-400">qualifizierte </span>
-                    <span className="text-orange-400">Handwerker</span><br />
-                    <span className="text-white">zu finden.</span>
+                    <span className="text-orange-400">Handwerker</span>
+                    <span className="text-white"> zu finden.</span>
                   </h1>
                 </div>
               </div>
