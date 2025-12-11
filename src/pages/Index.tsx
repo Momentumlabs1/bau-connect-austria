@@ -409,9 +409,8 @@ const Index = () => {
                   {/* Headline */}
                   <div className="absolute bottom-4 left-4 right-4">
                     <h1 className="text-xl font-extrabold leading-tight text-white drop-shadow-lg">
-                      <span className="whitespace-nowrap">Der einfachste Weg,</span>{" "}
-                      <span className="text-blue-400">qualifizierte</span>{" "}
-                      <span className="text-orange-400">Handwerker</span> zu finden.
+                      <span className="whitespace-nowrap">Der einfachste Weg,</span><br />
+                      <span className="text-orange-400">Handwerker</span> zu <span className="text-blue-400">finden.</span>
                     </h1>
                   </div>
                 </div>
@@ -433,7 +432,7 @@ const Index = () => {
                     </div>
                   ) : (
                     <div className="space-y-3">
-                      <h2 className="text-lg font-bold text-gray-900">Beschreiben Sie Ihren Auftrag</h2>
+                      <p className="text-sm font-medium text-gray-600">Beschreiben Sie Ihren Auftrag</p>
                       <div className="relative">
                         <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
                         <Input
@@ -510,9 +509,7 @@ const Index = () => {
                 <div className="relative z-10 h-full flex flex-col justify-center p-10 lg:p-14 max-w-2xl">
                   <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight mb-8 text-white drop-shadow-lg">
                     <span className="whitespace-nowrap">Der einfachste Weg,</span><br />
-                    <span className="text-blue-400">qualifizierte</span>{" "}
-                    <span className="text-orange-400">Handwerker</span><br />
-                    zu finden.
+                    <span className="text-orange-400">Handwerker</span> zu <span className="text-blue-400">finden.</span>
                   </h1>
                   
                   {role === 'contractor' ? (
@@ -528,9 +525,9 @@ const Index = () => {
                       </Button>
                     </div>
                   ) : (
-                    <div className="space-y-4 max-w-md">
+                    <div className="space-y-3 max-w-md">
                       <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl">
-                        <h2 className="text-xl font-bold text-gray-900 mb-4">Beschreiben Sie Ihren Auftrag</h2>
+                        <p className="text-sm font-medium text-gray-600 mb-3">Beschreiben Sie Ihren Auftrag</p>
                         <div className="relative mb-4">
                           <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
                           <Input
