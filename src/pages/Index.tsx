@@ -408,8 +408,8 @@ const Index = () => {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/30 to-transparent" />
                   {/* Headline */}
                   <div className="absolute bottom-4 left-4 right-4">
-                    <h1 className="text-2xl font-extrabold leading-tight text-white drop-shadow-lg">
-                      Der einfachste Weg,<br />
+                    <h1 className="text-xl font-extrabold leading-tight text-white drop-shadow-lg">
+                      <span className="whitespace-nowrap">Der einfachste Weg,</span>{" "}
                       <span className="text-blue-400">qualifizierte</span>{" "}
                       <span className="text-orange-400">Handwerker</span> zu finden.
                     </h1>
@@ -494,20 +494,30 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Desktop Layout - Two Columns */}
-              <div className="hidden md:grid md:grid-cols-2 h-[500px] lg:h-[550px]">
-                {/* Left Column - Content */}
-                <div className="bg-gradient-to-br from-slate-50 to-white flex flex-col justify-center p-10 lg:p-14">
-                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight mb-8">
-                    Der einfachste Weg,<br />
-                    <span className="text-blue-600">qualifizierte</span>{" "}
-                    <span className="text-orange-500">Handwerker</span><br />
+              {/* Desktop Layout - Image Background with Overlay Content */}
+              <div className="hidden md:block relative h-[500px] lg:h-[550px]">
+                {/* Full Background Image */}
+                <img 
+                  src={contractorHero} 
+                  alt="Professioneller Handwerker" 
+                  className="absolute inset-0 w-full h-full object-cover"
+                  loading="eager"
+                />
+                {/* Gradient Overlay - Left side darker for text */}
+                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+                
+                {/* Content Overlay - Left Side */}
+                <div className="relative z-10 h-full flex flex-col justify-center p-10 lg:p-14 max-w-2xl">
+                  <h1 className="text-4xl lg:text-5xl xl:text-6xl font-extrabold leading-tight mb-8 text-white drop-shadow-lg">
+                    <span className="whitespace-nowrap">Der einfachste Weg,</span><br />
+                    <span className="text-blue-400">qualifizierte</span>{" "}
+                    <span className="text-orange-400">Handwerker</span><br />
                     zu finden.
                   </h1>
                   
                   {role === 'contractor' ? (
                     <div className="space-y-4">
-                      <p className="text-gray-600 text-lg">Schauen Sie sich Ihre verfügbaren Leads an</p>
+                      <p className="text-white/90 text-lg">Schauen Sie sich Ihre verfügbaren Leads an</p>
                       <Button
                         size="lg"
                         onClick={() => navigate('/handwerker/dashboard')}
@@ -519,74 +529,66 @@ const Index = () => {
                     </div>
                   ) : (
                     <div className="space-y-4 max-w-md">
-                      <h2 className="text-xl font-bold text-gray-900">Beschreiben Sie Ihren Auftrag</h2>
-                      <div className="relative">
-                        <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
-                        <Input
-                          type="text"
-                          placeholder="z.B.: Malerarbeiten, Steckdose installieren..."
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                          onKeyPress={handleKeyPress}
-                          onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
-                          onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
-                          className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
-                        />
-                        
-                        {/* Live Search Suggestions */}
-                        {showSuggestions && searchSuggestions.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
-                            <div className="p-2 bg-gray-50 border-b border-gray-200">
-                              <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
+                      <div className="bg-white/95 backdrop-blur-sm rounded-2xl p-6 shadow-2xl">
+                        <h2 className="text-xl font-bold text-gray-900 mb-4">Beschreiben Sie Ihren Auftrag</h2>
+                        <div className="relative mb-4">
+                          <Search className="absolute left-4 top-1/2 -translate-y-1/2 h-5 w-5 text-gray-400 z-10" />
+                          <Input
+                            type="text"
+                            placeholder="z.B.: Malerarbeiten, Steckdose installieren..."
+                            value={searchQuery}
+                            onChange={(e) => setSearchQuery(e.target.value)}
+                            onKeyPress={handleKeyPress}
+                            onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
+                            onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
+                            className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
+                          />
+                          
+                          {/* Live Search Suggestions */}
+                          {showSuggestions && searchSuggestions.length > 0 && (
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                              <div className="p-2 bg-gray-50 border-b border-gray-200">
+                                <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
+                              </div>
+                              {searchSuggestions.map((suggestion) => {
+                                const parentCategory = suggestion.level === 2 
+                                  ? quickCategories.find(cat => cat.id === suggestion.parent_id)?.name 
+                                  : suggestion.name;
+                                
+                                return (
+                                  <button
+                                    key={suggestion.id}
+                                    onClick={() => handleSuggestionClick(suggestion)}
+                                    className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
+                                  >
+                                    <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
+                                      <span className="text-xl">🔨</span>
+                                    </div>
+                                    <div className="flex-1 min-w-0">
+                                      <p className="font-semibold text-sm text-gray-900">
+                                        {parentCategory}{suggestion.level === 2 && ` / ${suggestion.name}`}
+                                      </p>
+                                      {suggestion.description && (
+                                        <p className="text-xs text-muted-foreground truncate">{suggestion.description}</p>
+                                      )}
+                                    </div>
+                                  </button>
+                                );
+                              })}
                             </div>
-                            {searchSuggestions.map((suggestion) => {
-                              const parentCategory = suggestion.level === 2 
-                                ? quickCategories.find(cat => cat.id === suggestion.parent_id)?.name 
-                                : suggestion.name;
-                              
-                              return (
-                                <button
-                                  key={suggestion.id}
-                                  onClick={() => handleSuggestionClick(suggestion)}
-                                  className="w-full px-4 py-3 text-left hover:bg-blue-50 transition-colors border-b border-gray-100 last:border-b-0 flex items-center gap-3"
-                                >
-                                  <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0">
-                                    <span className="text-xl">🔨</span>
-                                  </div>
-                                  <div className="flex-1 min-w-0">
-                                    <p className="font-semibold text-sm text-gray-900">
-                                      {parentCategory}{suggestion.level === 2 && ` / ${suggestion.name}`}
-                                    </p>
-                                    {suggestion.description && (
-                                      <p className="text-xs text-muted-foreground truncate">{suggestion.description}</p>
-                                    )}
-                                  </div>
-                                </button>
-                              );
-                            })}
-                          </div>
-                        )}
+                          )}
+                        </div>
+                        <Button
+                          size="lg"
+                          onClick={handleSearch}
+                          className="w-full h-14 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl transition-all"
+                        >
+                          <ArrowRight className="mr-2 h-5 w-5" />
+                          Auftrag erstellen
+                        </Button>
                       </div>
-                      <Button
-                        size="lg"
-                        onClick={handleSearch}
-                        className="h-14 px-8 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-bold text-lg shadow-lg shadow-blue-600/30 hover:shadow-xl transition-all"
-                      >
-                        <ArrowRight className="mr-2 h-5 w-5" />
-                        Auftrag erstellen
-                      </Button>
                     </div>
                   )}
-                </div>
-                
-                {/* Right Column - Image */}
-                <div className="relative">
-                  <img 
-                    src={contractorHero} 
-                    alt="Professioneller Handwerker" 
-                    className="w-full h-full object-cover object-right"
-                    loading="eager"
-                  />
                 </div>
               </div>
             </div>
