@@ -392,7 +392,7 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {/* Hero Section with Background Image Overlay */}
-            <div className="relative rounded-3xl overflow-hidden mb-0 h-[500px] md:h-[650px] lg:h-[750px] flex items-center bg-slate-900">
+            <div className="relative rounded-3xl overflow-hidden mb-0 h-[480px] md:h-[600px] lg:h-[700px] flex flex-col justify-between bg-slate-900">
               {/* Background Image with Opacity */}
               <div className="absolute inset-0 bg-gradient-to-r from-gray-900/70 to-gray-900/50">
                 <img 
@@ -404,16 +404,21 @@ const Index = () => {
                 />
               </div>
 
-              {/* Content Overlay */}
-              <div className="relative z-10 w-full px-3 md:px-12 py-8 md:py-16">
+              {/* Content Overlay - positioned at top */}
+              <div className="relative z-10 w-full px-3 md:px-12 pt-6 md:pt-12">
                 <div className="max-w-4xl">
-                  {/* Headline - 3 Zeilen, kein Glow */}
-                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold mb-6 md:mb-10 leading-tight">
+                  {/* Headline - mit Text-Shadow für bessere Lesbarkeit */}
+                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
                     <span className="text-white">Der einfachste Weg,</span><br />
-                    <span className="text-blue-600">qualifizierte</span>{' '}
-                    <span className="text-orange-600">Handwerker</span><br />
+                    <span className="text-blue-400">qualifizierte</span>{' '}
+                    <span className="text-orange-400">Handwerker</span><br />
                     <span className="text-white">zu finden.</span>
                   </h1>
+                </div>
+              </div>
+
+              {/* Search Box - am unteren Rand */}
+              <div className="relative z-10 w-full px-3 md:px-12 pb-4 md:pb-8">
 
                   {/* Role-based content */}
                   {role === 'contractor' ? (
@@ -501,7 +506,6 @@ const Index = () => {
                       </div>
                     </div>
                   )}
-                </div>
               </div>
             </div>
           </div>
