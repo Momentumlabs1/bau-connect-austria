@@ -277,7 +277,7 @@ const Index = () => {
           <div className="flex items-center justify-between h-20 md:h-22">
             {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate("/")}>
-              <img src={logoNew} alt="BauConnect24 Logo" className="h-12 md:h-14 lg:h-16 w-auto" />
+              <img src={logoNew} alt="BauConnect24 Logo" className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto" />
             </div>
 
             {/* Desktop Navigation */}

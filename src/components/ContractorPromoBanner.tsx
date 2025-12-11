@@ -9,12 +9,12 @@ export const ContractorPromoBanner = () => {
 
   return (
     <div className="bg-blue-50 border-b border-blue-100">
-      <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-        <div className="flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-2 text-sm">
-          <span className="text-muted-foreground">Sind Sie Handwerker?</span>
+      <div className="container mx-auto px-4 py-1.5 flex items-center justify-between">
+        <div className="flex items-center gap-1 text-xs">
+          <span className="text-muted-foreground whitespace-nowrap">Sind Sie Handwerker?</span>
           <Link 
             to="/register?role=contractor" 
-            className="font-medium text-primary hover:underline"
+            className="font-medium text-primary hover:underline whitespace-nowrap"
           >
             Kostenlos registrieren
           </Link>
