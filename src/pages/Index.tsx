@@ -29,6 +29,7 @@ import { Footer } from "@/components/Footer";
 import { useAuth } from "@/stores/authStore";
 import { LoadingScreen } from "@/components/LoadingSpinner";
 import { AnimatePresence, motion } from "framer-motion";
+import { ContractorPromoBanner } from "@/components/ContractorPromoBanner";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -273,10 +274,10 @@ const Index = () => {
         }`}
       >
         <div className="container mx-auto px-4">
-          <div className="flex items-center justify-between h-16 md:h-18">
+          <div className="flex items-center justify-between h-20 md:h-22">
             {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate("/")}>
-              <img src={logoNew} alt="BauConnect24 Logo" className="h-16 md:h-20 lg:h-24 w-auto" />
+              <img src={logoNew} alt="BauConnect24 Logo" className="h-12 md:h-14 lg:h-16 w-auto" />
             </div>
 
             {/* Desktop Navigation */}
@@ -383,8 +384,11 @@ const Index = () => {
         )}
       </nav>
 
+      {/* Contractor Promo Banner - only for non-contractors */}
+      {role !== 'contractor' && <div className="pt-20 md:pt-22"><ContractorPromoBanner /></div>}
+
       {/* Hero Section - MyHammer Style */}
-      <section className="pt-24 pb-8 md:pt-28 md:pb-10 lg:pt-32 lg:pb-12 bg-gradient-to-b from-gray-50 to-white">
+      <section className={`${role !== 'contractor' ? 'pt-4' : 'pt-24'} pb-8 md:${role !== 'contractor' ? 'pt-6' : 'pt-28'} md:pb-10 lg:${role !== 'contractor' ? 'pt-8' : 'pt-32'} lg:pb-12 bg-gradient-to-b from-gray-50 to-white`}>
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {/* Hero Section with Background Image Overlay */}
