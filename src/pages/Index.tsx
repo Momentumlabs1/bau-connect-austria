@@ -404,11 +404,11 @@ const Index = () => {
                 />
               </div>
 
-              {/* Content Overlay - positioned at top */}
-              <div className="relative z-10 w-full px-3 md:px-12 pt-6 md:pt-12">
-                <div className="max-w-4xl">
+              {/* Content Overlay - zentriert für besseren goldenen Schnitt */}
+              <div className="relative z-10 w-full px-6 md:px-12 pt-10 md:pt-16 flex justify-center md:justify-start">
+                <div className="max-w-4xl md:ml-[8%]">
                   {/* Headline - mit Text-Shadow für bessere Lesbarkeit */}
-                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)]">
+                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-center md:text-left">
                     <span className="text-white">Der einfachste Weg,</span><br />
                     <span className="text-blue-400">qualifizierte</span>{' '}
                     <span className="text-orange-400">Handwerker</span><br />
@@ -417,13 +417,13 @@ const Index = () => {
                 </div>
               </div>
 
-              {/* Search Box - am unteren Rand */}
-              <div className="relative z-10 w-full px-3 md:px-12 pb-4 md:pb-8">
+              {/* Search Box - am unteren Rand, zentriert */}
+              <div className="relative z-10 w-full px-3 md:px-12 pb-4 md:pb-8 flex justify-center md:justify-start">
 
                   {/* Role-based content */}
                   {role === 'contractor' ? (
                     /* Contractor sees dashboard link */
-                    <div className="max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-6 md:p-8 border-2 border-gray-100 text-center space-y-4">
+                    <div className="max-w-xl bg-white/70 backdrop-blur-md rounded-2xl shadow-2xl p-6 md:p-8 border border-white/50 text-center space-y-4 md:ml-[8%]">
                       <h2 className="text-2xl md:text-3xl font-bold text-gray-900">Willkommen zurück!</h2>
                       <p className="text-gray-600">
                         Schauen Sie sich Ihre verfügbaren Leads an
@@ -439,7 +439,7 @@ const Index = () => {
                     </div>
                   ) : (
                     /* Customer or unauthenticated user sees project creation */
-                    <div className="max-w-xl bg-white/95 backdrop-blur-sm rounded-2xl shadow-2xl p-4 md:p-6 border-2 border-gray-100">
+                    <div className="max-w-xl bg-white/70 backdrop-blur-md rounded-2xl shadow-2xl p-4 md:p-6 border border-white/50 md:ml-[8%]">
                       <div className="mb-3 md:mb-5">
                         <h2 className="text-lg md:text-2xl font-bold text-gray-900 mb-1 md:mb-2">Beschreiben Sie Ihren Auftrag</h2>
                         <p className="text-xs md:text-base text-gray-600">
