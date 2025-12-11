@@ -393,12 +393,12 @@ const Index = () => {
           <div className="max-w-6xl mx-auto">
             {/* Hero Section with Background Image Overlay */}
             <div className="relative rounded-3xl overflow-hidden mb-0 h-[480px] md:h-[600px] lg:h-[700px] flex flex-col justify-between bg-slate-900">
-              {/* Background Image with Opacity */}
-              <div className="absolute inset-0 bg-gradient-to-r from-gray-900/70 to-gray-900/50">
+              {/* Background Image - weniger Overlay */}
+              <div className="absolute inset-0">
                 <img 
                   src={contractorHero} 
                   alt="Professioneller Handwerker" 
-                  className="w-full h-full object-cover opacity-50"
+                  className="w-full h-full object-cover opacity-80"
                   loading="eager"
                   decoding="async"
                 />
@@ -407,12 +407,12 @@ const Index = () => {
               {/* Content Overlay - zentriert für besseren goldenen Schnitt */}
               <div className="relative z-10 w-full px-6 md:px-12 pt-10 md:pt-16 flex justify-center md:justify-start">
                 <div className="max-w-4xl md:ml-[8%]">
-                  {/* Headline - mit Text-Shadow für bessere Lesbarkeit */}
-                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight drop-shadow-[0_2px_4px_rgba(0,0,0,0.8)] text-center md:text-left">
-                    <span className="text-white">Der einfachste Weg,</span><br />
-                    <span className="text-blue-400">qualifizierte</span>{' '}
-                    <span className="text-orange-400">Handwerker</span><br />
-                    <span className="text-white">zu finden.</span>
+                  {/* Headline - mit lokalem dunklen Hintergrund hinter Text */}
+                  <h1 className="text-3xl sm:text-4xl md:text-6xl lg:text-7xl font-extrabold leading-tight text-center md:text-left">
+                    <span className="text-white bg-black/40 px-2 py-1 rounded inline-block">Der einfachste Weg,</span><br />
+                    <span className="text-blue-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">qualifizierte</span>{' '}
+                    <span className="text-orange-400 drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">Handwerker</span><br />
+                    <span className="text-white drop-shadow-[0_2px_4px_rgba(0,0,0,0.9)]">zu finden.</span>
                   </h1>
                 </div>
               </div>
