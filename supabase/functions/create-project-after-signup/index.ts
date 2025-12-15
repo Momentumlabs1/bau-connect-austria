@@ -43,6 +43,10 @@ serve(async (req) => {
     console.log('User validated:', userData.user.email);
 
     // Create project with SERVICE_ROLE_KEY (bypasses RLS)
+    // Use status from projectData (draft for unconfirmed email, open for confirmed)
+    const projectStatus = projectData.status || 'draft';
+    const confirmedAt = projectStatus === 'open' ? new Date().toISOString() : null;
+    
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
@@ -58,10 +62,10 @@ serve(async (req) => {
         preferred_start_date: projectData.preferred_start_date,
         images: projectData.images || [],
         funnel_answers: projectData.funnel_answers || {},
-        status: 'open',
+        status: projectStatus,
         visibility: 'public',
         terms_accepted: projectData.terms_accepted || false,
-        confirmed_at: new Date().toISOString(),
+        confirmed_at: confirmedAt,
       })
       .select()
       .single();

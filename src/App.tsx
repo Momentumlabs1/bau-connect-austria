@@ -37,6 +37,8 @@ import Datenschutz from "./pages/Datenschutz";
 import AGB from "./pages/AGB";
 import Widerruf from "./pages/Widerruf";
 import HandwerkerDirectory from "./pages/HandwerkerDirectory";
+import EmailConfirmation from "./pages/EmailConfirmation";
+import AuthCallback from "./pages/AuthCallback";
 import { CookieBanner } from "@/components/CookieBanner";
 
 const queryClient = new QueryClient();
@@ -55,6 +57,8 @@ const AppContent = () => {
           <Route path="/" element={<Index />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/email-bestaetigung" element={<EmailConfirmation />} />
+          <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/kunde/dashboard" element={<CustomerDashboard />} />
           <Route path="/kunde/projekt-erstellen" element={<CreateProject />} />
           <Route path="/kunde/projekt/:id" element={<CustomerProjectDetail />} />
