@@ -103,7 +103,7 @@ export default function Login() {
         type: 'signup',
         email: emailForResend,
         options: {
-          emailRedirectTo: `${window.location.origin}/`
+          emailRedirectTo: `${window.location.origin}/auth/callback`
         }
       });
       

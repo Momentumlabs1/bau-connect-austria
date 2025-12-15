@@ -66,7 +66,7 @@ export default function Register() {
         email: data.email,
         password: data.password,
         options: {
-          emailRedirectTo: `${window.location.origin}/`,
+          emailRedirectTo: `${window.location.origin}/auth/callback?role=${role}`,
           data: {
             role,
             first_name: data.firstName,
@@ -121,13 +121,12 @@ export default function Register() {
 
       toast({
         title: "Registrierung erfolgreich!",
-        description: "Willkommen bei BauConnect24! Sie werden jetzt weitergeleitet.",
+        description: "Bitte bestätigen Sie Ihre E-Mail-Adresse",
         duration: 5000,
       });
 
-      setTimeout(() => {
-        navigate(role === 'contractor' ? "/handwerker/onboarding" : "/kunde/dashboard");
-      }, 1500);
+      // Redirect to email confirmation page
+      navigate(`/email-bestaetigung?email=${encodeURIComponent(data.email)}&role=${role}`);
     } catch (error: any) {
       toast({
         title: "Fehler bei der Registrierung",

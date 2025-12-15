@@ -405,7 +405,7 @@ export default function CreateProject() {
       email,
       password,
       options: {
-        emailRedirectTo: `${window.location.origin}/`,
+        emailRedirectTo: `${window.location.origin}/auth/callback?role=customer`,
         data: { role: 'customer' }
       }
     });
@@ -442,6 +442,7 @@ export default function CreateProject() {
     }
 
     // Prepare project data for Edge Function
+    // Save as DRAFT until email is confirmed
     const projectPayload = {
       title: projectData.title,
       description: projectData.description,
@@ -455,6 +456,7 @@ export default function CreateProject() {
       images: projectData.images || [],
       funnel_answers: projectData.tradeSpecificAnswers || {},
       terms_accepted: true,
+      status: 'draft', // Save as draft until email is confirmed
     };
 
     console.log('Calling create-project-after-signup Edge Function');
@@ -482,44 +484,18 @@ export default function CreateProject() {
 
     console.log('Project created successfully:', projectResult.projectId);
 
-    // Update state - check if component is still mounted
+    // Update state
     setUserId(authData.user.id);
     setCreatedProjectId(projectResult.projectId);
     setShowAuthDialog(false);
     
     toast({
       title: "🎉 Registrierung erfolgreich!",
-      description: "Ihr Projekt wurde erstellt und Handwerker werden benachrichtigt.",
+      description: "Bitte bestätigen Sie Ihre E-Mail-Adresse. Ihr Projekt wird nach der Bestätigung veröffentlicht.",
     });
 
-    // Wait a moment for matches to be created
-    await new Promise(resolve => setTimeout(resolve, 1500));
-
-    // Load MATCHED contractors from matches table
-    console.log('📋 Loading matched contractors from matches...');
-    try {
-      const { data: matchesData } = await supabase
-        .from('matches')
-        .select(`
-          *,
-          contractor:contractors(*)
-        `)
-        .eq('project_id', projectResult.projectId)
-        .order('score', { ascending: false })
-        .limit(5);
-
-      const matchedContractorsList = matchesData
-        ?.map(match => match.contractor)
-        .filter(Boolean) || [];
-
-      console.log(`✅ Loaded ${matchedContractorsList.length} matched contractors`);
-      setMatchedContractors(matchedContractorsList);
-      setShowSuccessDialog(true);
-    } catch (error) {
-      console.error('Error loading contractors:', error);
-    }
-
-    return { success: true, user: authData.user };
+    // Redirect to email confirmation page instead of showing success dialog
+    navigate(`/email-bestaetigung?email=${encodeURIComponent(email)}&role=customer`);
   };
 
   const handleSubmit = async (authenticatedUser?: any) => {
