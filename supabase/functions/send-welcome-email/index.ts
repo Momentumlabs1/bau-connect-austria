@@ -50,7 +50,7 @@ const getCustomerTemplate = (firstName: string) => `
               <table role="presentation" style="width: 100%; margin: 32px 0;">
                 <tr>
                   <td align="center">
-                    <a href="https://bauconnect24.at/projekt-erstellen" style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px;">
+                    <a href="https://bauconnect24.at/kunde/projekt-erstellen" style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #f97316 0%, #ea580c 100%); color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px;">
                       Projekt erstellen →
                     </a>
                   </td>
