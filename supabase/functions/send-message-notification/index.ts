@@ -165,7 +165,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "BauConnect24 <noreply@bauconnect24.at>",
+        from: "BauConnect24 <onboarding@resend.dev>",
         to: [recipientProfile.email],
         subject: `💬 Neue Nachricht von ${senderName}`,
         html,
