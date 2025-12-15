@@ -1139,51 +1139,47 @@ export default function CreateProject() {
               <div className="space-y-4">
                 <div className="text-center">
                   <p className="text-sm text-muted-foreground mb-3">Oder:</p>
-                  <Button
-                    variant="outline"
-                    onClick={() => setShowDatePicker(!showDatePicker)}
-                    className="gap-2"
-                  >
-                    <Calendar className="h-4 w-4" />
-                    Genaues Datum auswählen
-                  </Button>
-                </div>
+                  <Popover open={showDatePicker} onOpenChange={setShowDatePicker}>
+                    <PopoverTrigger asChild>
+                      <Button
+                        variant="outline"
+                        className="gap-2"
+                      >
+                        <Calendar className="h-4 w-4" />
+                        Genaues Datum auswählen
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="center">
+                      <CalendarComponent
+                        mode="single"
+                        selected={selectedDate}
+                        onSelect={(date) => {
+                          setSelectedDate(date);
+                          setShowDatePicker(false);
+                          if (date) {
+                            const daysUntil = differenceInDays(date, new Date());
+                            let urgency: 'low' | 'medium' | 'high' = 'medium';
 
-                {showDatePicker && (
-                  <motion.div
-                    initial={{ opacity: 0, height: 0 }}
-                    animate={{ opacity: 1, height: "auto" }}
-                    className="flex justify-center"
-                  >
-                    <Popover open={true}>
-                      <PopoverContent className="w-auto p-0" align="center">
-                        <CalendarComponent
-                          mode="single"
-                          selected={selectedDate}
-                          onSelect={(date) => {
-                            setSelectedDate(date);
-                            if (date) {
-                              const daysUntil = differenceInDays(date, new Date());
-                              let urgency: 'low' | 'medium' | 'high' = 'medium';
-
-                              if (daysUntil <= 14) {
-                                urgency = 'high';
-                              } else if (daysUntil > 60) {
-                                urgency = 'low';
-                              }
-
-                              updateProjectData('urgency', urgency);
-                              updateProjectData('preferred_start_date', date.toISOString());
+                            // <= 7 days = high (Dringend), 8-30 = medium (Bald), > 30 = low (Flexibel)
+                            if (daysUntil <= 7) {
+                              urgency = 'high';
+                            } else if (daysUntil <= 30) {
+                              urgency = 'medium';
+                            } else {
+                              urgency = 'low';
                             }
-                          }}
-                          disabled={(date) => date < new Date()}
-                          initialFocus
-                          className="pointer-events-auto"
-                        />
-                      </PopoverContent>
-                    </Popover>
-                  </motion.div>
-                )}
+
+                            updateProjectData('urgency', urgency);
+                            updateProjectData('preferred_start_date', date.toISOString());
+                          }
+                        }}
+                        disabled={(date) => date < new Date()}
+                        initialFocus
+                        className="p-3 pointer-events-auto"
+                      />
+                    </PopoverContent>
+                  </Popover>
+                </div>
               </div>
                 
               {/* Selected Date Display with Urgency */}
