@@ -166,22 +166,18 @@ export default function CreateProject() {
     setShowDatePicker(false);
   }, [updateProjectData]);
 
-  // Urgency info derived from selected date
+  // Urgency info derived directly from projectData.urgency (single source of truth)
   const urgencyInfo = useMemo(() => {
-    if (!selectedDate) {
-      return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
+    switch (projectData.urgency) {
+      case 'high':
+        return { urgency: 'high' as const, label: 'Dringend', color: 'bg-red-500', textColor: 'text-red-600' };
+      case 'low':
+        return { urgency: 'low' as const, label: 'Flexibel', color: 'bg-green-500', textColor: 'text-green-600' };
+      case 'medium':
+      default:
+        return { urgency: 'medium' as const, label: 'Bald', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
     }
-
-    const daysUntil = differenceInDays(selectedDate, new Date());
-
-    if (daysUntil <= 14) {
-      return { urgency: 'high' as const, label: 'Dringend', color: 'bg-red-500', textColor: 'text-red-600' };
-    } else if (daysUntil <= 60) {
-      return { urgency: 'medium' as const, label: 'Mittel', color: 'bg-yellow-500', textColor: 'text-yellow-600' };
-    } else {
-      return { urgency: 'low' as const, label: 'Flexibel', color: 'bg-green-500', textColor: 'text-green-600' };
-    }
-  }, [selectedDate]);
+  }, [projectData.urgency]);
 
   const hasInitializedFromLocation = useRef(false);
 
@@ -1160,10 +1156,10 @@ export default function CreateProject() {
                             const daysUntil = differenceInDays(date, new Date());
                             let urgency: 'low' | 'medium' | 'high' = 'medium';
 
-                            // <= 7 days = high (Dringend), 8-30 = medium (Bald), > 30 = low (Flexibel)
+                            // <= 7 days = high (Dringend), 8-21 = medium (Bald), > 21 = low (Flexibel)
                             if (daysUntil <= 7) {
                               urgency = 'high';
-                            } else if (daysUntil <= 30) {
+                            } else if (daysUntil <= 21) {
                               urgency = 'medium';
                             } else {
                               urgency = 'low';
