@@ -190,6 +190,24 @@ Deno.serve(async (req) => {
       // Don't fail the whole operation
     }
 
+    // Send email notification (non-blocking)
+    try {
+      const emailUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1/send-offer-notification';
+      const response = await fetch(emailUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ offerId: offer.id })
+      });
+      if (!response.ok) {
+        console.error('❌ Email notification failed:', await response.text());
+      } else {
+        console.log('📧 Offer email notification sent');
+      }
+    } catch (emailError) {
+      console.error('❌ Email notification error:', emailError);
+      // Don't fail the operation
+    }
+
     return new Response(
       JSON.stringify({
         success: true,
