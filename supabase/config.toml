@@ -35,3 +35,15 @@ verify_jwt = true
 
 [functions.cleanup-test-users]
 verify_jwt = false
+
+[functions.send-welcome-email]
+verify_jwt = false
+
+[functions.send-new-lead-notification]
+verify_jwt = false
+
+[functions.send-offer-notification]
+verify_jwt = false
+
+[functions.send-message-notification]
+verify_jwt = false

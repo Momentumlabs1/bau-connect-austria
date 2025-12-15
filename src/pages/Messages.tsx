@@ -208,6 +208,18 @@ export default function Messages() {
       
       console.log('✅ Message sent successfully');
       setNewMessage('');
+
+      // Send email notification to recipient (non-blocking)
+      if (selectedConversation && otherParticipantId) {
+        supabase.functions.invoke('send-message-notification', {
+          body: {
+            conversationId: selectedConvId,
+            senderId: userId,
+            recipientId: otherParticipantId,
+            messagePreview: trimmedMessage
+          }
+        }).catch(err => console.error('Email notification failed:', err));
+      }
     } catch (error: any) {
       console.error('💥 Send message failed:', error);
       toast({

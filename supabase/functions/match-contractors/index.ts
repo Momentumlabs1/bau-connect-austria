@@ -350,7 +350,26 @@ Deno.serve(async (req) => {
       if (matchError) {
         console.error('❌ Error creating matches:', matchError)
       } else {
-        console.log('🎯 Created', matches.length, 'match records')
+      console.log('🎯 Created', matches.length, 'match records')
+
+        // Send email notifications to matched contractors (non-blocking)
+        try {
+          const emailUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1/send-new-lead-notification';
+          const contractorIds = matches.map(m => m.contractor_id);
+          const emailResponse = await fetch(emailUrl, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ projectId, contractorIds })
+          });
+          if (!emailResponse.ok) {
+            console.error('❌ Lead email notification failed:', await emailResponse.text());
+          } else {
+            console.log('📧 Lead email notifications sent to', contractorIds.length, 'contractors');
+          }
+        } catch (emailError) {
+          console.error('❌ Lead email notification error:', emailError);
+          // Don't fail the operation
+        }
       }
     }
 

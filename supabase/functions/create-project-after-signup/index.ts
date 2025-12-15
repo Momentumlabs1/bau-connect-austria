@@ -76,6 +76,29 @@ serve(async (req) => {
 
     console.log('Project created:', project.id);
 
+    // Send welcome email to new customer (non-blocking)
+    try {
+      const firstName = userData.user.user_metadata?.first_name || 'Kunde';
+      const emailUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1/send-welcome-email';
+      const emailResponse = await fetch(emailUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: userData.user.email,
+          firstName,
+          role: 'customer'
+        })
+      });
+      if (!emailResponse.ok) {
+        console.error('Welcome email failed:', await emailResponse.text());
+      } else {
+        console.log('📧 Welcome email sent to customer');
+      }
+    } catch (emailError) {
+      console.error('Welcome email error:', emailError);
+      // Don't fail project creation
+    }
+
     // Matching wird aktuell nicht im Backend ausgelöst,
     // sondern clientseitig nach der Registrierung im Funnel.
 

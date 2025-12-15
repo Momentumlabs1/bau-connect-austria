@@ -105,15 +105,29 @@ export default function Register() {
         }
       }
 
+      // Send welcome email (non-blocking)
+      try {
+        await supabase.functions.invoke('send-welcome-email', {
+          body: {
+            email: data.email,
+            firstName: data.firstName,
+            role
+          }
+        });
+      } catch (emailError) {
+        console.error('Welcome email failed:', emailError);
+        // Don't fail registration if email fails
+      }
+
       toast({
         title: "Registrierung erfolgreich!",
-        description: "Bitte bestätigen Sie Ihre E-Mail-Adresse. Wir haben Ihnen eine Bestätigungs-E-Mail gesendet.",
-        duration: 10000,
+        description: "Willkommen bei BauConnect24! Sie werden jetzt weitergeleitet.",
+        duration: 5000,
       });
 
       setTimeout(() => {
-        navigate("/login?registered=true");
-      }, 2000);
+        navigate(role === 'contractor' ? "/handwerker/onboarding" : "/kunde/dashboard");
+      }, 1500);
     } catch (error: any) {
       toast({
         title: "Fehler bei der Registrierung",
