@@ -82,10 +82,18 @@ export default function AuthCallback() {
           .eq('customer_id', user.id)
           .eq('status', 'draft');
 
+        console.log("Draft projects found:", draftProjects?.length || 0);
+        
+        let publishedProjectId: string | null = null;
+
         if (!draftError && draftProjects && draftProjects.length > 0) {
+          setMessage("Projekte werden veröffentlicht...");
+          
           // Publish all draft projects
           for (const project of draftProjects) {
-            await supabase
+            console.log("Publishing project:", project.id);
+            
+            const { error: updateError } = await supabase
               .from('projects')
               .update({ 
                 status: 'open',
@@ -93,13 +101,28 @@ export default function AuthCallback() {
               })
               .eq('id', project.id);
 
+            if (updateError) {
+              console.error('Project update error:', updateError);
+              continue;
+            }
+            
+            console.log("✅ Project published:", project.id);
+            publishedProjectId = project.id;
+
             // Trigger contractor matching
+            setMessage("Handwerker werden gesucht...");
             try {
-              await supabase.functions.invoke('match-contractors', {
+              const { data: matchData, error: matchError } = await supabase.functions.invoke('match-contractors', {
                 body: { projectId: project.id }
               });
+              
+              if (matchError) {
+                console.error('Matching error:', matchError);
+              } else {
+                console.log("✅ Matching completed:", matchData);
+              }
             } catch (matchErr) {
-              console.error('Matching error:', matchErr);
+              console.error('Matching exception:', matchErr);
             }
           }
 
@@ -123,22 +146,16 @@ export default function AuthCallback() {
         const roles = userRoles?.map(r => r.role) || [];
         const role = searchParams.get('role');
 
-        // Check if user has a newly published project to show
-        const { data: recentProjects } = await supabase
-          .from('projects')
-          .select('id')
-          .eq('customer_id', user.id)
-          .eq('status', 'open')
-          .order('created_at', { ascending: false })
-          .limit(1);
+        setMessage("Weiterleitung...");
 
         setTimeout(() => {
           if (roles.includes('contractor') || role === 'contractor') {
             navigate('/handwerker/onboarding');
           } else if (roles.includes('customer') || role === 'customer') {
-            // If there's a recently created project, go to that project detail
-            if (recentProjects && recentProjects.length > 0) {
-              navigate(`/kunde/projekte/${recentProjects[0].id}`);
+            // If we just published a project, go directly to it
+            if (publishedProjectId) {
+              console.log("Redirecting to published project:", publishedProjectId);
+              navigate(`/kunde/projekt/${publishedProjectId}`);
             } else {
               navigate('/kunde/dashboard');
             }
