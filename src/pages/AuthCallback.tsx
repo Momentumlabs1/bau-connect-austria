@@ -14,7 +14,29 @@ export default function AuthCallback() {
   useEffect(() => {
     const handleCallback = async () => {
       try {
-        // Get session from URL (Supabase handles the token exchange)
+        // First check for code in URL params (email confirmation uses this)
+        const code = searchParams.get('code');
+        const token_hash = searchParams.get('token_hash');
+        const type = searchParams.get('type');
+        
+        console.log("Auth callback - URL params:", { code, token_hash, type });
+        console.log("Auth callback - Full URL:", window.location.href);
+        console.log("Auth callback - Hash:", window.location.hash);
+        
+        // Try to exchange authorization code if present
+        if (code) {
+          console.log("Exchanging code for session...");
+          const { data, error: exchangeError } = await supabase.auth.exchangeCodeForSession(code);
+          
+          if (exchangeError) {
+            console.error("Code exchange error:", exchangeError);
+            throw exchangeError;
+          }
+          
+          console.log("Code exchange successful:", data);
+        }
+
+        // Get session (should be set now if code exchange worked)
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
 
         if (sessionError) {
@@ -22,11 +44,15 @@ export default function AuthCallback() {
           throw sessionError;
         }
 
+        console.log("Current session:", session);
+
         if (!session) {
-          // Try to exchange the token from URL
+          // Try to get tokens from URL hash (older flow)
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
           const accessToken = hashParams.get('access_token');
           const refreshToken = hashParams.get('refresh_token');
+          
+          console.log("Hash tokens:", { accessToken: !!accessToken, refreshToken: !!refreshToken });
           
           if (accessToken && refreshToken) {
             const { error: setSessionError } = await supabase.auth.setSession({
@@ -36,7 +62,7 @@ export default function AuthCallback() {
             
             if (setSessionError) throw setSessionError;
           } else {
-            throw new Error("Keine gültige Session gefunden");
+            throw new Error("Keine gültige Session gefunden. Bitte fordern Sie einen neuen Bestätigungslink an.");
           }
         }
 
