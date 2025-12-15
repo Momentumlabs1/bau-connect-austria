@@ -448,7 +448,7 @@ const Index = () => {
                         
                         {/* Live Search Suggestions */}
                         {showSuggestions && searchSuggestions.length > 0 && (
-                          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                          <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50">
                             <div className="p-2 bg-gray-50 border-b border-gray-200">
                               <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
                             </div>
@@ -543,7 +543,7 @@ const Index = () => {
                           
                           {/* Live Search Suggestions */}
                           {showSuggestions && searchSuggestions.length > 0 && (
-                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50 overflow-hidden">
+                            <div className="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-2xl border border-gray-200 z-50">
                               <div className="p-2 bg-gray-50 border-b border-gray-200">
                                 <p className="text-xs font-semibold text-muted-foreground uppercase">Passende Leistungen</p>
                               </div>
