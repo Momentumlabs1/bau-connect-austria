@@ -123,11 +123,25 @@ export default function AuthCallback() {
         const roles = userRoles?.map(r => r.role) || [];
         const role = searchParams.get('role');
 
+        // Check if user has a newly published project to show
+        const { data: recentProjects } = await supabase
+          .from('projects')
+          .select('id')
+          .eq('customer_id', user.id)
+          .eq('status', 'open')
+          .order('created_at', { ascending: false })
+          .limit(1);
+
         setTimeout(() => {
           if (roles.includes('contractor') || role === 'contractor') {
             navigate('/handwerker/onboarding');
           } else if (roles.includes('customer') || role === 'customer') {
-            navigate('/kunde/dashboard');
+            // If there's a recently created project, go to that project detail
+            if (recentProjects && recentProjects.length > 0) {
+              navigate(`/kunde/projekte/${recentProjects[0].id}`);
+            } else {
+              navigate('/kunde/dashboard');
+            }
           } else {
             navigate('/');
           }

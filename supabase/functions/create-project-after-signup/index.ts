@@ -43,10 +43,20 @@ serve(async (req) => {
     console.log('User validated:', userData.user.email);
 
     // Create project with SERVICE_ROLE_KEY (bypasses RLS)
-    // Use status from projectData (draft for unconfirmed email, open for confirmed)
-    const projectStatus = projectData.status || 'draft';
+    // Use status from projectData - 'open' for immediate publishing
+    const projectStatus = projectData.status || 'open';
     const confirmedAt = projectStatus === 'open' ? new Date().toISOString() : null;
     
+    // Generate keywords from description and title
+    const descriptionText = projectData.description || '';
+    const titleText = projectData.title || '';
+    const keywords = (descriptionText + ' ' + titleText)
+      .toLowerCase()
+      .split(/\s+/)
+      .filter((word: string) => word.length > 3)
+      .filter((word: string, index: number, self: string[]) => self.indexOf(word) === index)
+      .slice(0, 20);
+
     const { data: project, error: projectError } = await supabase
       .from('projects')
       .insert({
@@ -58,13 +68,16 @@ serve(async (req) => {
         postal_code: projectData.postal_code,
         city: projectData.city,
         address: projectData.address,
-        urgency: projectData.urgency,
+        urgency: projectData.urgency || 'medium',
         preferred_start_date: projectData.preferred_start_date,
         images: projectData.images || [],
+        fotos: projectData.images || [],
         funnel_answers: projectData.funnel_answers || {},
+        keywords: keywords,
+        projekt_typ: projectData.title,
         status: projectStatus,
         visibility: 'public',
-        terms_accepted: projectData.terms_accepted || false,
+        terms_accepted: projectData.terms_accepted || true,
         confirmed_at: confirmedAt,
       })
       .select()
@@ -78,12 +91,37 @@ serve(async (req) => {
       );
     }
 
-    console.log('Project created:', project.id);
+    console.log('✅ Project created:', project.id, 'Status:', projectStatus);
+
+    // If project is OPEN, trigger contractor matching immediately
+    if (projectStatus === 'open') {
+      console.log('🎯 Project is open, triggering contractor matching...');
+      try {
+        const matchUrl = `${supabaseUrl}/functions/v1/match-contractors`;
+        const matchResponse = await fetch(matchUrl, {
+          method: 'POST',
+          headers: { 
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${supabaseServiceKey}`
+          },
+          body: JSON.stringify({ projectId: project.id })
+        });
+        
+        if (matchResponse.ok) {
+          const matchResult = await matchResponse.json();
+          console.log('✅ Matching triggered:', matchResult.matches || 0, 'contractors');
+        } else {
+          console.error('⚠️ Matching response not ok:', await matchResponse.text());
+        }
+      } catch (matchError) {
+        console.error('⚠️ Match triggering error (non-blocking):', matchError);
+      }
+    }
 
     // Send welcome email to new customer (non-blocking)
     try {
       const firstName = userData.user.user_metadata?.first_name || 'Kunde';
-      const emailUrl = Deno.env.get('SUPABASE_URL') + '/functions/v1/send-welcome-email';
+      const emailUrl = `${supabaseUrl}/functions/v1/send-welcome-email`;
       const emailResponse = await fetch(emailUrl, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -100,17 +138,14 @@ serve(async (req) => {
       }
     } catch (emailError) {
       console.error('Welcome email error:', emailError);
-      // Don't fail project creation
     }
-
-    // Matching wird aktuell nicht im Backend ausgelöst,
-    // sondern clientseitig nach der Registrierung im Funnel.
 
     return new Response(
       JSON.stringify({ 
         success: true, 
         projectId: project.id,
-        project: project
+        project: project,
+        status: projectStatus
       }),
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     );
