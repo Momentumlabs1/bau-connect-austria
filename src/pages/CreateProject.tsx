@@ -397,101 +397,196 @@ export default function CreateProject() {
       return { success: false };
     }
 
-    const { data: authData, error: authError } = await supabase.auth.signUp({
-      email,
-      password,
-      options: {
-        emailRedirectTo: `${window.location.origin}/auth/callback?role=customer`,
-        data: { role: 'customer' }
-      }
-    });
+    setLoading(true);
 
-    if (authError) {
-      toast({
-        title: "Registrierung fehlgeschlagen",
-        description: authError.message,
-        variant: "destructive",
-      });
-      return { success: false };
-    }
-
-    if (!authData.user) {
-      toast({
-        title: "Registrierung fehlgeschlagen",
-        description: "Konto konnte nicht erstellt werden",
-        variant: "destructive",
-      });
-      return { success: false };
-    }
-
-    console.log('User registered, creating project via Edge Function:', authData.user.id);
-
-    // Update profile
     try {
-      await supabase.from('profiles').update({
-        first_name: firstName,
-        last_name: lastName,
-        phone: phone
-      }).eq('id', authData.user.id);
-    } catch (error) {
-      console.error('Profile update failed:', error);
-    }
+      // 1. Register user (auto_confirm is enabled, so user is immediately logged in)
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email,
+        password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/auth/callback?role=customer`,
+          data: { role: 'customer' }
+        }
+      });
 
-    // Prepare project data for Edge Function
-    // Save as DRAFT until email is confirmed
-    const projectPayload = {
-      title: projectData.title,
-      description: projectData.description,
-      gewerk_id: projectData.gewerk_id,
-      subcategory_id: projectData.subcategory_id,
-      postal_code: projectData.postal_code,
-      city: projectData.city,
-      address: projectData.address,
-      urgency: projectData.urgency,
-      preferred_start_date: projectData.preferred_start_date,
-      images: projectData.images || [],
-      funnel_answers: projectData.tradeSpecificAnswers || {},
-      terms_accepted: true,
-      status: 'draft', // Save as draft until email is confirmed
-    };
-
-    console.log('Calling create-project-after-signup Edge Function');
-
-    // Call Edge Function to create project (bypasses RLS since user isn't logged in yet)
-    const { data: projectResult, error: projectError } = await supabase.functions.invoke(
-      'create-project-after-signup',
-      {
-        body: {
-          userId: authData.user.id,
-          projectData: projectPayload,
-        },
+      if (authError) {
+        toast({
+          title: "Registrierung fehlgeschlagen",
+          description: authError.message,
+          variant: "destructive",
+        });
+        return { success: false };
       }
-    );
 
-    if (projectError || !projectResult?.success) {
-      console.error('Project creation error:', projectError);
+      if (!authData.user) {
+        toast({
+          title: "Registrierung fehlgeschlagen",
+          description: "Konto konnte nicht erstellt werden",
+          variant: "destructive",
+        });
+        return { success: false };
+      }
+
+      console.log('✅ User registered:', authData.user.id);
+
+      // 2. Wait for session to be established (auto_confirm enabled)
+      await new Promise(resolve => setTimeout(resolve, 500));
+      
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('📋 Session after signup:', !!session);
+
+      // 3. Update profile with name and phone
+      try {
+        await supabase.from('profiles').update({
+          first_name: firstName,
+          last_name: lastName,
+          phone: phone
+        }).eq('id', authData.user.id);
+        console.log('✅ Profile updated');
+      } catch (error) {
+        console.error('Profile update failed:', error);
+      }
+
+      // 4. Generate description from trade-specific answers
+      let generatedDescription = projectData.description || "";
+      if (Object.keys(projectData.tradeSpecificAnswers).length > 0) {
+        const answerTexts: string[] = [];
+        Object.entries(projectData.tradeSpecificAnswers).forEach(([key, value]) => {
+          if (Array.isArray(value) && value.length > 0) {
+            answerTexts.push(`${value.join(', ')}`);
+          } else if (typeof value === 'string' && value) {
+            answerTexts.push(value);
+          }
+        });
+        if (answerTexts.length > 0) {
+          generatedDescription = answerTexts.join('. ') + (generatedDescription ? '. ' + generatedDescription : '');
+        }
+      }
+      if (!generatedDescription || generatedDescription.length < 20) {
+        generatedDescription = `${projectData.title}. Weitere Details werden mit dem Handwerker besprochen.`;
+      }
+
+      // 5. Prepare project data - OPEN status immediately (no email confirmation needed)
+      const projectPayload = {
+        title: projectData.title,
+        description: generatedDescription,
+        gewerk_id: projectData.gewerk_id,
+        subcategory_id: projectData.subcategory_id,
+        postal_code: projectData.postal_code,
+        city: projectData.city,
+        address: projectData.address,
+        urgency: projectData.urgency || 'medium',
+        preferred_start_date: projectData.preferred_start_date,
+        images: projectData.images || [],
+        funnel_answers: projectData.tradeSpecificAnswers || {},
+        terms_accepted: true,
+        status: 'open', // DIRECTLY OPEN - no email confirmation required
+      };
+
+      console.log('📤 Creating project via Edge Function...');
+
+      // 6. Call Edge Function to create project
+      const { data: projectResult, error: projectError } = await supabase.functions.invoke(
+        'create-project-after-signup',
+        {
+          body: {
+            userId: authData.user.id,
+            projectData: projectPayload,
+          },
+        }
+      );
+
+      if (projectError || !projectResult?.success) {
+        console.error('❌ Project creation error:', projectError);
+        toast({
+          title: "Projekt konnte nicht erstellt werden",
+          description: "Bitte versuchen Sie es später erneut",
+          variant: "destructive",
+        });
+        return { success: false };
+      }
+
+      console.log('✅ Project created:', projectResult.projectId);
+
+      // 7. Trigger contractor matching
+      console.log('🎯 Triggering contractor matching...');
+      try {
+        const matchResponse = await fetch(
+          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/match-contractors`,
+          {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
+            },
+            body: JSON.stringify({ projectId: projectResult.projectId }),
+          }
+        );
+        const matchResult = await matchResponse.json();
+        console.log('✅ Matching complete:', matchResult);
+      } catch (matchErr) {
+        console.error('⚠️ Matching error (non-blocking):', matchErr);
+      }
+
+      // 8. Wait for matches to be created
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      // 9. Load matched contractors
+      console.log('📋 Loading matched contractors...');
+      const { data: matchesData } = await supabase
+        .from('matches')
+        .select(`*, contractor:contractors(*)`)
+        .eq('project_id', projectResult.projectId)
+        .order('score', { ascending: false })
+        .limit(5);
+
+      let matchedContractorsList = matchesData
+        ?.map(match => match.contractor)
+        .filter(Boolean) || [];
+
+      // Fallback: fetch contractors directly if no matches
+      if (matchedContractorsList.length === 0) {
+        console.log('🔄 No matches, fetching fallback contractors...');
+        const { data: contractors } = await supabase
+          .from('contractors')
+          .select('*')
+          .contains('trades', [projectData.gewerk_id])
+          .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
+          .limit(5);
+        
+        if (contractors && contractors.length > 0) {
+          matchedContractorsList = contractors;
+        }
+      }
+
+      console.log(`✅ Loaded ${matchedContractorsList.length} contractors`);
+
+      // 10. Update state and show success dialog
+      setUserId(authData.user.id);
+      setCreatedProjectId(projectResult.projectId);
+      setMatchedContractors(matchedContractorsList);
+      setShowAuthDialog(false);
+      setShowSuccessDialog(true);
+
       toast({
-        title: "Projekt konnte nicht erstellt werden",
-        description: "Bitte versuchen Sie es später erneut",
+        title: "🎉 Projekt erfolgreich erstellt!",
+        description: `${matchedContractorsList.length} Handwerker wurden gefunden`,
+      });
+
+      return { success: true, user: authData.user };
+
+    } catch (error: any) {
+      console.error('💥 Registration error:', error);
+      toast({
+        title: "Fehler",
+        description: error.message,
         variant: "destructive",
       });
       return { success: false };
+    } finally {
+      setLoading(false);
     }
-
-    console.log('Project created successfully:', projectResult.projectId);
-
-    // Update state
-    setUserId(authData.user.id);
-    setCreatedProjectId(projectResult.projectId);
-    setShowAuthDialog(false);
-    
-    toast({
-      title: "🎉 Registrierung erfolgreich!",
-      description: "Bitte bestätigen Sie Ihre E-Mail-Adresse. Ihr Projekt wird nach der Bestätigung veröffentlicht.",
-    });
-
-    // Redirect to email confirmation page instead of showing success dialog
-    navigate(`/email-bestaetigung?email=${encodeURIComponent(email)}&role=customer`);
   };
 
   const handleSubmit = async (authenticatedUser?: any) => {
