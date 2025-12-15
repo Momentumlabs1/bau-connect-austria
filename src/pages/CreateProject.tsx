@@ -400,7 +400,7 @@ export default function CreateProject() {
     setLoading(true);
 
     try {
-      // 1. Register user (auto_confirm is enabled, so user is immediately logged in)
+      // 1. Register user (email confirmation is REQUIRED)
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email,
         password,
@@ -430,13 +430,7 @@ export default function CreateProject() {
 
       console.log('✅ User registered:', authData.user.id);
 
-      // 2. Wait for session to be established (auto_confirm enabled)
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      const { data: { session } } = await supabase.auth.getSession();
-      console.log('📋 Session after signup:', !!session);
-
-      // 3. Update profile with name and phone
+      // 2. Update profile with name and phone (trigger creates profile automatically)
       try {
         await supabase.from('profiles').update({
           first_name: firstName,
@@ -448,7 +442,7 @@ export default function CreateProject() {
         console.error('Profile update failed:', error);
       }
 
-      // 4. Generate description from trade-specific answers
+      // 3. Generate description from trade-specific answers
       let generatedDescription = projectData.description || "";
       if (Object.keys(projectData.tradeSpecificAnswers).length > 0) {
         const answerTexts: string[] = [];
@@ -467,7 +461,7 @@ export default function CreateProject() {
         generatedDescription = `${projectData.title}. Weitere Details werden mit dem Handwerker besprochen.`;
       }
 
-      // 5. Prepare project data - OPEN status immediately (no email confirmation needed)
+      // 4. Prepare project data - DRAFT status (will be published after email confirmation)
       const projectPayload = {
         title: projectData.title,
         description: generatedDescription,
@@ -481,12 +475,12 @@ export default function CreateProject() {
         images: projectData.images || [],
         funnel_answers: projectData.tradeSpecificAnswers || {},
         terms_accepted: true,
-        status: 'open', // DIRECTLY OPEN - no email confirmation required
+        status: 'draft', // DRAFT - will be published after email confirmation
       };
 
-      console.log('📤 Creating project via Edge Function...');
+      console.log('📤 Creating draft project via Edge Function...');
 
-      // 6. Call Edge Function to create project
+      // 5. Call Edge Function to create project as draft
       const { data: projectResult, error: projectError } = await supabase.functions.invoke(
         'create-project-after-signup',
         {
@@ -507,72 +501,20 @@ export default function CreateProject() {
         return { success: false };
       }
 
-      console.log('✅ Project created:', projectResult.projectId);
+      console.log('✅ Draft project created:', projectResult.projectId);
 
-      // 7. Trigger contractor matching
-      console.log('🎯 Triggering contractor matching...');
-      try {
-        const matchResponse = await fetch(
-          `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/match-contractors`,
-          {
-            method: 'POST',
-            headers: {
-              'Content-Type': 'application/json',
-              'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY}`,
-            },
-            body: JSON.stringify({ projectId: projectResult.projectId }),
-          }
-        );
-        const matchResult = await matchResponse.json();
-        console.log('✅ Matching complete:', matchResult);
-      } catch (matchErr) {
-        console.error('⚠️ Matching error (non-blocking):', matchErr);
-      }
-
-      // 8. Wait for matches to be created
-      await new Promise(resolve => setTimeout(resolve, 1500));
-
-      // 9. Load matched contractors
-      console.log('📋 Loading matched contractors...');
-      const { data: matchesData } = await supabase
-        .from('matches')
-        .select(`*, contractor:contractors(*)`)
-        .eq('project_id', projectResult.projectId)
-        .order('score', { ascending: false })
-        .limit(5);
-
-      let matchedContractorsList = matchesData
-        ?.map(match => match.contractor)
-        .filter(Boolean) || [];
-
-      // Fallback: fetch contractors directly if no matches
-      if (matchedContractorsList.length === 0) {
-        console.log('🔄 No matches, fetching fallback contractors...');
-        const { data: contractors } = await supabase
-          .from('contractors')
-          .select('*')
-          .contains('trades', [projectData.gewerk_id])
-          .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
-          .limit(5);
-        
-        if (contractors && contractors.length > 0) {
-          matchedContractorsList = contractors;
-        }
-      }
-
-      console.log(`✅ Loaded ${matchedContractorsList.length} contractors`);
-
-      // 10. Update state and show success dialog
+      // 6. Update state and redirect to email confirmation page
       setUserId(authData.user.id);
       setCreatedProjectId(projectResult.projectId);
-      setMatchedContractors(matchedContractorsList);
       setShowAuthDialog(false);
-      setShowSuccessDialog(true);
 
       toast({
-        title: "🎉 Projekt erfolgreich erstellt!",
-        description: `${matchedContractorsList.length} Handwerker wurden gefunden`,
+        title: "🎉 Registrierung erfolgreich!",
+        description: "Bitte bestätigen Sie Ihre E-Mail-Adresse um Ihr Projekt zu veröffentlichen.",
       });
+
+      // Redirect to email confirmation page
+      navigate(`/email-bestaetigung?email=${encodeURIComponent(email)}&role=customer`);
 
       return { success: true, user: authData.user };
 

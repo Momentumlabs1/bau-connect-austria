@@ -4,7 +4,7 @@ project_id = "emfijlgxorugiuvykszg"
 verify_jwt = false
 
 [functions.match-contractors]
-verify_jwt = true
+verify_jwt = false
 
 [functions.purchase-lead]
 verify_jwt = true
