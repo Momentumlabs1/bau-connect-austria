@@ -173,7 +173,7 @@ serve(async (req) => {
         "Authorization": `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "BauConnect24 <onboarding@resend.dev>",
+        from: "BauConnect24 <noreply@bauconnect24.at>",
         to: [email],
         subject,
         html,
