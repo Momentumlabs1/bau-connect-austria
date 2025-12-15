@@ -85,6 +85,7 @@ const AppContent = () => {
           <Route path="/agb" element={<AGB />} />
           <Route path="/widerruf" element={<Widerruf />} />
           {/* Fallback redirects for old/legacy links */}
+          <Route path="/auftrag-erstellen" element={<Navigate to="/kunde/projekt-erstellen" replace />} />
           <Route path="/projekt-erstellen" element={<Navigate to="/kunde/projekt-erstellen" replace />} />
           {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
           <Route path="*" element={<NotFound />} />
