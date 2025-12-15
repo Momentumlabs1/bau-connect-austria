@@ -392,12 +392,12 @@ const Index = () => {
         <div className="container mx-auto px-4">
           <div className="max-w-6xl mx-auto">
             {/* Desktop: Two Columns | Mobile: Stacked */}
-            <div className="rounded-3xl overflow-hidden shadow-2xl">
+            <div className="relative z-20 rounded-3xl shadow-2xl">
               
               {/* Mobile Layout */}
               <div className="md:hidden">
                 {/* Image with Headline Overlay */}
-                <div className="relative h-[240px]">
+                <div className="relative h-[240px] rounded-t-3xl overflow-hidden">
                   <img 
                     src={contractorHero} 
                     alt="Professioneller Handwerker" 
@@ -495,15 +495,17 @@ const Index = () => {
 
               {/* Desktop Layout - Image Background with Overlay Content */}
               <div className="hidden md:block relative h-[500px] lg:h-[550px]">
-                {/* Full Background Image */}
-                <img 
-                  src={contractorHero} 
-                  alt="Professioneller Handwerker" 
-                  className="absolute inset-0 w-full h-full object-cover"
-                  loading="eager"
-                />
-                {/* Gradient Overlay - Left side darker for text */}
-                <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+                {/* Full Background Image (clipped to rounded corners) */}
+                <div className="absolute inset-0 rounded-3xl overflow-hidden">
+                  <img 
+                    src={contractorHero} 
+                    alt="Professioneller Handwerker" 
+                    className="absolute inset-0 w-full h-full object-cover"
+                    loading="eager"
+                  />
+                  {/* Gradient Overlay - Left side darker for text */}
+                  <div className="absolute inset-0 bg-gradient-to-r from-black/80 via-black/50 to-transparent" />
+                </div>
                 
                 {/* Content Overlay - Left Side */}
                 <div className="relative z-10 h-full flex flex-col justify-center p-10 lg:p-14 max-w-2xl">
