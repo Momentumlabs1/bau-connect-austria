@@ -163,7 +163,8 @@ const Index = () => {
   // Live search for subcategories
   useEffect(() => {
     const searchSubcategories = async () => {
-      if (searchQuery.trim().length < 1) {
+      // Mindestens 2 Zeichen für Suche erforderlich
+      if (searchQuery.trim().length < 2) {
         setSearchSuggestions([]);
         setShowSuggestions(false);
         return;
@@ -441,7 +442,7 @@ const Index = () => {
                           value={searchQuery}
                           onChange={(e) => setSearchQuery(e.target.value)}
                           onKeyPress={handleKeyPress}
-                          onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
+                          onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                           onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                           className="pl-11 h-12 text-base border-2 border-gray-200 focus:border-blue-600 rounded-xl"
                         />
@@ -538,7 +539,7 @@ const Index = () => {
                             value={searchQuery}
                             onChange={(e) => setSearchQuery(e.target.value)}
                             onKeyPress={handleKeyPress}
-                            onFocus={() => searchQuery.length >= 1 && setShowSuggestions(true)}
+                            onFocus={() => searchQuery.length >= 2 && setShowSuggestions(true)}
                             onBlur={() => setTimeout(() => setShowSuggestions(false), 200)}
                             className="pl-12 h-14 text-lg border-2 border-gray-200 focus:border-blue-600 rounded-xl"
                           />
