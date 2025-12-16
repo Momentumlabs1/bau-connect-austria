@@ -53,6 +53,9 @@ serve(async (req) => {
     const projectData = verificationRecord.project_data;
     const password = projectData?.password;
     const firstName = projectData?.firstName;
+    const lastName = projectData?.lastName;
+    const role = projectData?.role || 'customer';
+    const isDirectRegistration = projectData?.isDirectRegistration === true;
 
     if (!password) {
       throw new Error("Password not found in verification record");
@@ -72,24 +75,37 @@ serve(async (req) => {
       email_confirm: true,
       user_metadata: {
         first_name: firstName,
-        role: projectData?.role || 'customer'
+        role: role
       }
     });
 
     if (signUpError) {
       // Check if user already exists
       if (signUpError.message?.includes("already been registered")) {
-        console.log("User already exists, attempting to sign in...");
+        console.log("User already exists, handling based on registration type...");
         
         // Try to get existing user
         const { data: existingUsers } = await supabase.auth.admin.listUsers();
         const existingUser = existingUsers?.users?.find(u => u.email?.toLowerCase() === email.toLowerCase());
         
         if (existingUser) {
-          // User exists, create project for them
           const userId = existingUser.id;
           
-          // Create the project
+          // If direct registration (no project), just return success
+          if (isDirectRegistration) {
+            console.log("✅ Direct registration - user already exists, returning success");
+            return new Response(
+              JSON.stringify({
+                success: true,
+                userId: userId,
+                userExists: true,
+                message: "Email bestätigt! Konto existiert bereits.",
+              }),
+              { headers: { "Content-Type": "application/json", ...corsHeaders } }
+            );
+          }
+          
+          // Create project for existing user
           const { data: project, error: projectError } = await supabase
             .from("projects")
             .insert({
@@ -151,12 +167,12 @@ serve(async (req) => {
     const userId = authData.user.id;
     console.log("✅ User created:", userId);
 
-    // Add customer role
+    // Add role
     const { error: roleError } = await supabase
       .from("user_roles")
       .insert({
         user_id: userId,
-        role: projectData?.role || "customer",
+        role: role,
       });
 
     if (roleError) {
@@ -170,7 +186,7 @@ serve(async (req) => {
         id: userId,
         email: email.toLowerCase(),
         first_name: firstName || null,
-        last_name: projectData?.lastName || null,
+        last_name: lastName || null,
         phone: projectData?.phone || null,
       });
 
@@ -178,7 +194,54 @@ serve(async (req) => {
       console.error("Profile insert error:", profileError);
     }
 
-    // Create the project
+    // If contractor, create contractor profile
+    if (role === 'contractor') {
+      console.log("Creating contractor profile...");
+      const { error: contractorError } = await supabase
+        .from("contractors")
+        .insert({
+          id: userId,
+          company_name: `${firstName || ''} ${lastName || ''}`.trim() || 'Neuer Handwerker',
+          trades: [],
+          postal_codes: [],
+          service_radius: 50,
+          verified: false,
+          handwerker_status: 'REGISTERED',
+          wallet_balance: 0,
+        });
+
+      if (contractorError) {
+        console.error("Contractor profile error:", contractorError);
+      } else {
+        console.log("✅ Contractor profile created");
+      }
+    }
+
+    // If direct registration (no project), return success without project creation
+    if (isDirectRegistration) {
+      console.log("✅ Direct registration completed for:", role);
+      
+      // Clean up old verification codes
+      await supabase
+        .from("email_verification_codes")
+        .delete()
+        .eq("email", email.toLowerCase())
+        .neq("id", verificationRecord.id);
+
+      return new Response(
+        JSON.stringify({
+          success: true,
+          userId: userId,
+          role: role,
+          message: role === 'contractor' 
+            ? "Registrierung erfolgreich! Bitte vervollständigen Sie Ihr Profil."
+            : "Registrierung erfolgreich! Willkommen bei BauConnect24.",
+        }),
+        { headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Create the project (for customer project funnel)
     const { data: project, error: projectError } = await supabase
       .from("projects")
       .insert({
