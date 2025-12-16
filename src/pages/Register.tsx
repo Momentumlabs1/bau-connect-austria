@@ -7,13 +7,18 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Navbar } from "@/components/Navbar";
-import { Wrench, User } from "lucide-react";
+import { Wrench, User, Mail, ArrowLeft, Loader2 } from "lucide-react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Link } from "react-router-dom";
 import { Footer } from "@/components/Footer";
+import {
+  InputOTP,
+  InputOTPGroup,
+  InputOTPSlot,
+} from "@/components/ui/input-otp";
 
 const registerSchema = z.object({
   email: z.string().email("Bitte geben Sie eine gültige E-Mail ein"),
@@ -31,6 +36,11 @@ export default function Register() {
   const [searchParams] = useSearchParams();
   const [role, setRole] = useState<"customer" | "contractor" | null>(null);
   const [loading, setLoading] = useState(false);
+  const [verificationStep, setVerificationStep] = useState<'form' | 'otp'>('form');
+  const [otpCode, setOtpCode] = useState("");
+  const [verifyingOtp, setVerifyingOtp] = useState(false);
+  const [registeredEmail, setRegisteredEmail] = useState("");
+  const [formData, setFormData] = useState<RegisterForm | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
   
@@ -61,82 +71,223 @@ export default function Register() {
     if (!role) return;
     
     setLoading(true);
+    setFormData(data);
+    setRegisteredEmail(data.email);
+    
     try {
-      const { error, data: authData } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?role=${role}`,
-          data: {
-            role,
-            first_name: data.firstName,
-            last_name: data.lastName,
-          },
-        },
+      // Send verification code instead of creating account directly
+      const { error } = await supabase.functions.invoke('send-verification-code', {
+        body: {
+          email: data.email,
+          firstName: data.firstName,
+          projectData: {
+            // No project data - just registration
+            password: data.password,
+            firstName: data.firstName,
+            lastName: data.lastName,
+            role: role,
+            isDirectRegistration: true, // Flag to indicate no project
+          }
+        }
       });
 
       if (error) throw error;
 
-      // Update profile with additional info
-      if (authData.user) {
-        await supabase
-          .from("profiles")
-          .update({
-            first_name: data.firstName,
-            last_name: data.lastName,
-          })
-          .eq("id", authData.user.id);
-
-        // Note: user_roles is automatically created by handle_new_user() trigger
-        
-        // Create contractor profile if registering as contractor
-        if (role === 'contractor' && authData.user) {
-          await supabase
-            .from('contractors')
-            .insert({
-              id: authData.user.id,
-              company_name: `${data.firstName} ${data.lastName}`,
-              trades: [],
-              postal_codes: [],
-              service_radius: 50,
-              verified: false,
-              handwerker_status: 'REGISTERED'
-            });
-        }
-      }
-
-      // Send welcome email (non-blocking)
-      try {
-        await supabase.functions.invoke('send-welcome-email', {
-          body: {
-            email: data.email,
-            firstName: data.firstName,
-            role
-          }
-        });
-      } catch (emailError) {
-        console.error('Welcome email failed:', emailError);
-        // Don't fail registration if email fails
-      }
-
       toast({
-        title: "Registrierung erfolgreich!",
-        description: "Bitte bestätigen Sie Ihre E-Mail-Adresse",
-        duration: 5000,
+        title: "Bestätigungscode gesendet!",
+        description: `Wir haben einen 6-stelligen Code an ${data.email} gesendet.`,
       });
 
-      // Redirect to email confirmation page
-      navigate(`/email-bestaetigung?email=${encodeURIComponent(data.email)}&role=${role}`);
+      setVerificationStep('otp');
     } catch (error: any) {
+      console.error('Registration error:', error);
       toast({
         title: "Fehler bei der Registrierung",
-        description: error.message,
+        description: error.message || "Bitte versuchen Sie es erneut",
         variant: "destructive",
       });
     } finally {
       setLoading(false);
     }
   };
+
+  const handleVerifyOtp = async () => {
+    if (otpCode.length !== 6 || !formData || !role) return;
+    
+    setVerifyingOtp(true);
+    
+    try {
+      const { data: verifyResult, error } = await supabase.functions.invoke('verify-email-code', {
+        body: {
+          email: registeredEmail,
+          code: otpCode,
+        }
+      });
+
+      if (error) throw error;
+      
+      if (verifyResult?.error) {
+        throw new Error(verifyResult.error);
+      }
+
+      // Sign in the user after successful verification
+      const { error: signInError } = await supabase.auth.signInWithPassword({
+        email: registeredEmail,
+        password: formData.password,
+      });
+
+      if (signInError) {
+        console.error('Sign-in after verification failed:', signInError);
+        // Don't throw - user was created, they can sign in manually
+      }
+
+      toast({
+        title: "Registrierung erfolgreich!",
+        description: role === 'contractor' 
+          ? "Willkommen! Sie werden zum Onboarding weitergeleitet."
+          : "Willkommen bei BauConnect24!",
+      });
+
+      // Redirect based on role
+      if (role === 'contractor') {
+        navigate('/handwerker/onboarding');
+      } else {
+        navigate('/kunde/dashboard');
+      }
+    } catch (error: any) {
+      console.error('OTP verification error:', error);
+      toast({
+        title: "Verifizierungsfehler",
+        description: error.message || "Ungültiger Code. Bitte versuchen Sie es erneut.",
+        variant: "destructive",
+      });
+    } finally {
+      setVerifyingOtp(false);
+    }
+  };
+
+  const handleResendCode = async () => {
+    if (!formData || !role) return;
+    
+    setLoading(true);
+    try {
+      const { error } = await supabase.functions.invoke('send-verification-code', {
+        body: {
+          email: registeredEmail,
+          firstName: formData.firstName,
+          projectData: {
+            password: formData.password,
+            firstName: formData.firstName,
+            lastName: formData.lastName,
+            role: role,
+            isDirectRegistration: true,
+          }
+        }
+      });
+
+      if (error) throw error;
+
+      toast({
+        title: "Neuer Code gesendet!",
+        description: `Ein neuer 6-stelliger Code wurde an ${registeredEmail} gesendet.`,
+      });
+      setOtpCode("");
+    } catch (error: any) {
+      toast({
+        title: "Fehler",
+        description: "Code konnte nicht gesendet werden",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // OTP Verification Step
+  if (verificationStep === 'otp') {
+    return (
+      <div className="min-h-screen bg-background">
+        <Navbar />
+        <div className="container mx-auto px-4 py-12">
+          <div className="mx-auto max-w-md">
+            <Card>
+              <CardHeader className="text-center">
+                <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10">
+                  <Mail className="h-8 w-8 text-primary" />
+                </div>
+                <CardTitle>E-Mail bestätigen</CardTitle>
+                <CardDescription>
+                  Wir haben einen 6-stelligen Code an<br />
+                  <span className="font-medium text-foreground">{registeredEmail}</span><br />
+                  gesendet.
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="space-y-6">
+                <div className="flex justify-center">
+                  <InputOTP
+                    maxLength={6}
+                    value={otpCode}
+                    onChange={setOtpCode}
+                  >
+                    <InputOTPGroup>
+                      <InputOTPSlot index={0} />
+                      <InputOTPSlot index={1} />
+                      <InputOTPSlot index={2} />
+                      <InputOTPSlot index={3} />
+                      <InputOTPSlot index={4} />
+                      <InputOTPSlot index={5} />
+                    </InputOTPGroup>
+                  </InputOTP>
+                </div>
+
+                <Button 
+                  onClick={handleVerifyOtp}
+                  disabled={otpCode.length !== 6 || verifyingOtp}
+                  className="w-full"
+                >
+                  {verifyingOtp ? (
+                    <>
+                      <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                      Wird überprüft...
+                    </>
+                  ) : (
+                    "E-Mail bestätigen"
+                  )}
+                </Button>
+
+                <div className="text-center space-y-2">
+                  <p className="text-sm text-muted-foreground">
+                    Keinen Code erhalten?
+                  </p>
+                  <Button 
+                    variant="link" 
+                    onClick={handleResendCode}
+                    disabled={loading}
+                    className="text-primary"
+                  >
+                    {loading ? "Wird gesendet..." : "Neuen Code senden"}
+                  </Button>
+                </div>
+
+                <Button
+                  variant="ghost"
+                  onClick={() => {
+                    setVerificationStep('form');
+                    setOtpCode("");
+                  }}
+                  className="w-full"
+                >
+                  <ArrowLeft className="mr-2 h-4 w-4" />
+                  Zurück zur Registrierung
+                </Button>
+              </CardContent>
+            </Card>
+          </div>
+        </div>
+        <Footer />
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-background">
@@ -292,7 +443,14 @@ export default function Register() {
                       Zurück
                     </Button>
                     <Button type="submit" disabled={loading} className="flex-1">
-                      {loading ? "Wird erstellt..." : "Registrieren"}
+                      {loading ? (
+                        <>
+                          <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                          Wird gesendet...
+                        </>
+                      ) : (
+                        "Code senden"
+                      )}
                     </Button>
                   </div>
                 </form>
