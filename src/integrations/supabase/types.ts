@@ -252,6 +252,39 @@ export type Database = {
           },
         ]
       }
+      email_verification_codes: {
+        Row: {
+          code: string
+          created_at: string
+          email: string
+          expires_at: string
+          id: string
+          project_data: Json | null
+          user_id: string | null
+          verified_at: string | null
+        }
+        Insert: {
+          code: string
+          created_at?: string
+          email: string
+          expires_at: string
+          id?: string
+          project_data?: Json | null
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Update: {
+          code?: string
+          created_at?: string
+          email?: string
+          expires_at?: string
+          id?: string
+          project_data?: Json | null
+          user_id?: string | null
+          verified_at?: string | null
+        }
+        Relationships: []
+      }
       gewerke_config: {
         Row: {
           base_price: number
