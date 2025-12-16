@@ -9,7 +9,8 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { ReviewList } from "@/components/reviews/ReviewList";
 import { PortfolioGallery } from "@/components/portfolio/PortfolioGallery";
-import { Star, MapPin, CheckCircle2, Loader2, MessageSquare } from "lucide-react";
+import { VerificationBadge } from "@/components/contractor/VerificationBadge";
+import { Star, MapPin, Loader2, MessageSquare } from "lucide-react";
 
 interface Contractor {
   id: string;
@@ -111,12 +112,7 @@ export default function PublicContractorProfile() {
                   <MapPin className="h-4 w-4" />
                   {contractor.city}
                 </div>
-                {contractor.verified && (
-                  <Badge className="bg-green-500">
-                    <CheckCircle2 className="h-3 w-3 mr-1" />
-                    Verifiziert
-                  </Badge>
-                )}
+                <VerificationBadge verified={contractor.verified} size="sm" />
               </div>
               
               <div className="flex items-center justify-center md:justify-start gap-2 mb-4">

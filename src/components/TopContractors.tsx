@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Star, MapPin, Briefcase } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
+import { VerificationBadge } from "@/components/contractor/VerificationBadge";
 
 interface TopContractor {
   id: string;
@@ -15,6 +16,7 @@ interface TopContractor {
   rating: number;
   total_reviews: number;
   profile_image_url: string | null;
+  verified: boolean;
 }
 
 const GEWERKE_LABELS: Record<string, { label: string; icon: string }> = {
@@ -39,7 +41,7 @@ export function TopContractors() {
     try {
       const { data, error } = await supabase
         .from('contractors')
-        .select('id, company_name, trades, city, description, rating, total_reviews, profile_image_url')
+        .select('id, company_name, trades, city, description, rating, total_reviews, profile_image_url, verified')
         .eq('verified', true)
         .gt('rating', 4.5)
         .order('rating', { ascending: false })
@@ -98,9 +100,12 @@ export function TopContractors() {
 
                   {/* Content */}
                   <div className="flex-1 min-w-0">
-                    <h3 className="text-xl font-bold text-gray-900 mb-2 group-hover:text-blue-600 transition-colors">
-                      {contractor.company_name}
-                    </h3>
+                    <div className="flex items-center gap-2 mb-2">
+                      <h3 className="text-xl font-bold text-gray-900 group-hover:text-blue-600 transition-colors">
+                        {contractor.company_name}
+                      </h3>
+                      <VerificationBadge verified={contractor.verified} size="sm" />
+                    </div>
 
                     {/* Rating */}
                     <div className="flex items-center gap-2 mb-3">
