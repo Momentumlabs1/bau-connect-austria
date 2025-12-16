@@ -378,157 +378,12 @@ export default function CreateProject() {
     return { success: true, user: data.user };
   };
 
+  // This is a fallback - the OTP flow in AuthDialog is the primary registration path
   const handleRegister = async (email: string, password: string, firstName: string, lastName: string, phone: string, acceptTerms: boolean) => {
-    if (!acceptTerms) {
-      toast({
-        title: "AGB nicht akzeptiert",
-        description: "Bitte akzeptieren Sie die AGB und Datenschutzerklärung",
-        variant: "destructive",
-      });
-      return { success: false };
-    }
-
-    if (password.length < 6) {
-      toast({
-        title: "Passwort zu kurz",
-        description: "Das Passwort muss mindestens 6 Zeichen lang sein",
-        variant: "destructive",
-      });
-      return { success: false };
-    }
-
-    setLoading(true);
-
-    try {
-      // 1. Register user (email confirmation is REQUIRED)
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email,
-        password,
-        options: {
-          emailRedirectTo: `${window.location.origin}/auth/callback?role=customer`,
-          data: { role: 'customer' }
-        }
-      });
-
-      if (authError) {
-        toast({
-          title: "Registrierung fehlgeschlagen",
-          description: authError.message,
-          variant: "destructive",
-        });
-        return { success: false };
-      }
-
-      if (!authData.user) {
-        toast({
-          title: "Registrierung fehlgeschlagen",
-          description: "Konto konnte nicht erstellt werden",
-          variant: "destructive",
-        });
-        return { success: false };
-      }
-
-      console.log('✅ User registered:', authData.user.id);
-
-      // 2. Update profile with name and phone (trigger creates profile automatically)
-      try {
-        await supabase.from('profiles').update({
-          first_name: firstName,
-          last_name: lastName,
-          phone: phone
-        }).eq('id', authData.user.id);
-        console.log('✅ Profile updated');
-      } catch (error) {
-        console.error('Profile update failed:', error);
-      }
-
-      // 3. Generate description from trade-specific answers
-      let generatedDescription = projectData.description || "";
-      if (Object.keys(projectData.tradeSpecificAnswers).length > 0) {
-        const answerTexts: string[] = [];
-        Object.entries(projectData.tradeSpecificAnswers).forEach(([key, value]) => {
-          if (Array.isArray(value) && value.length > 0) {
-            answerTexts.push(`${value.join(', ')}`);
-          } else if (typeof value === 'string' && value) {
-            answerTexts.push(value);
-          }
-        });
-        if (answerTexts.length > 0) {
-          generatedDescription = answerTexts.join('. ') + (generatedDescription ? '. ' + generatedDescription : '');
-        }
-      }
-      if (!generatedDescription || generatedDescription.length < 20) {
-        generatedDescription = `${projectData.title}. Weitere Details werden mit dem Handwerker besprochen.`;
-      }
-
-      // 4. Prepare project data - DRAFT status (will be published after email confirmation)
-      const projectPayload = {
-        title: projectData.title,
-        description: generatedDescription,
-        gewerk_id: projectData.gewerk_id,
-        subcategory_id: projectData.subcategory_id,
-        postal_code: projectData.postal_code,
-        city: projectData.city,
-        address: projectData.address,
-        urgency: projectData.urgency || 'medium',
-        preferred_start_date: projectData.preferred_start_date,
-        images: projectData.images || [],
-        funnel_answers: projectData.tradeSpecificAnswers || {},
-        terms_accepted: true,
-        status: 'draft', // DRAFT - will be published after email confirmation
-      };
-
-      console.log('📤 Creating draft project via Edge Function...');
-
-      // 5. Call Edge Function to create project as draft
-      const { data: projectResult, error: projectError } = await supabase.functions.invoke(
-        'create-project-after-signup',
-        {
-          body: {
-            userId: authData.user.id,
-            projectData: projectPayload,
-          },
-        }
-      );
-
-      if (projectError || !projectResult?.success) {
-        console.error('❌ Project creation error:', projectError);
-        toast({
-          title: "Projekt konnte nicht erstellt werden",
-          description: "Bitte versuchen Sie es später erneut",
-          variant: "destructive",
-        });
-        return { success: false };
-      }
-
-      console.log('✅ Draft project created:', projectResult.projectId);
-
-      // 6. Update state and redirect to email confirmation page
-      setUserId(authData.user.id);
-      setCreatedProjectId(projectResult.projectId);
-      setShowAuthDialog(false);
-
-      toast({
-        title: "🎉 Registrierung erfolgreich!",
-        description: "Bitte bestätigen Sie Ihre E-Mail-Adresse um Ihr Projekt zu veröffentlichen.",
-      });
-
-      // Redirect to email confirmation page
-      navigate(`/email-bestaetigung?email=${encodeURIComponent(email)}&role=customer`);
-
-      return { success: true, user: authData.user };
-
-    } catch (error: any) {
-      console.error('💥 Registration error:', error);
-      toast({
-        title: "Fehler",
-        description: error.message,
-        variant: "destructive",
-      });
-      return { success: false };
-    } finally {
-      setLoading(false);
-    }
+    // The OTP flow handles registration directly in AuthDialog
+    // This function is kept as a fallback but should not be called in normal flow
+    console.log('handleRegister called - OTP flow should handle this');
+    return { success: false };
   };
 
   const handleSubmit = async (authenticatedUser?: any) => {
@@ -1591,13 +1446,49 @@ export default function CreateProject() {
         </div>
       </div>
 
-      {/* Auth Dialog */}
+      {/* Auth Dialog with OTP verification */}
       <AuthDialog
         open={showAuthDialog}
         onOpenChange={setShowAuthDialog}
         onLogin={handleLogin}
         onRegister={async (email, password, firstName, lastName, phone, acceptTerms) => {
           return await handleRegister(email, password, firstName, lastName, phone, acceptTerms);
+        }}
+        projectData={{
+          title: projectData.title,
+          description: projectData.description,
+          gewerk_id: projectData.gewerk_id,
+          subcategory_id: projectData.subcategory_id,
+          postal_code: projectData.postal_code,
+          city: projectData.city,
+          address: projectData.address,
+          urgency: projectData.urgency || 'medium',
+          preferred_start_date: projectData.preferred_start_date,
+          images: projectData.images || [],
+          funnel_answers: projectData.tradeSpecificAnswers || {},
+        }}
+        onVerificationSuccess={(userId, projectId) => {
+          console.log('✅ Verification success:', userId, projectId);
+          setUserId(userId);
+          setCreatedProjectId(projectId);
+          
+          // Load matched contractors and show success dialog
+          supabase
+            .from('matches')
+            .select(`
+              contractor:contractors(
+                id, company_name, city, rating, total_reviews, profile_image_url
+              )
+            `)
+            .eq('project_id', projectId)
+            .then(({ data: matches }) => {
+              const contractors = matches
+                ?.map(m => m.contractor)
+                .filter(Boolean)
+                .slice(0, 5) || [];
+              setMatchedContractors(contractors);
+              setShowSuccessDialog(true);
+            });
         }}
       />
     </div>
