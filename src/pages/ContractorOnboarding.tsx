@@ -72,7 +72,6 @@ export default function ContractorOnboarding() {
 
   // Step 4: Qualifikationen
   const [gewerbescheinUrl, setGewerbescheinUrl] = useState("");
-  const [versicherungUrl, setVersicherungUrl] = useState("");
   const [zertifikateUrls, setZertifikateUrls] = useState<string[]>([]);
   const [portfolioImages, setPortfolioImages] = useState<string[]>([]);
 
@@ -112,7 +111,6 @@ export default function ContractorOnboarding() {
       setTeamSize(contractor.team_size || 1);
       setCapacityPerMonth([contractor.capacity_per_month || 5]);
       setGewerbescheinUrl(contractor.gewerbeschein_url || "");
-      setVersicherungUrl(contractor.versicherung_url || "");
       setZertifikateUrls(contractor.zertifikate_urls || []);
       setPortfolioImages(contractor.portfolio_images || []);
     }
@@ -163,8 +161,8 @@ export default function ContractorOnboarding() {
       case 2:
         return true;
       case 3:
-        if (!gewerbescheinUrl || !versicherungUrl) {
-          toast({ title: "Fehler", description: "Gewerbeschein und Versicherungsnachweis sind erforderlich", variant: "destructive" });
+        if (!gewerbescheinUrl) {
+          toast({ title: "Fehler", description: "Gewerbeschein ist erforderlich", variant: "destructive" });
           return false;
         }
         return true;
@@ -209,7 +207,6 @@ export default function ContractorOnboarding() {
           team_size: teamSize,
           capacity_per_month: capacityPerMonth[0],
           gewerbeschein_url: gewerbescheinUrl,
-          versicherung_url: versicherungUrl,
           zertifikate_urls: zertifikateUrls,
           portfolio_images: portfolioImages,
           handwerker_status: "UNDER_REVIEW",
@@ -451,16 +448,6 @@ export default function ContractorOnboarding() {
               <SingleImageUpload
                 value={gewerbescheinUrl}
                 onChange={setGewerbescheinUrl}
-                bucket="contractor-portfolios"
-                folder={`${contractorId || ''}/documents`}
-              />
-            </div>
-
-            <div>
-              <Label>Versicherungsnachweis *</Label>
-              <SingleImageUpload
-                value={versicherungUrl}
-                onChange={setVersicherungUrl}
                 bucket="contractor-portfolios"
                 folder={`${contractorId || ''}/documents`}
               />
