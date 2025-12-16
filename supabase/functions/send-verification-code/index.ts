@@ -13,9 +13,13 @@ serve(async (req) => {
   }
 
   try {
-    const { email, firstName, projectData, password } = await req.json();
+    const { email, firstName, projectData } = await req.json();
+    
+    // Password kann entweder direkt oder in projectData sein
+    const passwordToStore = projectData?.password;
     
     console.log("Sending verification code to:", email);
+    console.log("Password provided:", !!passwordToStore);
 
     if (!email) {
       throw new Error("Email is required");
@@ -43,7 +47,7 @@ serve(async (req) => {
       .insert({
         email: email.toLowerCase(),
         code,
-        project_data: { ...projectData, password, firstName },
+        project_data: { ...projectData, password: passwordToStore, firstName },
         expires_at: expiresAt.toISOString(),
       });
 
