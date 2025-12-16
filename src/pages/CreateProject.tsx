@@ -19,6 +19,7 @@ import { LoadingSpinner } from "@/components/LoadingSpinner";
 import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { motion } from "framer-motion";
+import { getOptionEmoji, getSubcategoryEmoji } from "@/utils/optionEmojis";
 import { Card } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { AuthDialog } from "@/components/AuthDialog";
@@ -686,10 +687,11 @@ export default function CreateProject() {
                   ) : subCategories.length > 0 ? (
                     subCategories.map((category) => {
                       const IconComponent = category.icon ? iconMap[category.icon] : null;
+                      const emoji = getSubcategoryEmoji(category.name, category.description);
                       return (
                         <SelectionCard
                           key={category.id}
-                          icon={IconComponent ? <IconComponent className="h-10 w-10" /> : <span className="text-3xl">📋</span>}
+                          icon={IconComponent ? <IconComponent className="h-10 w-10" /> : <span className="text-3xl">{emoji}</span>}
                           label={category.name}
                           description={category.description}
                           isSelected={projectData.subcategory_id === category.id}
@@ -777,7 +779,7 @@ export default function CreateProject() {
                               "w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-colors",
                               isSelected ? "bg-primary/10" : "bg-gray-100"
                             )}>
-                              {option.icon || "📋"}
+                              {option.icon || getOptionEmoji(option.value, option.label)}
                             </div>
                             <p className="font-semibold text-base">{option.label}</p>
                           </div>
@@ -820,7 +822,7 @@ export default function CreateProject() {
                               "w-16 h-16 rounded-full flex items-center justify-center text-3xl transition-colors",
                               isSelected ? "bg-primary/10" : "bg-gray-100"
                             )}>
-                              {option.icon || "📋"}
+                              {option.icon || getOptionEmoji(option.value, option.label)}
                             </div>
                             <Label 
                               htmlFor={option.value} 
