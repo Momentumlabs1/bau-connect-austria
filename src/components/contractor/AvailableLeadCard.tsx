@@ -5,6 +5,15 @@ import { MapPin, Euro, Clock, Eye } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 
+const GEWERK_LABELS: Record<string, string> = {
+  'elektriker': '⚡ Elektriker',
+  'sanitar-heizung': '🔧 Sanitär/Heizung',
+  'dachdecker': '🏠 Dachdecker',
+  'fassade': '🧱 Fassade',
+  'maler': '🎨 Maler',
+  'bau': '🏗️ Bau/Rohbau',
+};
+
 interface AvailableLeadCardProps {
   match: {
     id: string;
@@ -53,6 +62,12 @@ export const AvailableLeadCard = ({ match, index, onSelect }: AvailableLeadCardP
           <div className="flex-1">
             <div className="flex items-start gap-3 mb-3">
               <div className="flex-1">
+                <div className="flex items-center gap-2 mb-1">
+                  <Badge variant="outline" className="text-xs font-medium">
+                    {GEWERK_LABELS[match.project.gewerk_id] || match.project.gewerk_id}
+                  </Badge>
+                  {getUrgencyBadge(match.project.urgency)}
+                </div>
                 <h3 className="text-lg font-semibold mb-1">{match.project.title}</h3>
                 <p className="text-sm text-muted-foreground flex items-center gap-1">
                   <MapPin className="h-3 w-3" />
@@ -62,7 +77,6 @@ export const AvailableLeadCard = ({ match, index, onSelect }: AvailableLeadCardP
                   Genaue Adresse nach Kauf sichtbar
                 </p>
               </div>
-              {getUrgencyBadge(match.project.urgency)}
             </div>
 
             <div className="flex items-center gap-4 mb-4">
