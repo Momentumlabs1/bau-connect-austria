@@ -42,9 +42,9 @@ const Index = () => {
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
   const [heroImageLoaded, setHeroImageLoaded] = useState(false);
   const [stats, setStats] = useState({
-    totalProjects: 0,
+    openProjects: 0,
     totalContractors: 0,
-    averageRating: 0,
+    completedProjects: 0,
   });
 
 
@@ -134,26 +134,34 @@ const Index = () => {
   useEffect(() => {
     const fetchStats = async () => {
       try {
-        const { count: projectsCount } = await supabase.from("projects").select("*", { count: "exact", head: true });
+        // Offene Projekte (status = 'open')
+        const { count: openCount } = await supabase
+          .from("projects")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "open");
+
+        // Fertiggestellte Projekte (status = 'completed')
+        const { count: completedCount } = await supabase
+          .from("projects")
+          .select("*", { count: "exact", head: true })
+          .eq("status", "completed");
+
+        // Alle Handwerker (RLS beschränkt auf verified, also zählen wir was sichtbar ist)
         const { count: contractorsCount } = await supabase
           .from("contractors")
           .select("*", { count: "exact", head: true });
-        const { data: reviews } = await supabase.from("reviews").select("rating");
-
-        const avgRating =
-          reviews && reviews.length > 0 ? reviews.reduce((acc, r) => acc + r.rating, 0) / reviews.length : 4.9;
 
         setStats({
-          totalProjects: projectsCount || 0,
+          openProjects: openCount || 0,
           totalContractors: contractorsCount || 0,
-          averageRating: reviews && reviews.length > 0 ? Number(avgRating.toFixed(1)) : 0,
+          completedProjects: completedCount || 0,
         });
       } catch (error) {
         console.error("Error fetching stats:", error);
         setStats({
-          totalProjects: 0,
+          openProjects: 0,
           totalContractors: 0,
-          averageRating: 0,
+          completedProjects: 0,
         });
       }
     };
@@ -245,7 +253,7 @@ const Index = () => {
   ];
 
   // Trust signals now use real stats - only shown if data exists
-  const hasRealStats = stats.totalProjects > 0 || stats.totalContractors > 0;
+  const hasRealStats = stats.openProjects > 0 || stats.totalContractors > 0 || stats.completedProjects > 0;
 
   return (
     <div className="min-h-screen bg-white">
@@ -622,27 +630,47 @@ const Index = () => {
                 ))}
               </div>
 
-              {/* Trust Signals - Only show if real data exists */}
+              {/* Trust Signals - Improved Design with 3 Cards */}
               {hasRealStats && (
-                <div className="flex flex-nowrap justify-center items-center gap-12 md:gap-20">
-                  {stats.totalProjects > 0 && (
-                    <div className="flex items-center gap-4">
-                      <Hammer className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <div className="text-3xl md:text-4xl font-bold text-gray-900">{stats.totalProjects}</div>
-                        <div className="text-sm md:text-base text-gray-600 whitespace-nowrap">Projekte</div>
-                      </div>
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+                  {/* Offene Projekte */}
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                    <div className="w-14 h-14 mx-auto mb-4 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <Hammer className="h-7 w-7 text-white" />
                     </div>
-                  )}
-                  {stats.totalContractors > 0 && (
-                    <div className="flex items-center gap-4">
-                      <Users className="h-8 w-8 md:h-10 md:w-10 text-blue-600 flex-shrink-0" />
-                      <div>
-                        <div className="text-3xl md:text-4xl font-bold text-gray-900">{stats.totalContractors}</div>
-                        <div className="text-sm md:text-base text-gray-600 whitespace-nowrap">Handwerker</div>
-                      </div>
+                    <div className="text-3xl md:text-4xl font-extrabold text-blue-700 mb-1">
+                      {stats.openProjects}
                     </div>
-                  )}
+                    <div className="text-sm md:text-base font-medium text-blue-600">
+                      Offene Projekte
+                    </div>
+                  </div>
+
+                  {/* Handwerker */}
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                    <div className="w-14 h-14 mx-auto mb-4 bg-yellow-500 rounded-xl flex items-center justify-center shadow-lg">
+                      <Users className="h-7 w-7 text-white" />
+                    </div>
+                    <div className="text-3xl md:text-4xl font-extrabold text-yellow-700 mb-1">
+                      {stats.totalContractors}
+                    </div>
+                    <div className="text-sm md:text-base font-medium text-yellow-600">
+                      Handwerker
+                    </div>
+                  </div>
+
+                  {/* Fertiggestellte Projekte */}
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
+                    <div className="w-14 h-14 mx-auto mb-4 bg-green-600 rounded-xl flex items-center justify-center shadow-lg">
+                      <CheckCircle className="h-7 w-7 text-white" />
+                    </div>
+                    <div className="text-3xl md:text-4xl font-extrabold text-green-700 mb-1">
+                      {stats.completedProjects}
+                    </div>
+                    <div className="text-sm md:text-base font-medium text-green-600">
+                      Fertiggestellte Projekte
+                    </div>
+                  </div>
                 </div>
               )}
             </div>
