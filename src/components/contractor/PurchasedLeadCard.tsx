@@ -126,7 +126,11 @@ export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
               </div>
               <div className="flex items-center gap-1">
                 <Euro className="h-3 w-3" />
-                €{(match.project.final_price ?? 5).toFixed(2)}
+                {match.project.final_price != null ? (
+                  <>€{match.project.final_price.toFixed(2)}</>
+                ) : (
+                  <span className="text-muted-foreground">Preis wird berechnet</span>
+                )}
               </div>
             </div>
           </div>

@@ -68,9 +68,11 @@ export const AvailableLeadCard = ({ match, index, onSelect }: AvailableLeadCardP
             <div className="flex items-center gap-4 mb-4">
               <div className="bg-primary/10 px-3 py-1.5 rounded-lg">
                 <p className="text-xs font-medium text-muted-foreground">Lead-Preis</p>
-                <p className="text-lg font-bold text-primary">
-                  €{(match.project.final_price ?? 5).toFixed(2)}
-                </p>
+                {match.project.final_price != null ? (
+                  <p className="text-lg font-bold text-primary">€{match.project.final_price.toFixed(2)}</p>
+                ) : (
+                  <p className="text-sm font-semibold text-muted-foreground">Preis wird berechnet</p>
+                )}
               </div>
               <div className="bg-muted/50 px-3 py-1.5 rounded-lg">
                 <p className="text-xs font-medium text-muted-foreground">Dringlichkeit</p>
