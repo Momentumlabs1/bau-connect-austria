@@ -18,7 +18,7 @@ interface AvailableLeadCardProps {
       postal_code: string;
       gewerk_id: string;
       urgency: string;
-      final_price: number;
+      final_price: number | null;
       description?: string;
       images?: string[];
       funnel_answers?: Record<string, any>;
@@ -69,7 +69,7 @@ export const AvailableLeadCard = ({ match, index, onSelect }: AvailableLeadCardP
               <div className="bg-primary/10 px-3 py-1.5 rounded-lg">
                 <p className="text-xs font-medium text-muted-foreground">Lead-Preis</p>
                 <p className="text-lg font-bold text-primary">
-                  €{match.project.final_price.toFixed(2)}
+                  €{(match.project.final_price ?? 5).toFixed(2)}
                 </p>
               </div>
               <div className="bg-muted/50 px-3 py-1.5 rounded-lg">
