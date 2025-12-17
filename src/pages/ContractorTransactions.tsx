@@ -133,7 +133,7 @@ export default function ContractorTransactions() {
           <div className="flex items-center justify-between">
             <div>
               <p className="text-sm text-muted-foreground mb-1">Aktuelles Guthaben</p>
-              <p className="text-4xl font-bold">€{currentBalance.toFixed(2)}</p>
+              <p className="text-4xl font-bold">€{(currentBalance ?? 0).toFixed(2)}</p>
             </div>
             <Wallet className="h-12 w-12 text-primary" />
           </div>
@@ -189,10 +189,10 @@ export default function ContractorTransactions() {
                           : 'text-primary'
                       }`}>
                         {transaction.type === 'LEAD_PURCHASE' ? '-' : '+'}
-                        €{Math.abs(transaction.amount).toFixed(2)}
+                        €{Math.abs(transaction.amount ?? 0).toFixed(2)}
                       </p>
                       <p className="text-xs text-muted-foreground">
-                        Saldo: €{transaction.balance_after.toFixed(2)}
+                        Saldo: €{(transaction.balance_after ?? 0).toFixed(2)}
                       </p>
                     </div>
                   </div>

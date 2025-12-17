@@ -162,7 +162,7 @@ export function LeadPreviewCard({
           <div className="border-t pt-4 space-y-3">
             <div className="bg-primary/5 border border-primary/20 rounded-lg p-4">
               <p className="text-sm text-muted-foreground mb-1">Lead-Preis:</p>
-              <p className="text-3xl font-bold text-primary">€{leadPrice.toFixed(2)}</p>
+              <p className="text-3xl font-bold text-primary">€{(leadPrice ?? 0).toFixed(2)}</p>
             </div>
 
             {insufficientBalance && (
@@ -172,11 +172,11 @@ export function LeadPreviewCard({
                   Guthaben zu niedrig
                 </p>
                 <p className="text-sm text-muted-foreground">
-                  Ihr aktuelles Guthaben: €{currentBalance.toFixed(2)}
+                  Ihr aktuelles Guthaben: €{(currentBalance ?? 0).toFixed(2)}
                   <br />
-                  Benötigt: €{leadPrice.toFixed(2)}
+                  Benötigt: €{(leadPrice ?? 0).toFixed(2)}
                   <br />
-                  Fehlbetrag: €{(leadPrice - currentBalance).toFixed(2)}
+                  Fehlbetrag: €{((leadPrice ?? 0) - (currentBalance ?? 0)).toFixed(2)}
                 </p>
               </div>
             )}
@@ -232,7 +232,7 @@ export function LeadPreviewCard({
                 ) : voucherCode ? (
                   <>Lead mit Gutschein kaufen</>
                 ) : (
-                  <>Lead jetzt kaufen für €{leadPrice.toFixed(2)}</>
+                  <>Lead jetzt kaufen für €{(leadPrice ?? 0).toFixed(2)}</>
                 )}
               </Button>
             )}

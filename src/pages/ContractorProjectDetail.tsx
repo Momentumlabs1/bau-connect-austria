@@ -197,7 +197,7 @@ export default function ContractorProjectDetail() {
     if (!voucherCode && (insufficientBalance || walletBalance < project.final_price)) {
       toast({
         title: "Guthaben zu niedrig",
-        description: `Sie benötigen €${project.final_price}. Ihr aktuelles Guthaben: €${walletBalance.toFixed(2)}`,
+        description: `Sie benötigen €${(project.final_price ?? 0).toFixed(2)}. Ihr aktuelles Guthaben: €${(walletBalance ?? 0).toFixed(2)}`,
         variant: "destructive",
         action: (
           <Button 
@@ -232,7 +232,7 @@ export default function ContractorProjectDetail() {
           setInsufficientBalance(true);
           toast({
             title: "Guthaben zu niedrig",
-            description: `Lead-Preis: €${project.final_price}. Ihr Guthaben: €${walletBalance.toFixed(2)}`,
+            description: `Lead-Preis: €${(project.final_price ?? 0).toFixed(2)}. Ihr Guthaben: €${(walletBalance ?? 0).toFixed(2)}`,
             variant: "destructive",
             action: (
               <Button 
@@ -284,8 +284,8 @@ export default function ContractorProjectDetail() {
       toast({
         title: data.voucherApplied ? "Lead mit Gutschein gekauft! 🎉" : "Lead erfolgreich gekauft! 🎉",
         description: data.voucherApplied 
-          ? `${data.message} Neues Guthaben: €${data.newBalance.toFixed(2)}`
-          : `Sie können jetzt den Kunden kontaktieren. Neues Guthaben: €${data.newBalance.toFixed(2)}`,
+          ? `${data.message} Neues Guthaben: €${(data.newBalance ?? 0).toFixed(2)}`
+          : `Sie können jetzt den Kunden kontaktieren. Neues Guthaben: €${(data.newBalance ?? 0).toFixed(2)}`,
       });
     } catch (error: any) {
       console.error("Purchase error:", error);
@@ -381,7 +381,7 @@ export default function ContractorProjectDetail() {
         {!hasPurchasedLead ? (
           <LeadPreviewCard
             project={project}
-            leadPrice={project.final_price}
+            leadPrice={project.final_price ?? 5}
             onPurchase={handlePurchaseLead}
             purchasing={purchasing}
             insufficientBalance={insufficientBalance}
