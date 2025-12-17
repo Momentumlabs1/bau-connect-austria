@@ -112,7 +112,7 @@ export function TopContractors() {
                       <div className="flex items-center gap-1">
                         <Star className="h-5 w-5 text-yellow-500 fill-yellow-500" />
                         <span className="font-bold text-gray-900">
-                          {contractor.rating.toFixed(1)}
+                          {(contractor.rating ?? 0).toFixed(1)}
                         </span>
                       </div>
                       <span className="text-sm text-gray-600">

@@ -117,7 +117,7 @@ export default function PublicContractorProfile() {
               
               <div className="flex items-center justify-center md:justify-start gap-2 mb-4">
                 <Star className="h-5 w-5 fill-yellow-400 text-yellow-400" />
-                <span className="font-semibold">{contractor.rating.toFixed(1)}</span>
+                <span className="font-semibold">{(contractor.rating ?? 0).toFixed(1)}</span>
                 <span className="text-muted-foreground">
                   ({contractor.total_reviews} Bewertungen)
                 </span>

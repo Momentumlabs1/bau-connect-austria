@@ -123,7 +123,7 @@ export const FullProjectDetails = ({ project, customer, purchasedAt, categoryQue
           <div>
             <p className="font-semibold">Lead erfolgreich gekauft</p>
             <p className="text-sm text-muted-foreground">
-              Gekauft am {format(new Date(purchasedAt), 'dd. MMM yyyy, HH:mm', { locale: de })} Uhr für €{project.final_price.toFixed(2)}
+              Gekauft am {format(new Date(purchasedAt), 'dd. MMM yyyy, HH:mm', { locale: de })} Uhr für €{(project.final_price ?? 0).toFixed(2)}
             </p>
           </div>
         </div>
