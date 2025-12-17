@@ -18,7 +18,7 @@ interface PurchasedLeadCardProps {
       title: string;
       city: string;
       postal_code: string;
-      final_price: number;
+      final_price: number | null;
       customer_id: string;
       status?: string;
       profiles?: {
@@ -126,7 +126,7 @@ export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
               </div>
               <div className="flex items-center gap-1">
                 <Euro className="h-3 w-3" />
-                €{match.project.final_price.toFixed(2)}
+                €{(match.project.final_price ?? 5).toFixed(2)}
               </div>
             </div>
           </div>
