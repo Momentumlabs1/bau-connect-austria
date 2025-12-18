@@ -1,13 +1,12 @@
 import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-import { Resend } from "https://esm.sh/resend@2.0.0";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
   "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type",
 };
 
-const getEmailTemplate = (code: string, firstName?: string) => `
+const getEmailTemplate = (resetLink: string, firstName?: string) => `
 <!DOCTYPE html>
 <html lang="de">
 <head>
@@ -22,34 +21,41 @@ const getEmailTemplate = (code: string, firstName?: string) => `
           <tr>
             <td style="padding: 40px 40px 20px; text-align: center; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); border-radius: 16px 16px 0 0;">
               <h1 style="margin: 0; color: #ffffff; font-size: 28px; font-weight: 700;">BauConnect24</h1>
-              <p style="margin: 8px 0 0; color: #bfdbfe; font-size: 14px;">E-Mail-Bestätigung</p>
+              <p style="margin: 8px 0 0; color: #bfdbfe; font-size: 14px;">Passwort zurücksetzen</p>
             </td>
           </tr>
           <tr>
             <td style="padding: 40px;">
               <h2 style="margin: 0 0 20px; color: #18181b; font-size: 24px; font-weight: 600;">
-                ${firstName ? `Willkommen, ${firstName}! 🔐` : 'Willkommen bei BauConnect24! 🔐'}
+                Passwort zurücksetzen 🔑
               </h2>
               <p style="margin: 0 0 20px; color: #52525b; font-size: 16px; line-height: 1.6;">
-                Vielen Dank für Ihre Registrierung! Um Ihre E-Mail-Adresse zu bestätigen und Ihr Projekt zu veröffentlichen, geben Sie bitte den folgenden Code ein:
+                ${firstName ? `Hallo ${firstName},` : 'Hallo,'}<br><br>
+                Sie haben eine Anfrage zum Zurücksetzen Ihres Passworts gestellt. Klicken Sie auf den Button unten, um ein neues Passwort zu erstellen.
               </p>
-              <div style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border: 2px solid #3b82f6; padding: 24px; margin: 24px 0; border-radius: 12px; text-align: center;">
-                <p style="margin: 0 0 8px; color: #1e40af; font-size: 14px; font-weight: 500;">Ihr Bestätigungscode:</p>
-                <p style="margin: 0; color: #1d4ed8; font-size: 36px; font-weight: 700; letter-spacing: 8px; font-family: 'Courier New', Courier, monospace;">
-                  ${code}
-                </p>
-              </div>
               <div style="background-color: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 24px 0; border-radius: 0 8px 8px 0;">
                 <p style="margin: 0; color: #92400e; font-size: 14px;">
-                  ⚠️ Dieser Code ist nur <strong>15 Minuten</strong> gültig.
+                  ⚠️ Dieser Link ist nur <strong>1 Stunde</strong> gültig.
                 </p>
               </div>
-              <p style="margin: 0; color: #71717a; font-size: 14px; line-height: 1.6;">
-                Geben Sie diesen Code im Formular ein, um Ihre E-Mail-Adresse zu bestätigen und Ihr Projekt zu veröffentlichen.
+              <table role="presentation" style="width: 100%; margin: 32px 0;">
+                <tr>
+                  <td align="center">
+                    <a href="${resetLink}" style="display: inline-block; padding: 16px 32px; background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%); color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; border-radius: 8px;">
+                      Neues Passwort erstellen →
+                    </a>
+                  </td>
+                </tr>
+              </table>
+              <p style="margin: 0 0 16px; color: #71717a; font-size: 14px; line-height: 1.6;">
+                Falls der Button nicht funktioniert, kopieren Sie diesen Link in Ihren Browser:
+              </p>
+              <p style="margin: 0; color: #3b82f6; font-size: 12px; word-break: break-all;">
+                ${resetLink}
               </p>
               <div style="margin-top: 32px; padding-top: 24px; border-top: 1px solid #e5e7eb;">
                 <p style="margin: 0; color: #71717a; font-size: 14px; line-height: 1.6;">
-                  Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren.
+                  Falls Sie diese Anfrage nicht gestellt haben, können Sie diese E-Mail ignorieren. Ihr Passwort bleibt unverändert.
                 </p>
               </div>
             </td>
@@ -79,17 +85,13 @@ serve(async (req) => {
   }
 
   try {
-    const { email, firstName, projectData } = await req.json();
+    const { email } = await req.json();
     
-    // Password kann entweder direkt oder in projectData sein
-    const passwordToStore = projectData?.password;
-    
-    console.log("Sending verification code to:", email);
-    console.log("Password provided:", !!passwordToStore);
-
     if (!email) {
       throw new Error("Email is required");
     }
+
+    console.log("Processing password reset request for:", email);
 
     const supabaseUrl = Deno.env.get("SUPABASE_URL")!;
     const supabaseServiceKey = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY")!;
@@ -97,60 +99,91 @@ serve(async (req) => {
 
     const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
-    // Generate 6-digit code
-    const code = Math.floor(100000 + Math.random() * 900000).toString();
-    const expiresAt = new Date(Date.now() + 15 * 60 * 1000); // 15 minutes
+    // Check if user exists
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("id, first_name, email")
+      .eq("email", email.toLowerCase())
+      .single();
 
-    // Delete any existing codes for this email
+    // Always return success to prevent email enumeration attacks
+    if (!profile) {
+      console.log("No user found with email:", email);
+      return new Response(
+        JSON.stringify({ success: true, message: "If an account exists, a reset email has been sent." }),
+        { headers: { "Content-Type": "application/json", ...corsHeaders } }
+      );
+    }
+
+    // Generate secure token
+    const token = crypto.randomUUID() + "-" + crypto.randomUUID();
+    const expiresAt = new Date(Date.now() + 60 * 60 * 1000); // 1 hour
+
+    // Delete any existing tokens for this email
     await supabase
-      .from("email_verification_codes")
+      .from("password_reset_tokens")
       .delete()
       .eq("email", email.toLowerCase());
 
-    // Store the code with project data and password (hashed by Supabase on signup)
+    // Store the token
     const { error: insertError } = await supabase
-      .from("email_verification_codes")
+      .from("password_reset_tokens")
       .insert({
         email: email.toLowerCase(),
-        code,
-        project_data: { ...projectData, password: passwordToStore, firstName },
+        token,
         expires_at: expiresAt.toISOString(),
       });
 
     if (insertError) {
-      console.error("Insert error:", insertError);
-      throw new Error("Failed to store verification code");
+      console.error("Failed to store reset token:", insertError);
+      throw new Error("Failed to process reset request");
     }
 
-    // Send email with code
+    // Build reset link
+    const baseUrl = "https://bauconnect24.at";
+    const resetLink = `${baseUrl}/passwort-zuruecksetzen?token=${token}`;
+
+    // Send email
     if (resendApiKey) {
-      const resend = new Resend(resendApiKey);
-      const html = getEmailTemplate(code, firstName);
-      
-      await resend.emails.send({
-        from: "BauConnect24 <noreply@bauconnect24.at>",
-        to: [email],
-        subject: "🔐 Ihr Bestätigungscode: " + code,
-        html,
+      const html = getEmailTemplate(resetLink, profile.first_name);
+
+      const response = await fetch("https://api.resend.com/emails", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "Authorization": `Bearer ${resendApiKey}`,
+        },
+        body: JSON.stringify({
+          from: "BauConnect24 <noreply@bauconnect24.at>",
+          to: [email],
+          subject: "🔑 Passwort zurücksetzen - BauConnect24",
+          html,
+        }),
       });
-      
-      console.log("✅ Verification code sent via Resend");
+
+      const data = await response.json();
+
+      if (!response.ok) {
+        console.error("Resend API error:", data);
+        throw new Error("Failed to send reset email");
+      }
+
+      console.log("✅ Password reset email sent:", data);
     } else {
-      console.log("⚠️ No RESEND_API_KEY - Code stored but email not sent:", code);
+      console.log("⚠️ No RESEND_API_KEY - Token generated but email not sent");
+      console.log("Reset link:", resetLink);
     }
 
     return new Response(
       JSON.stringify({ 
         success: true, 
-        message: "Verification code sent",
-        // Only include code in dev for testing (remove in production)
-        ...(Deno.env.get("ENVIRONMENT") !== "production" && { devCode: code })
+        message: "If an account exists, a reset email has been sent." 
       }),
       { headers: { "Content-Type": "application/json", ...corsHeaders } }
     );
 
   } catch (error: any) {
-    console.error("Error:", error);
+    console.error("Error in send-password-reset:", error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { status: 500, headers: { "Content-Type": "application/json", ...corsHeaders } }

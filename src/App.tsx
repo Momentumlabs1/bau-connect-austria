@@ -40,6 +40,8 @@ import HandwerkerDirectory from "./pages/HandwerkerDirectory";
 import EmailConfirmation from "./pages/EmailConfirmation";
 import AuthCallback from "./pages/AuthCallback";
 import AdminDashboard from "./pages/AdminDashboard";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
 import { CookieBanner } from "@/components/CookieBanner";
 
 const queryClient = new QueryClient();
@@ -58,6 +60,8 @@ const AppContent = () => {
           <Route path="/" element={<Index />} />
           <Route path="/register" element={<Register />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/passwort-vergessen" element={<ForgotPassword />} />
+          <Route path="/passwort-zuruecksetzen" element={<ResetPassword />} />
           <Route path="/email-bestaetigung" element={<EmailConfirmation />} />
           <Route path="/auth/callback" element={<AuthCallback />} />
           <Route path="/kunde/dashboard" element={<CustomerDashboard />} />
