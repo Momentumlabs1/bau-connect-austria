@@ -190,9 +190,14 @@ export default function Login() {
                 )}
 
                 <div className="text-center text-sm text-muted-foreground">
-                  <a href="#" className="hover:text-primary">
+                  <Button
+                    type="button"
+                    variant="link"
+                    onClick={() => navigate("/passwort-vergessen")}
+                    className="p-0 h-auto text-muted-foreground hover:text-primary"
+                  >
                     Passwort vergessen?
-                  </a>
+                  </Button>
                 </div>
 
                 <div className="text-center text-sm">
