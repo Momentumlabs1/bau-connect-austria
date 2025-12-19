@@ -629,50 +629,6 @@ const Index = () => {
                   </button>
                 ))}
               </div>
-
-              {/* Trust Signals - Compact Horizontal Design */}
-              {hasRealStats && (
-                <div className="grid grid-cols-3 gap-2 md:gap-4">
-                  {/* Offene Projekte */}
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-2 md:p-4 text-center">
-                    <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-blue-600 rounded-lg flex items-center justify-center">
-                      <Hammer className="h-4 w-4 md:h-5 md:w-5 text-white" />
-                    </div>
-                    <div className="text-lg md:text-2xl font-bold text-blue-700">
-                      {stats.openProjects}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-medium text-blue-600 leading-tight">
-                      Offene Projekte
-                    </div>
-                  </div>
-
-                  {/* Handwerker */}
-                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-2 md:p-4 text-center">
-                    <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-yellow-500 rounded-lg flex items-center justify-center">
-                      <Users className="h-4 w-4 md:h-5 md:w-5 text-white" />
-                    </div>
-                    <div className="text-lg md:text-2xl font-bold text-yellow-700">
-                      {stats.totalContractors}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-medium text-yellow-600 leading-tight">
-                      Handwerker
-                    </div>
-                  </div>
-
-                  {/* Fertiggestellte Projekte */}
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-2 md:p-4 text-center">
-                    <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-green-600 rounded-lg flex items-center justify-center">
-                      <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-white" />
-                    </div>
-                    <div className="text-lg md:text-2xl font-bold text-green-700">
-                      {stats.completedProjects}
-                    </div>
-                    <div className="text-[10px] md:text-xs font-medium text-green-600 leading-tight">
-                      Abgeschlossen
-                    </div>
-                  </div>
-                </div>
-              )}
             </div>
           </div>
         </section>
@@ -737,6 +693,56 @@ const Index = () => {
           </div>
         </div>
       </section>
+
+      {/* Trust Signals - Nach So einfach funktioniert's */}
+      {hasRealStats && role !== 'contractor' && (
+        <section className="py-8 md:py-12 bg-white">
+          <div className="container mx-auto px-4">
+            <div className="max-w-2xl mx-auto">
+              <div className="grid grid-cols-3 gap-2 md:gap-4">
+                {/* Offene Projekte */}
+                <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-2 md:p-4 text-center">
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-blue-600 rounded-lg flex items-center justify-center">
+                    <Hammer className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                  </div>
+                  <div className="text-lg md:text-2xl font-bold text-blue-700">
+                    {stats.openProjects}
+                  </div>
+                  <div className="text-[10px] md:text-xs font-medium text-blue-600 leading-tight">
+                    Offene Projekte
+                  </div>
+                </div>
+
+                {/* Handwerker */}
+                <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-2 md:p-4 text-center">
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-yellow-500 rounded-lg flex items-center justify-center">
+                    <Users className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                  </div>
+                  <div className="text-lg md:text-2xl font-bold text-yellow-700">
+                    {stats.totalContractors}
+                  </div>
+                  <div className="text-[10px] md:text-xs font-medium text-yellow-600 leading-tight">
+                    Handwerker
+                  </div>
+                </div>
+
+                {/* Fertiggestellte Projekte */}
+                <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-2 md:p-4 text-center">
+                  <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-green-600 rounded-lg flex items-center justify-center">
+                    <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-white" />
+                  </div>
+                  <div className="text-lg md:text-2xl font-bold text-green-700">
+                    {stats.completedProjects}
+                  </div>
+                  <div className="text-[10px] md:text-xs font-medium text-green-600 leading-tight">
+                    Abgeschlossen
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+      )}
 
       {/* Top Contractors Section */}
       <TopContractors />
