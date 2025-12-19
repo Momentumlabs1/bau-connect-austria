@@ -287,7 +287,7 @@ const Index = () => {
           <div className="flex items-center justify-between h-20 md:h-22">
             {/* Logo */}
             <div className="flex items-center gap-2 cursor-pointer group" onClick={() => navigate("/")}>
-              <img src={logoNew} alt="BauConnect24 Logo" className="h-10 sm:h-12 md:h-14 lg:h-16 w-auto" />
+              <img src={logoNew} alt="BauConnect24 Logo" className="h-14 sm:h-16 md:h-20 lg:h-24 w-auto" />
             </div>
 
             {/* Desktop Navigation */}
@@ -630,45 +630,45 @@ const Index = () => {
                 ))}
               </div>
 
-              {/* Trust Signals - Improved Design with 3 Cards */}
+              {/* Trust Signals - Compact Horizontal Design */}
               {hasRealStats && (
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 md:gap-6">
+                <div className="grid grid-cols-3 gap-2 md:gap-4">
                   {/* Offene Projekte */}
-                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                    <div className="w-14 h-14 mx-auto mb-4 bg-blue-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <Hammer className="h-7 w-7 text-white" />
+                  <div className="bg-gradient-to-br from-blue-50 to-blue-100 border border-blue-200 rounded-xl p-2 md:p-4 text-center">
+                    <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-blue-600 rounded-lg flex items-center justify-center">
+                      <Hammer className="h-4 w-4 md:h-5 md:w-5 text-white" />
                     </div>
-                    <div className="text-3xl md:text-4xl font-extrabold text-blue-700 mb-1">
+                    <div className="text-lg md:text-2xl font-bold text-blue-700">
                       {stats.openProjects}
                     </div>
-                    <div className="text-sm md:text-base font-medium text-blue-600">
+                    <div className="text-[10px] md:text-xs font-medium text-blue-600 leading-tight">
                       Offene Projekte
                     </div>
                   </div>
 
                   {/* Handwerker */}
-                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                    <div className="w-14 h-14 mx-auto mb-4 bg-yellow-500 rounded-xl flex items-center justify-center shadow-lg">
-                      <Users className="h-7 w-7 text-white" />
+                  <div className="bg-gradient-to-br from-yellow-50 to-yellow-100 border border-yellow-200 rounded-xl p-2 md:p-4 text-center">
+                    <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-yellow-500 rounded-lg flex items-center justify-center">
+                      <Users className="h-4 w-4 md:h-5 md:w-5 text-white" />
                     </div>
-                    <div className="text-3xl md:text-4xl font-extrabold text-yellow-700 mb-1">
+                    <div className="text-lg md:text-2xl font-bold text-yellow-700">
                       {stats.totalContractors}
                     </div>
-                    <div className="text-sm md:text-base font-medium text-yellow-600">
+                    <div className="text-[10px] md:text-xs font-medium text-yellow-600 leading-tight">
                       Handwerker
                     </div>
                   </div>
 
                   {/* Fertiggestellte Projekte */}
-                  <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-2xl p-6 text-center hover:shadow-lg transition-all duration-300 hover:scale-[1.02]">
-                    <div className="w-14 h-14 mx-auto mb-4 bg-green-600 rounded-xl flex items-center justify-center shadow-lg">
-                      <CheckCircle className="h-7 w-7 text-white" />
+                  <div className="bg-gradient-to-br from-green-50 to-green-100 border border-green-200 rounded-xl p-2 md:p-4 text-center">
+                    <div className="w-8 h-8 md:w-10 md:h-10 mx-auto mb-1 md:mb-2 bg-green-600 rounded-lg flex items-center justify-center">
+                      <CheckCircle className="h-4 w-4 md:h-5 md:w-5 text-white" />
                     </div>
-                    <div className="text-3xl md:text-4xl font-extrabold text-green-700 mb-1">
+                    <div className="text-lg md:text-2xl font-bold text-green-700">
                       {stats.completedProjects}
                     </div>
-                    <div className="text-sm md:text-base font-medium text-green-600">
-                      Fertiggestellte Projekte
+                    <div className="text-[10px] md:text-xs font-medium text-green-600 leading-tight">
+                      Abgeschlossen
                     </div>
                   </div>
                 </div>
