@@ -23,7 +23,7 @@ const Impressum = () => {
             <section>
               <h2 className="text-xl font-semibold mb-2">Kontaktdaten</h2>
               <p>Telefon: +43 676 7360103</p>
-              <p>E-Mail: <a href="mailto:info@bauconnect24.at" className="text-primary hover:underline">info@bauconnect24.at</a></p>
+              <p>E-Mail: <a href="mailto:kontakt@bauconnect24.at" className="text-primary hover:underline">kontakt@bauconnect24.at</a></p>
             </section>
 
             <section>
