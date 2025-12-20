@@ -51,6 +51,68 @@ export default function Messages() {
     checkAuthAndLoad();
   }, []);
 
+  // Handle contractor+project params from OfferCard "Nachricht senden" button
+  useEffect(() => {
+    const handleDeepLink = async () => {
+      const contractorId = searchParams.get('contractor');
+      const projectId = searchParams.get('project');
+      
+      if (!contractorId || !projectId || !userId) return;
+
+      console.log('🔗 Deep link detected:', { contractorId, projectId });
+
+      try {
+        // Check if conversation already exists
+        const { data: existingConv } = await supabase
+          .from('conversations')
+          .select('id')
+          .eq('project_id', projectId)
+          .eq('customer_id', userId)
+          .eq('contractor_id', contractorId)
+          .maybeSingle();
+
+        if (existingConv) {
+          console.log('✅ Found existing conversation:', existingConv.id);
+          setSelectedConvId(existingConv.id);
+          setShowChat(true);
+          return;
+        }
+
+        // Create new conversation
+        console.log('📝 Creating new conversation...');
+        const { data: newConv, error } = await supabase
+          .from('conversations')
+          .insert({
+            project_id: projectId,
+            customer_id: userId,
+            contractor_id: contractorId,
+            last_message_at: new Date().toISOString()
+          })
+          .select()
+          .single();
+
+        if (error) {
+          console.error('❌ Error creating conversation:', error);
+          toast({
+            title: 'Fehler',
+            description: 'Konversation konnte nicht erstellt werden',
+            variant: 'destructive'
+          });
+          return;
+        }
+
+        console.log('✅ Created new conversation:', newConv.id);
+        await loadConversations(userId);
+        setSelectedConvId(newConv.id);
+        setShowChat(true);
+      } catch (error) {
+        console.error('❌ Deep link handling failed:', error);
+      }
+    };
+
+    handleDeepLink();
+  }, [userId, searchParams]);
+
   useEffect(() => {
     if (selectedConvId) {
       loadMessages(selectedConvId);
