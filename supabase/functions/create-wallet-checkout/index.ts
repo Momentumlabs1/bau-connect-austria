@@ -109,7 +109,7 @@ serve(async (req) => {
         quantity: 1,
       }],
       mode: 'payment',
-      success_url: `${req.headers.get("origin")}/wallet-success?amount=${amount}`,
+      success_url: `${req.headers.get("origin")}/wallet-success?amount=${amount}&session_id={CHECKOUT_SESSION_ID}`,
       cancel_url: `${req.headers.get("origin")}/handwerker/dashboard`,
       metadata: {
         type: 'WALLET_RECHARGE',
