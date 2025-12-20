@@ -1,11 +1,9 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Input } from "@/components/ui/input";
-import { MapPin, Euro, Clock, AlertCircle, Image as ImageIcon, Ticket } from "lucide-react";
+import { MapPin, Clock, AlertCircle, Image as ImageIcon } from "lucide-react";
 import { motion } from "framer-motion";
 import { LeadPurchaseButton } from "@/components/LeadPurchaseButton";
-import { useState } from "react";
 
 interface LeadPreviewCardProps {
   project: {
@@ -27,7 +25,7 @@ interface LeadPreviewCardProps {
     funnel_answers?: Record<string, any>;
   };
   leadPrice: number;
-  onPurchase?: (voucherCode?: string) => void;
+  onPurchase?: () => void;
   purchasing?: boolean;
   insufficientBalance?: boolean;
   currentBalance?: number;
@@ -36,63 +34,63 @@ interface LeadPreviewCardProps {
   subcategoryName?: string;
 }
 
-export function LeadPreviewCard({ 
-  project, 
-  leadPrice, 
-  onPurchase, 
-  purchasing = false, 
-  insufficientBalance = false, 
+export function LeadPreviewCard({
+  project,
+  leadPrice,
+  onPurchase,
+  purchasing = false,
+  insufficientBalance = false,
   currentBalance = 0,
   useStripePayment = false,
   onPurchaseSuccess,
-  subcategoryName
+  subcategoryName,
 }: LeadPreviewCardProps) {
-  const [voucherCode, setVoucherCode] = useState("");
-  
   const getUrgencyColor = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
-      case 'high': return 'destructive';
-      case 'medium': return 'default';
-      case 'low': return 'secondary';
-      default: return 'default';
+      case "high":
+        return "destructive";
+      case "medium":
+        return "default";
+      case "low":
+        return "secondary";
+      default:
+        return "default";
     }
   };
 
   const getUrgencyLabel = (urgency: string) => {
     switch (urgency?.toLowerCase()) {
-      case 'high': return 'Sofort';
-      case 'medium': return 'Normal';
-      case 'low': return 'Flexibel';
-      default: return urgency;
+      case "high":
+        return "Sofort";
+      case "medium":
+        return "Normal";
+      case "low":
+        return "Flexibel";
+      default:
+        return urgency;
     }
   };
 
   const getGewerkLabel = (gewerkId: string) => {
     const labels: Record<string, string> = {
-      'elektriker': 'Elektriker',
-      'sanitar-heizung': 'Sanitär / Heizung',
-      'dachdecker': 'Dachdecker',
-      'fassade': 'Fassade',
-      'maler': 'Maler'
+      elektriker: "Elektriker",
+      "sanitar-heizung": "Sanitär / Heizung",
+      dachdecker: "Dachdecker",
+      fassade: "Fassade",
+      maler: "Maler",
     };
     return labels[gewerkId] || gewerkId;
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0, y: 20 }}
-      animate={{ opacity: 1, y: 0 }}
-      transition={{ duration: 0.3 }}
-    >
+    <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.3 }}>
       <Card className="p-6 border-2 border-warning/50 bg-gradient-to-br from-warning/5 to-background">
         <div className="flex items-start justify-between mb-4">
           <div className="flex items-center gap-2">
             <AlertCircle className="h-5 w-5 text-warning" />
             <h3 className="font-semibold text-lg">Lead-Vorschau</h3>
           </div>
-          <Badge variant={getUrgencyColor(project.urgency)}>
-            {getUrgencyLabel(project.urgency)}
-          </Badge>
+          <Badge variant={getUrgencyColor(project.urgency)}>{getUrgencyLabel(project.urgency)}</Badge>
         </div>
 
         <div className="space-y-4">
@@ -101,17 +99,23 @@ export function LeadPreviewCard({
               <h4 className="font-semibold text-xl">{project.title}</h4>
               <Badge variant="outline">{getGewerkLabel(project.gewerk_id)}</Badge>
             </div>
-            {subcategoryName && (
-              <p className="text-sm text-muted-foreground mb-2">📂 {subcategoryName}</p>
-            )}
+            {subcategoryName && <p className="text-sm text-muted-foreground mb-2">📂 {subcategoryName}</p>}
             <div className="flex items-center gap-2 text-muted-foreground mb-3">
               <MapPin className="h-4 w-4" />
-              <span>{project.city} (PLZ: {project.postal_code.substring(0, 2)}**)</span>
+              <span>
+                {project.city} (PLZ: {project.postal_code.substring(0, 2)}**)
+              </span>
             </div>
             {project.preferred_start_date && (
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <Clock className="h-4 w-4" />
-                <span>Start: {new Date(project.preferred_start_date).toLocaleDateString('de-DE', { year: 'numeric', month: 'long', day: 'numeric' })}</span>
+                <span>
+                  Start: {new Date(project.preferred_start_date).toLocaleDateString("de-DE", {
+                    year: "numeric",
+                    month: "long",
+                    day: "numeric",
+                  })}
+                </span>
               </div>
             )}
           </div>
@@ -132,7 +136,7 @@ export function LeadPreviewCard({
                 {Object.entries(project.funnel_answers).map(([key, value]) => (
                   <div key={key} className="text-sm bg-background/50 p-2 rounded">
                     <span className="text-muted-foreground">• </span>
-                    {Array.isArray(value) ? value.join(', ') : String(value)}
+                    {Array.isArray(value) ? value.join(", ") : String(value)}
                   </div>
                 ))}
               </div>
@@ -144,7 +148,9 @@ export function LeadPreviewCard({
             <div className="space-y-2">
               <div className="flex items-center gap-2 text-sm text-muted-foreground">
                 <ImageIcon className="h-4 w-4" />
-                <span>{project.images.length} Foto{project.images.length > 1 ? 's' : ''}</span>
+                <span>
+                  {project.images.length} Foto{project.images.length > 1 ? "s" : ""}
+                </span>
               </div>
               <div className="grid grid-cols-3 gap-2">
                 {project.images.slice(0, 6).map((img, index) => (
@@ -153,6 +159,7 @@ export function LeadPreviewCard({
                     src={img}
                     alt={`Projektfoto ${index + 1}`}
                     className="aspect-square object-cover rounded-lg border"
+                    loading="lazy"
                   />
                 ))}
               </div>
@@ -192,45 +199,14 @@ export function LeadPreviewCard({
               </ul>
             </div>
 
-            <div className="space-y-2">
-              <div className="flex items-center gap-2 text-sm font-medium">
-                <Ticket className="h-4 w-4 text-primary" />
-                <span>Gutschein-Code (optional)</span>
-              </div>
-              <Input
-                placeholder="z.B. CONNECT2025"
-                value={voucherCode}
-                onChange={(e) => setVoucherCode(e.target.value.toUpperCase())}
-                className="uppercase"
-              />
-              {voucherCode && (
-                <p className="text-xs text-muted-foreground">
-                  ✓ Gutschein wird beim Kauf angewendet
-                </p>
-              )}
-            </div>
-
             {useStripePayment ? (
-              <LeadPurchaseButton 
-                leadId={project.id}
-                leadTitle={project.title}
-                leadPrice={leadPrice}
-                onPurchaseSuccess={onPurchaseSuccess}
-                voucherCode={voucherCode}
-              />
+              <LeadPurchaseButton leadId={project.id} leadTitle={project.title} leadPrice={leadPrice} onPurchaseSuccess={onPurchaseSuccess} />
             ) : (
-              <Button 
-                className="w-full text-lg py-6" 
-                size="lg"
-                onClick={() => onPurchase?.(voucherCode)}
-                disabled={purchasing || (insufficientBalance && !voucherCode)}
-              >
+              <Button className="w-full text-lg py-6" size="lg" onClick={onPurchase} disabled={purchasing || insufficientBalance}>
                 {purchasing ? (
                   <>Wird gekauft...</>
-                ) : insufficientBalance && !voucherCode ? (
+                ) : insufficientBalance ? (
                   <>Guthaben aufladen erforderlich</>
-                ) : voucherCode ? (
-                  <>Lead mit Gutschein kaufen</>
                 ) : (
                   <>Lead jetzt kaufen für €{(leadPrice ?? 0).toFixed(2)}</>
                 )}
