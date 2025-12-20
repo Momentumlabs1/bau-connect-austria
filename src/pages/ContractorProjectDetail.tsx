@@ -190,11 +190,10 @@ export default function ContractorProjectDetail() {
     }
   };
 
-  const handlePurchaseLead = async (voucherCode?: string) => {
+  const handlePurchaseLead = async () => {
     if (!project || !userId) return;
 
-    // Bei Gutscheincode: Balance-Check überspringen
-    if (!voucherCode && (insufficientBalance || walletBalance < project.final_price)) {
+    if (insufficientBalance || walletBalance < project.final_price) {
       toast({
         title: "Guthaben zu niedrig",
         description: `Sie benötigen €${(project.final_price ?? 0).toFixed(2)}. Ihr aktuelles Guthaben: €${(walletBalance ?? 0).toFixed(2)}`,
@@ -221,7 +220,7 @@ export default function ContractorProjectDetail() {
       }
 
       const { data, error } = await supabase.functions.invoke("purchase-lead", {
-        body: { leadId: project.id, voucherCode },
+        body: { leadId: project.id },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
         },
@@ -282,10 +281,8 @@ export default function ContractorProjectDetail() {
       }
 
       toast({
-        title: data.voucherApplied ? "Lead mit Gutschein gekauft! 🎉" : "Lead erfolgreich gekauft! 🎉",
-        description: data.voucherApplied 
-          ? `${data.message} Neues Guthaben: €${(data.newBalance ?? 0).toFixed(2)}`
-          : `Sie können jetzt den Kunden kontaktieren. Neues Guthaben: €${(data.newBalance ?? 0).toFixed(2)}`,
+        title: "Lead erfolgreich gekauft! 🎉",
+        description: `Sie können jetzt den Kunden kontaktieren. Neues Guthaben: €${(data.newBalance ?? 0).toFixed(2)}`,
       });
     } catch (error: any) {
       console.error("Purchase error:", error);
