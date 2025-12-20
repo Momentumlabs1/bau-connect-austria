@@ -547,7 +547,7 @@ export default function ContractorDashboard() {
             <LeadPreviewCard 
               project={selectedLead.project}
               leadPrice={selectedLead.project.final_price || 5}
-              useStripePayment={true}
+              useStripePayment={false}
               onPurchaseSuccess={() => {
                 setShowLeadDialog(false);
                 setSelectedLead(null);
