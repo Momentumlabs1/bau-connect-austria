@@ -271,17 +271,6 @@ export const OfferForm = ({ projectId, projectTitle = 'dieses Projekt', projectC
         </RadioGroup>
       </div>
 
-      {/* Info Box */}
-      <div className="bg-muted/50 p-4 rounded-lg text-sm border">
-        <p className="font-medium mb-1 flex items-center gap-2">
-          <MessageSquare className="h-4 w-4" />
-          Hinweis:
-        </p>
-        <p className="text-muted-foreground">
-          Dein Angebot ist 7 Tage gültig und wird als Nachricht an den Kunden gesendet. Der Kunde kann dein Angebot annehmen oder ablehnen.
-        </p>
-      </div>
-
       {/* Submit Button */}
       <Button type="submit" disabled={loading} className="w-full h-12 text-base" size="lg">
         {loading ? (
