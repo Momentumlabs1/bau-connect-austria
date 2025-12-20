@@ -1,5 +1,8 @@
 project_id = "emfijlgxorugiuvykszg"
 
+[functions.verify-wallet-recharge]
+verify_jwt = true
+
 [functions.create-project-after-signup]
 verify_jwt = false
 
