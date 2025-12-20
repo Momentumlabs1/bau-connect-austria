@@ -548,6 +548,12 @@ export default function ContractorDashboard() {
               project={selectedLead.project}
               leadPrice={selectedLead.project.final_price || 5}
               useStripePayment={false}
+              insufficientBalance={(Number(walletBalance) || 0) < (Number(selectedLead.project.final_price) || 0)}
+              currentBalance={Number(walletBalance) || 0}
+              onPurchase={() => {
+                setShowLeadDialog(false);
+                navigate(`/handwerker/projekt/${selectedLead.project.id}`);
+              }}
               onPurchaseSuccess={() => {
                 setShowLeadDialog(false);
                 setSelectedLead(null);
