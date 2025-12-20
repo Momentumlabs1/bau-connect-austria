@@ -311,8 +311,7 @@ export default function ContractorProjectDetail() {
 
       let conversationId = existingConv?.id;
 
-      // If conversation doesn't exist, it should have been created during purchase
-      // But create it anyway as fallback
+      // If conversation doesn't exist, create it (but NO automatic message)
       if (!conversationId) {
         const { data: newConv, error } = await supabase
           .from("conversations")
@@ -327,16 +326,7 @@ export default function ContractorProjectDetail() {
 
         if (error) throw error;
         conversationId = newConv.id;
-
-        // Send template message
-        await supabase
-          .from("messages")
-          .insert({
-            conversation_id: conversationId,
-            sender_id: userId,
-            message: `Guten Tag! Ich habe großes Interesse an Ihrem Projekt "${project.title}" in ${project.city}. Ich würde mich freuen, Ihnen ein detailliertes Angebot zu erstellen. Könnten wir einen Termin für eine Besichtigung vor Ort vereinbaren?`,
-            read: false
-          });
+        // NO automatic message - user navigates to chat and writes their own
       }
 
       navigate("/nachrichten");

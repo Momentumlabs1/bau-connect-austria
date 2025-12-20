@@ -245,31 +245,24 @@ Deno.serve(async (req) => {
       if (!convError && newConv) {
         conversationId = newConv.id
         console.log('✅ Conversation created:', conversationId)
-
-        // Send automatic welcome message from contractor
-        await supabase
-          .from('messages')
-          .insert({
-            conversation_id: conversationId,
-            sender_id: user.id,
-            message: `Guten Tag! Ich habe großes Interesse an Ihrem Projekt "${lead.title || lead.projekt_typ}" in ${lead.city}. Ich würde mich freuen, Ihnen ein detailliertes Angebot zu erstellen. Könnten wir einen Termin für eine Besichtigung vor Ort vereinbaren?`,
-            read: false
-          })
+        // NO automatic message - contractor will write their own message
       }
     }
 
     console.log('✅ Lead purchased successfully!')
 
-    // 11. Get customer details
-    console.log('👤 Fetching customer details...')
+    // 11. Get customer details - WICHTIG: Service Role Key umgeht RLS!
+    console.log('👤 Fetching customer details for customer_id:', lead.customer_id)
     const { data: customerProfile, error: customerError } = await supabase
       .from('profiles')
       .select('first_name, last_name, email, phone')
       .eq('id', lead.customer_id)
       .single()
 
+    console.log('👤 Customer profile result:', { customerProfile, customerError })
+
     if (customerError) {
-      console.warn('⚠️ Could not fetch customer profile:', customerError)
+      console.error('❌ Could not fetch customer profile:', customerError)
     }
 
     // 12. Return full lead details with customer info
