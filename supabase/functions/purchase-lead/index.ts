@@ -30,8 +30,8 @@ Deno.serve(async (req) => {
       throw new Error('Unauthorized')
     }
 
-    const { leadId, voucherCode } = await req.json()
-    console.log('💰 Processing lead purchase:', { leadId, handwerkerId: user.id, voucherCode })
+    const { leadId } = await req.json()
+    console.log('💰 Processing lead purchase:', { leadId, handwerkerId: user.id })
 
     // 1. Get contractor profile
     const { data: contractor, error: contractorError } = await supabase
@@ -55,54 +55,8 @@ Deno.serve(async (req) => {
       throw new Error('Lead not found')
     }
 
-    let leadPrice = Number(lead.final_price) || 0
-    let voucherApplied = false
-
-    // 2.5. Check voucher code if provided
-    if (voucherCode) {
-      console.log('🎟️ Checking voucher code:', voucherCode)
-      const { data: promoCode, error: promoError } = await supabase
-        .from('promo_codes')
-        .select('*')
-        .eq('code', voucherCode.toUpperCase())
-        .eq('active', true)
-        .single()
-
-      if (!promoError && promoCode) {
-        // Check if voucher is valid
-        const now = new Date()
-        const validFrom = promoCode.valid_from ? new Date(promoCode.valid_from) : null
-        const validUntil = promoCode.valid_until ? new Date(promoCode.valid_until) : null
-
-        if ((!validFrom || now >= validFrom) && (!validUntil || now <= validUntil)) {
-          // Check usage limits
-          if (!promoCode.max_uses || promoCode.used_count < promoCode.max_uses) {
-            // Apply discount
-            if (promoCode.discount_type === 'fixed') {
-              leadPrice = Math.max(0, leadPrice - promoCode.discount_value)
-            } else if (promoCode.discount_type === 'percentage') {
-              leadPrice = leadPrice * (1 - promoCode.discount_value / 100)
-            }
-            voucherApplied = true
-            console.log('✅ Voucher applied! New price:', leadPrice)
-
-            // Increment usage count
-            await supabase
-              .from('promo_codes')
-              .update({ used_count: promoCode.used_count + 1 })
-              .eq('id', promoCode.id)
-          } else {
-            console.warn('⚠️ Voucher usage limit reached')
-          }
-        } else {
-          console.warn('⚠️ Voucher not valid at this time')
-        }
-      } else {
-        console.warn('⚠️ Voucher not found or inactive')
-      }
-    }
-
-    console.log('📊 Final lead price:', leadPrice, 'Wallet balance:', contractor.wallet_balance)
+    const leadPrice = Number(lead.final_price) || 0
+    console.log('📊 Lead price:', leadPrice, 'Wallet balance:', contractor.wallet_balance)
 
     // 3. Check if contractor has enough balance
     if (Number(contractor.wallet_balance) < leadPrice) {
@@ -322,11 +276,8 @@ Deno.serve(async (req) => {
     return new Response(
       JSON.stringify({
         success: true,
-        message: voucherApplied 
-          ? `Lead erfolgreich mit Gutschein gekauft! Gespart: €${(Number(lead.final_price) - leadPrice).toFixed(2)}`
-          : `Lead erfolgreich gekauft für €${leadPrice}`,
+        message: `Lead erfolgreich gekauft für €${leadPrice}`,
         newBalance,
-        voucherApplied,
         conversationId,
         leadDetails: {
           id: lead.id,
