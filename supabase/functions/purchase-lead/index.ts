@@ -265,6 +265,28 @@ Deno.serve(async (req) => {
       console.error('❌ Could not fetch customer profile:', customerError)
     }
 
+    // 12. Send email confirmation to contractor
+    console.log('📧 Sending lead purchase confirmation email...')
+    try {
+      const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-lead-purchase-confirmation`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${supabaseServiceKey}`,
+        },
+        body: JSON.stringify({
+          contractorId: user.id,
+          leadId: leadId,
+          pricePaid: leadPrice
+        })
+      })
+      const emailResult = await emailResponse.json()
+      console.log('📧 Email result:', emailResult)
+    } catch (emailError) {
+      console.error('⚠️ Failed to send email confirmation (non-blocking):', emailError)
+      // Don't throw - email is nice to have but not critical
+    }
+
     // 12. Return full lead details with customer info
     return new Response(
       JSON.stringify({
