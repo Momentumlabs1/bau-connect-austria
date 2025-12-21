@@ -5,7 +5,6 @@ import { Navbar } from "@/components/Navbar";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { Send, Loader2, MessageSquare, ExternalLink, ArrowLeft } from "lucide-react";
 import { cn } from "@/lib/utils";
@@ -52,11 +51,7 @@ export default function Messages() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle deep links:
-  // - ?conversation=<id> (direct open)
-  // - ?project=<id>&customer=<id> (contractor -> open/create)
-  // - ?project=<id>&contractor=<id> (customer -> open/create)
-  // - (legacy) ?project=<id>&contractor=<id> (still supported)
+  // Handle deep links
   useEffect(() => {
     const handleDeepLink = async () => {
       if (!userId) return;
@@ -74,7 +69,6 @@ export default function Messages() {
 
       if (!projectId) return;
 
-      // Determine role + other participant from params
       const isUserCustomer = (customerId && userId === customerId) || (!!contractorId && userId !== contractorId && !customerId);
       const isUserContractor = (contractorId && userId === contractorId) || (!!customerId && userId !== customerId && !contractorId);
 
@@ -93,7 +87,6 @@ export default function Messages() {
       });
 
       try {
-        // Check if conversation already exists (works for both roles)
         const { data: existingConv, error: existingError } = await supabase
           .from("conversations")
           .select("id")
@@ -113,7 +106,6 @@ export default function Messages() {
           return;
         }
 
-        // Create new conversation
         console.log("📝 Creating new conversation...");
         const insertPayload = isUserCustomer
           ? {
@@ -170,9 +162,7 @@ export default function Messages() {
   }, [messages]);
 
   const checkAuthAndLoad = async () => {
-    const {
-      data: { session },
-    } = await supabase.auth.getSession();
+    const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
       navigate("/login");
       return;
@@ -223,12 +213,8 @@ export default function Messages() {
           : Promise.resolve({ data: [] } as any),
       ]);
 
-      const contractorMap = new Map(
-        (contractors || []).map((c: any) => [c.id, c])
-      );
-      const customerMap = new Map(
-        (customers || []).map((p: any) => [p.id, p])
-      );
+      const contractorMap = new Map((contractors || []).map((c: any) => [c.id, c]));
+      const customerMap = new Map((customers || []).map((p: any) => [p.id, p]));
 
       const enriched = list.map((conv) => ({
         ...conv,
@@ -263,7 +249,6 @@ export default function Messages() {
 
     setMessages(data || []);
 
-    // Mark as read
     await supabase
       .from("messages")
       .update({ read: true })
@@ -297,9 +282,6 @@ export default function Messages() {
     if (!newMessage.trim() || !selectedConvId || !userId) return;
 
     try {
-      // ============================================================
-      // SECURITY: Validate message before insertion
-      // ============================================================
       const trimmedMessage = newMessage.trim();
 
       if (trimmedMessage.length === 0) {
@@ -320,7 +302,6 @@ export default function Messages() {
         return;
       }
 
-      // Check for potentially malicious content
       if (/<script|javascript:|on\w+=/i.test(trimmedMessage)) {
         toast({
           title: "Ungültige Nachricht",
@@ -358,7 +339,6 @@ export default function Messages() {
       console.log("✅ Message sent successfully");
       setNewMessage("");
 
-      // Send email notification to recipient (non-blocking)
       if (selectedConversation && otherParticipantId) {
         supabase.functions
           .invoke("send-message-notification", {
@@ -444,54 +424,50 @@ export default function Messages() {
         <h1 className="text-2xl md:text-3xl font-bold mb-6">Nachrichten</h1>
 
         <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-          {/* Conversations Sidebar - Hidden on mobile when chat shown */}
+          {/* Conversations Sidebar */}
           <Card className={`p-4 overflow-y-auto ${showChat ? "hidden lg:block" : "block"}`}>
             <h2 className="text-xl font-bold mb-4">Unterhaltungen</h2>
             <div className="space-y-2">
-              {conversations.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">Noch keine Unterhaltungen</p>
-              ) : (
-                conversations.map((conv) => {
-                  const isUserContractor = conv.contractor_id === userId;
-                  const projectLink = isUserContractor
-                    ? `/handwerker/projekt/${conv.project_id}`
-                    : `/kunde/projekt/${conv.project_id}`;
+              {conversations.map((conv) => {
+                const isUserContractor = conv.contractor_id === userId;
+                const projectLink = isUserContractor
+                  ? `/handwerker/projekt/${conv.project_id}`
+                  : `/kunde/projekt/${conv.project_id}`;
 
-                  return (
-                    <div
-                      key={conv.id}
-                      className={cn(
-                        "p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors",
-                        selectedConvId === conv.id && "bg-primary/10"
-                      )}
-                      onClick={() => {
-                        setSelectedConvId(conv.id);
-                        setShowChat(true);
-                      }}
+                return (
+                  <div
+                    key={conv.id}
+                    className={cn(
+                      "p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors",
+                      selectedConvId === conv.id && "bg-primary/10"
+                    )}
+                    onClick={() => {
+                      setSelectedConvId(conv.id);
+                      setShowChat(true);
+                    }}
+                  >
+                    <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
+                    <Link
+                      to={projectLink}
+                      className="text-sm text-primary hover:underline flex items-center gap-1"
+                      onClick={(e) => e.stopPropagation()}
                     >
-                      <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
-                      <Link
-                        to={projectLink}
-                        className="text-sm text-primary hover:underline flex items-center gap-1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {conv.project?.title || "Projekt"}
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  );
-                })
-              )}
+                      {conv.project?.title || "Projekt"}
+                      <ExternalLink className="h-3 w-3" />
+                    </Link>
+                  </div>
+                );
+              })}
             </div>
           </Card>
 
-          {/* Messages Area - Shown on mobile when chat selected */}
+          {/* Messages Area */}
           <Card
             className={`lg:col-span-2 p-4 flex flex-col ${!showChat && !selectedConvId ? "hidden lg:flex" : "flex"}`}
           >
             {selectedConvId && selectedConversation ? (
               <>
-                {/* Chat Header with Back Button */}
+                {/* Chat Header */}
                 <div className="border-b pb-3 mb-4">
                   <div className="flex items-center gap-2">
                     <Button
@@ -530,135 +506,9 @@ export default function Messages() {
                   </div>
                 </div>
 
-
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="flex items-center justify-center min-h-[60vh]">
-          <Loader2 className="h-8 w-8 animate-spin text-primary" />
-        </div>
-      </div>
-    );
-  }
-
-  if (conversations.length === 0) {
-    return (
-      <div className="min-h-screen bg-background">
-        <Navbar />
-        <div className="container mx-auto px-4 py-8">
-          <Card className="p-12 text-center max-w-lg mx-auto">
-            <MessageSquare className="h-16 w-16 mx-auto mb-4 text-muted-foreground" />
-            <h2 className="text-2xl font-bold mb-2">Keine Nachrichten</h2>
-            <p className="text-muted-foreground mb-6">
-              Sie haben noch keine Unterhaltungen. Kontaktieren Sie Handwerker über Ihre Projekte oder durchsuchen Sie verfügbare Leads.
-            </p>
-            <div className="flex gap-4 justify-center">
-              <Button onClick={() => navigate('/kunde/projekt-erstellen')}>
-                Projekt erstellen
-              </Button>
-              <Button variant="outline" onClick={() => navigate('/handwerker/dashboard')}>
-                Leads ansehen
-              </Button>
-            </div>
-          </Card>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="min-h-screen bg-background">
-      <Navbar />
-      
-      <div className="container mx-auto px-4 py-8">
-        <h1 className="text-2xl md:text-3xl font-bold mb-6">Nachrichten</h1>
-        
-        <div className="flex flex-col lg:grid lg:grid-cols-3 gap-6 h-[calc(100vh-200px)]">
-          {/* Conversations Sidebar - Hidden on mobile when chat shown */}
-          <Card className={`p-4 overflow-y-auto ${showChat ? 'hidden lg:block' : 'block'}`}>
-            <h2 className="text-xl font-bold mb-4">Unterhaltungen</h2>
-            <div className="space-y-2">
-              {conversations.length === 0 ? (
-                <p className="text-sm text-muted-foreground text-center py-8">
-                  Noch keine Unterhaltungen
-                </p>
-              ) : (
-                conversations.map(conv => {
-                  const isUserContractor = conv.contractor_id === userId;
-                  const projectLink = isUserContractor 
-                    ? `/handwerker/projekt/${conv.project_id}`
-                    : `/kunde/projekt/${conv.project_id}`;
-                  
-                  return (
-                    <div
-                      key={conv.id}
-                      className={cn(
-                        "p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors",
-                        selectedConvId === conv.id && "bg-primary/10"
-                      )}
-                      onClick={() => {
-                        setSelectedConvId(conv.id);
-                        setShowChat(true);
-                      }}
-                    >
-                      <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
-                      <Link 
-                        to={projectLink}
-                        className="text-sm text-primary hover:underline flex items-center gap-1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {conv.project?.title || 'Projekt'}
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  );
-                })
-              
-              )}
-            </div>
-          </Card>
-          
-          {/* Messages Area - Shown on mobile when chat selected */}
-          <Card className={`lg:col-span-2 p-4 flex flex-col ${!showChat && !selectedConvId ? 'hidden lg:flex' : 'flex'}`}>
-            {selectedConvId && selectedConversation ? (
-              <>
-                {/* Chat Header with Back Button */}
-                <div className="border-b pb-3 mb-4">
-                  <div className="flex items-center gap-2">
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="lg:hidden"
-                      onClick={() => setShowChat(false)}
-                    >
-                      <ArrowLeft className="h-4 w-4" />
-                    </Button>
-                    <div className="flex-1">
-                      <h3 className="font-semibold text-base md:text-lg">
-                        {isContractor ? (
-                          <Link to={`/kunde/projekt/${selectedConversation.customer_id}`} className="hover:text-primary transition-colors">
-                            {getConversationTitle(selectedConversation)}
-                          </Link>
-                        ) : (
-                          <Link to={`/handwerker/${selectedConversation.contractor_id}`} className="hover:text-primary transition-colors">
-                            {getConversationTitle(selectedConversation)}
-                          </Link>
-                        )}
-                      </h3>
-                      <Link 
-                        to={isContractor ? `/handwerker/projekt/${selectedConversation.project_id}` : `/kunde/projekt/${selectedConversation.project_id}`}
-                        className="text-xs md:text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
-                      >
-                        {selectedConversation.project?.title || 'Projekt'}
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
-                    </div>
-                  </div>
-                </div>
-
+                {/* Messages List */}
                 <div className="flex-1 overflow-y-auto space-y-4 mb-4">
-                  {messages.map(msg => (
+                  {messages.map((msg) => (
                     <div
                       key={msg.id}
                       className={cn(
@@ -676,9 +526,9 @@ export default function Messages() {
                       >
                         <p className="text-sm break-words">{msg.message}</p>
                         <p className="text-xs opacity-70 mt-1">
-                          {new Date(msg.created_at).toLocaleTimeString('de-DE', {
-                            hour: '2-digit',
-                            minute: '2-digit'
+                          {new Date(msg.created_at).toLocaleTimeString("de-DE", {
+                            hour: "2-digit",
+                            minute: "2-digit",
                           })}
                         </p>
                       </div>
@@ -686,12 +536,13 @@ export default function Messages() {
                   ))}
                   <div ref={messagesEndRef} />
                 </div>
-                
+
+                {/* Message Input */}
                 <div className="flex gap-2">
                   <Input
                     value={newMessage}
-                    onChange={e => setNewMessage(e.target.value)}
-                    onKeyPress={e => e.key === 'Enter' && sendMessage()}
+                    onChange={(e) => setNewMessage(e.target.value)}
+                    onKeyPress={(e) => e.key === "Enter" && sendMessage()}
                     placeholder="Nachricht eingeben..."
                     className="text-sm md:text-base"
                   />
