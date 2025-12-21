@@ -1,6 +1,5 @@
 import { Loader2 } from 'lucide-react';
 import { cn } from '@/lib/utils';
-import { motion } from 'framer-motion';
 import logo from '@/assets/bauconnect-logo-new.png';
 
 interface LoadingSpinnerProps {
@@ -24,40 +23,15 @@ export const LoadingSpinner = ({ size = 'md', className }: LoadingSpinnerProps) 
 
 export const LoadingScreen = ({ message }: { message?: string }) => {
   return (
-    <div className="min-h-screen flex items-center justify-center relative overflow-hidden bg-white">
-      {/* Animated gradient background */}
-      <motion.div
-        className="absolute inset-0"
-        animate={{
-          background: [
-            'radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)',
-            'radial-gradient(circle at 80% 50%, hsl(var(--primary) / 0.15) 0%, transparent 50%), radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)',
-            'radial-gradient(circle at 20% 50%, hsl(var(--primary) / 0.15) 0%, transparent 50%), radial-gradient(circle at 80% 50%, hsl(var(--primary) / 0.1) 0%, transparent 50%)',
-          ],
-        }}
-        transition={{
-          duration: 4,
-          repeat: Infinity,
-          ease: "easeInOut"
-        }}
-      />
-
-      {/* Breathing logo */}
-      <motion.div className="relative z-10">
-        <motion.img 
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-white via-blue-50/30 to-white">
+      {/* Simple CSS-only loading - no heavy JS animations */}
+      <div className="relative">
+        <img 
           src={logo} 
           alt="BauConnect24" 
-          className="h-32 md:h-40 w-auto"
-          animate={{
-            scale: [1, 1.08, 1],
-          }}
-          transition={{
-            duration: 2,
-            repeat: Infinity,
-            ease: "easeInOut"
-          }}
+          className="h-24 md:h-32 w-auto animate-pulse"
         />
-      </motion.div>
+      </div>
     </div>
   );
 };

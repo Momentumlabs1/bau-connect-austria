@@ -28,7 +28,7 @@ import { TopContractors } from "@/components/TopContractors";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/stores/authStore";
 import { LoadingScreen } from "@/components/LoadingSpinner";
-import { AnimatePresence, motion } from "framer-motion";
+// Removed framer-motion for better mobile performance
 import { ContractorPromoBanner } from "@/components/ContractorPromoBanner";
 
 const Index = () => {
@@ -257,25 +257,16 @@ const Index = () => {
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Loading Screen - Show until hero image loads */}
-      <AnimatePresence>
-        {!heroImageLoaded && (
-          <motion.div 
-            className="fixed inset-0 z-[100]"
-            initial={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-          >
-            <LoadingScreen />
-          </motion.div>
-        )}
-      </AnimatePresence>
+      {/* Loading Screen - CSS-only, no framer-motion */}
+      {!heroImageLoaded && (
+        <div className="fixed inset-0 z-[100] transition-opacity duration-300">
+          <LoadingScreen />
+        </div>
+      )}
 
-      {/* Main Content - Fade in smoothly */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: heroImageLoaded ? 1 : 0 }}
-        transition={{ duration: 0.4, delay: 0.2 }}
+      {/* Main Content - CSS transition instead of framer-motion */}
+      <div 
+        className={`transition-opacity duration-300 ${heroImageLoaded ? 'opacity-100' : 'opacity-0'}`}
       >
       {/* Minimalist Navbar */}
       <nav
@@ -826,23 +817,7 @@ const Index = () => {
                         >
                           <Icon className="h-5 w-5 md:h-6 md:w-6 lg:h-7 lg:w-7 text-white" />
                         </div>
-
-                        {/* Pulse Effect */}
-                        {visibleItems.includes(index) && (
-                          <>
-                            <div
-                              className={`absolute inset-0 ${
-                                feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
-                              } rounded-full animate-ping opacity-40`}
-                            ></div>
-                            <div
-                              className={`absolute inset-0 ${
-                                feature.color === "blue" ? "bg-blue-600" : "bg-yellow-500"
-                              } rounded-full animate-ping opacity-20`}
-                              style={{ animationDelay: "0.3s" }}
-                            ></div>
-                          </>
-                        )}
+                        {/* Removed animate-ping - too CPU intensive on mobile */}
                       </div>
 
                       {/* Content Card */}
@@ -1001,7 +976,7 @@ const Index = () => {
       </section>
 
       <Footer />
-      </motion.div> {/* End of heroImageLoaded wrapper */}
+      </div> {/* End of heroImageLoaded wrapper */}
     </div>
   );
 };
