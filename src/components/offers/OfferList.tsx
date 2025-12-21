@@ -28,10 +28,17 @@ interface OfferListProps {
 export const OfferList = ({ projectId, showActions = false, onOfferUpdate }: OfferListProps) => {
   const [offers, setOffers] = useState<Offer[]>([]);
   const [loading, setLoading] = useState(true);
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null);
 
   useEffect(() => {
     loadOffers();
+    loadCurrentUser();
   }, [projectId]);
+
+  const loadCurrentUser = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setCurrentUserId(session?.user?.id || null);
+  };
 
   const loadOffers = async () => {
     try {
@@ -145,6 +152,7 @@ export const OfferList = ({ projectId, showActions = false, onOfferUpdate }: Off
           contractorId={offer.contractors?.id}
           contractorImageUrl={offer.contractors?.profile_image_url}
           projectId={projectId}
+          customerId={currentUserId || undefined}
           showActions={showActions}
           onAccept={handleAccept}
           onReject={handleReject}

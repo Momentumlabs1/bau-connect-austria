@@ -2,8 +2,9 @@ import { Button } from '@/components/ui/button';
 import { Avatar, AvatarImage, AvatarFallback } from '@/components/ui/avatar';
 import { formatDistanceToNow } from 'date-fns';
 import { de } from 'date-fns/locale';
-import { CheckCircle, XCircle, Clock, User, MessageCircle } from 'lucide-react';
+import { CheckCircle, XCircle, Clock, User, MessageCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
+import { useChatNavigation } from '@/hooks/useChatNavigation';
 
 interface OfferCardProps {
   id: string;
@@ -16,6 +17,7 @@ interface OfferCardProps {
   contractorId?: string;
   contractorImageUrl?: string | null;
   projectId?: string;
+  customerId?: string;
   onAccept?: (offerId: string) => void;
   onReject?: (offerId: string) => void;
   showActions?: boolean;
@@ -32,11 +34,14 @@ export const OfferCard = ({
   contractorId,
   contractorImageUrl,
   projectId,
+  customerId,
   onAccept,
   onReject,
   showActions = false
 }: OfferCardProps) => {
   const navigate = useNavigate();
+  const { navigateToChat, isNavigating } = useChatNavigation();
+  
   const statusConfig = {
     pending: {
       icon: Clock,
@@ -65,6 +70,18 @@ export const OfferCard = ({
 
   const isExpired = new Date(validUntil) < new Date();
   const isPending = status === 'pending' && !isExpired;
+
+  const handleOpenChat = () => {
+    if (!contractorId || !projectId || !customerId) {
+      console.error("❌ OfferCard: Missing chat params", { contractorId, projectId, customerId });
+      return;
+    }
+    navigateToChat({
+      projectId,
+      customerId,
+      contractorId,
+    });
+  };
 
   return (
     <div className="border rounded-lg p-4 space-y-3">
@@ -108,7 +125,7 @@ export const OfferCard = ({
         Gültig bis: {new Date(validUntil).toLocaleDateString('de-DE')}
       </div>
 
-      {contractorId && (
+      {contractorId && projectId && customerId && (
         <div className="flex gap-2 pt-2">
           <Button
             variant="outline"
@@ -122,10 +139,15 @@ export const OfferCard = ({
           <Button
             variant="outline"
             size="sm"
-            onClick={() => navigate(`/nachrichten?contractor=${contractorId}&project=${projectId}`)}
+            onClick={handleOpenChat}
+            disabled={isNavigating}
             className="flex items-center gap-2"
           >
-            <MessageCircle className="w-4 h-4" />
+            {isNavigating ? (
+              <Loader2 className="w-4 h-4 animate-spin" />
+            ) : (
+              <MessageCircle className="w-4 h-4" />
+            )}
             Nachricht senden
           </Button>
         </div>

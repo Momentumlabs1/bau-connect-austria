@@ -51,7 +51,7 @@ export default function Messages() {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle deep links
+  // Handle deep links - simplified and more robust
   useEffect(() => {
     const handleDeepLink = async () => {
       if (!userId) return;
@@ -64,35 +64,66 @@ export default function Messages() {
       }
 
       const projectId = searchParams.get("project");
-      const contractorId = searchParams.get("contractor");
-      const customerId = searchParams.get("customer");
+      let contractorId = searchParams.get("contractor");
+      let customerId = searchParams.get("customer");
 
       if (!projectId) return;
 
-      const isUserCustomer = (customerId && userId === customerId) || (!!contractorId && userId !== contractorId && !customerId);
-      const isUserContractor = (contractorId && userId === contractorId) || (!!customerId && userId !== customerId && !contractorId);
-
-      const otherParticipantId = isUserCustomer ? contractorId : isUserContractor ? customerId : null;
-
-      if (!otherParticipantId) {
-        console.warn("🔗 Deep link missing participant:", { projectId, contractorId, customerId, userId });
-        return;
-      }
-
-      console.log("🔗 Deep link detected:", {
-        projectId,
-        userId,
-        otherParticipantId,
-        role: isUserCustomer ? "customer" : "contractor",
-      });
+      console.log("🔗 Deep link detected:", { projectId, contractorId, customerId, userId });
 
       try {
+        // If we're missing either participant, try to get them from the database
+        if (!contractorId || !customerId) {
+          // Check if user is a contractor
+          const { data: contractorData } = await supabase
+            .from("contractors")
+            .select("id")
+            .eq("id", userId)
+            .maybeSingle();
+
+          const isUserContractor = !!contractorData;
+          
+          if (isUserContractor) {
+            contractorId = userId;
+            // Get customer from project
+            if (!customerId) {
+              const { data: projectData } = await supabase
+                .from("projects")
+                .select("customer_id")
+                .eq("id", projectId)
+                .single();
+              customerId = projectData?.customer_id || null;
+            }
+          } else {
+            customerId = userId;
+            // Get contractor from matches
+            if (!contractorId) {
+              const { data: matchData } = await supabase
+                .from("matches")
+                .select("contractor_id")
+                .eq("project_id", projectId)
+                .eq("lead_purchased", true)
+                .limit(1)
+                .maybeSingle();
+              contractorId = matchData?.contractor_id || null;
+            }
+          }
+        }
+
+        if (!contractorId || !customerId) {
+          console.warn("❌ Could not determine both participants:", { contractorId, customerId });
+          return;
+        }
+
+        console.log("🔍 Looking for conversation:", { projectId, customerId, contractorId });
+
+        // Check for existing conversation
         const { data: existingConv, error: existingError } = await supabase
           .from("conversations")
           .select("id")
-          .or(
-            `and(project_id.eq.${projectId},customer_id.eq.${userId},contractor_id.eq.${otherParticipantId}),and(project_id.eq.${projectId},contractor_id.eq.${userId},customer_id.eq.${otherParticipantId})`
-          )
+          .eq("project_id", projectId)
+          .eq("customer_id", customerId)
+          .eq("contractor_id", contractorId)
           .maybeSingle();
 
         if (existingError) {
@@ -107,23 +138,14 @@ export default function Messages() {
         }
 
         console.log("📝 Creating new conversation...");
-        const insertPayload = isUserCustomer
-          ? {
-              project_id: projectId,
-              customer_id: userId,
-              contractor_id: otherParticipantId,
-              last_message_at: new Date().toISOString(),
-            }
-          : {
-              project_id: projectId,
-              contractor_id: userId,
-              customer_id: otherParticipantId,
-              last_message_at: new Date().toISOString(),
-            };
-
         const { data: newConv, error } = await supabase
           .from("conversations")
-          .insert(insertPayload)
+          .insert({
+            project_id: projectId,
+            customer_id: customerId,
+            contractor_id: contractorId,
+            last_message_at: new Date().toISOString(),
+          })
           .select("id")
           .single();
 

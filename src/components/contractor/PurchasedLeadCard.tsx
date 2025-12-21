@@ -1,16 +1,18 @@
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { MapPin, User, Phone, Mail, MessageSquare, Calendar, Euro } from "lucide-react";
+import { MapPin, User, Phone, Mail, MessageSquare, Calendar, Euro, Loader2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
+import { useChatNavigation } from "@/hooks/useChatNavigation";
 
 interface PurchasedLeadCardProps {
   match: {
     id: string;
     project_id: string;
+    contractor_id: string;
     purchased_at: string;
     status?: string;
     project: {
@@ -37,6 +39,7 @@ interface PurchasedLeadCardProps {
 
 export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
   const navigate = useNavigate();
+  const { navigateToChat, isNavigating } = useChatNavigation();
   const customer = match.project.profiles;
   
   // Determine status badge
@@ -61,6 +64,14 @@ export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
       return <Badge className="bg-yellow-500">Angebot ausstehend</Badge>;
     }
     return <Badge variant="default" className="bg-primary/10 text-primary">Gekauft</Badge>;
+  };
+
+  const handleOpenChat = () => {
+    navigateToChat({
+      projectId: match.project.id,
+      customerId: match.project.customer_id,
+      contractorId: match.contractor_id,
+    });
   };
 
   return (
@@ -146,13 +157,14 @@ export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
             <Button 
               variant="outline"
               className="w-full"
-              onClick={() =>
-                navigate(
-                  `/nachrichten?project=${match.project.id}&customer=${match.project.customer_id}`
-                )
-              }
+              onClick={handleOpenChat}
+              disabled={isNavigating}
             >
-              <MessageSquare className="h-4 w-4 mr-2" />
+              {isNavigating ? (
+                <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+              ) : (
+                <MessageSquare className="h-4 w-4 mr-2" />
+              )}
               Chat öffnen
             </Button>
           </div>
