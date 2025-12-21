@@ -430,9 +430,11 @@ export default function Messages() {
             <div className="space-y-2">
               {conversations.map((conv) => {
                 const isUserContractor = conv.contractor_id === userId;
-                const projectLink = isUserContractor
-                  ? `/handwerker/projekt/${conv.project_id}`
-                  : `/kunde/projekt/${conv.project_id}`;
+                const projectLink = conv.project_id
+                  ? isUserContractor
+                    ? `/handwerker/projekt/${conv.project_id}`
+                    : `/kunde/projekt/${conv.project_id}`
+                  : null;
 
                 return (
                   <div
@@ -447,14 +449,20 @@ export default function Messages() {
                     }}
                   >
                     <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
-                    <Link
-                      to={projectLink}
-                      className="text-sm text-primary hover:underline flex items-center gap-1"
-                      onClick={(e) => e.stopPropagation()}
-                    >
-                      {conv.project?.title || "Projekt"}
-                      <ExternalLink className="h-3 w-3" />
-                    </Link>
+                    {projectLink ? (
+                      <Link
+                        to={projectLink}
+                        className="text-sm text-primary hover:underline flex items-center gap-1"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        {conv.project?.title || "Projekt"}
+                        <ExternalLink className="h-3 w-3" />
+                      </Link>
+                    ) : (
+                      <span className="text-sm text-muted-foreground">
+                        {conv.project?.title || "Projekt nicht verfügbar"}
+                      </span>
+                    )}
                   </div>
                 );
               })}
@@ -491,17 +499,23 @@ export default function Messages() {
                           </Link>
                         )}
                       </h3>
-                      <Link
-                        to={
-                          isContractor
-                            ? `/handwerker/projekt/${selectedConversation.project_id}`
-                            : `/kunde/projekt/${selectedConversation.project_id}`
-                        }
-                        className="text-xs md:text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
-                      >
-                        {selectedConversation.project?.title || "Projekt"}
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
+                      {selectedConversation.project_id ? (
+                        <Link
+                          to={
+                            isContractor
+                              ? `/handwerker/projekt/${selectedConversation.project_id}`
+                              : `/kunde/projekt/${selectedConversation.project_id}`
+                          }
+                          className="text-xs md:text-sm text-muted-foreground hover:text-primary flex items-center gap-1"
+                        >
+                          {selectedConversation.project?.title || "Projekt ansehen"}
+                          <ExternalLink className="h-3 w-3" />
+                        </Link>
+                      ) : (
+                        <span className="text-xs md:text-sm text-muted-foreground">
+                          {selectedConversation.project?.title || "Projekt nicht verfügbar"}
+                        </span>
+                      )}
                     </div>
                   </div>
                 </div>
