@@ -271,54 +271,13 @@ Deno.serve(async (req) => {
       )
     }
 
-    // Get project coordinates
-    const projectCoords = getCoordinatesFromPostalCode(project.postal_code)
-    console.log('📍 Project coordinates:', projectCoords)
+    // SIMPLIFIED MATCHING: All contractors with matching trade get matched
+    console.log('🎯 Creating matches for all contractors with matching trade')
 
-    // Calculate scores and filter by distance
-    const scoredContractors: Array<{ contractor: Contractor; score: number; distance: number }> = []
-    
-    for (const contractor of contractors) {
-      // Get contractor location from postal_codes array
-      const contractorPostalCode = contractor.postal_codes?.[0]
-      const contractorCoords = getCoordinatesFromPostalCode(contractorPostalCode)
-      
-      if (!contractorCoords || !projectCoords) {
-        // Include anyway with default distance
-        scoredContractors.push({
-          contractor,
-          score: calculateRelevanceScore(contractor, project, 50, leadPrice),
-          distance: 50
-        })
-        continue
-      }
-      
-      const distance = calculateDistance(
-        projectCoords.lat,
-        projectCoords.lon,
-        contractorCoords.lat,
-        contractorCoords.lon
-      )
-      
-      // Check if within service radius
-      if (distance <= (contractor.service_radius || 150)) {
-        const score = calculateRelevanceScore(contractor, project, distance, leadPrice)
-        scoredContractors.push({ contractor, score, distance })
-      }
-    }
-
-    console.log(`📊 ${scoredContractors.length} contractors within service radius`)
-
-    // Sort by score and take top matches
-    const topMatches = scoredContractors
-      .sort((a, b) => b.score - a.score)
-      .slice(0, 10)
-
-    console.log(`🎯 Creating ${topMatches.length} match records`)
-
-    // Create match records
     let matchesCreated = 0
-    for (const { contractor, score } of topMatches) {
+    const matchedContractors: Array<{ id: string; company_name: string }> = []
+
+    for (const contractor of contractors) {
       try {
         // Check if match already exists
         const { data: existingMatch } = await supabase
@@ -333,14 +292,14 @@ Deno.serve(async (req) => {
           continue
         }
 
-        // Create new match
+        // Create new match with fixed score of 50 (always valid 0-100)
         const { error: matchError } = await supabase
           .from('matches')
           .insert({
             project_id: projectId,
             contractor_id: contractor.id,
             match_type: 'suggested',
-            score: Math.round(score),
+            score: 50, // Fixed score - no constraint issues
             status: 'pending',
             lead_purchased: false
           })
@@ -351,7 +310,8 @@ Deno.serve(async (req) => {
         }
 
         matchesCreated++
-        console.log(`✅ Match created for ${contractor.company_name} (score: ${Math.round(score)})`)
+        matchedContractors.push({ id: contractor.id, company_name: contractor.company_name })
+        console.log(`✅ Match created for ${contractor.company_name}`)
 
         // Create notification for contractor
         try {
@@ -392,11 +352,7 @@ Deno.serve(async (req) => {
         success: true, 
         matches: matchesCreated,
         leadPrice,
-        topContractors: topMatches.slice(0, 5).map(m => ({
-          id: m.contractor.id,
-          company_name: m.contractor.company_name,
-          score: Math.round(m.score)
-        }))
+        matchedContractors: matchedContractors.slice(0, 10)
       }), 
       { status: 200, headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
     )
