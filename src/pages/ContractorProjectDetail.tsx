@@ -329,7 +329,7 @@ export default function ContractorProjectDetail() {
         // NO automatic message - user navigates to chat and writes their own
       }
 
-      navigate("/nachrichten");
+      navigate(`/nachrichten?conversation=${conversationId}`);
     } catch (error) {
       toast({
         title: "Fehler",

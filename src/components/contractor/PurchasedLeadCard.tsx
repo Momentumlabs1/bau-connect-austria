@@ -146,7 +146,11 @@ export const PurchasedLeadCard = ({ match, index }: PurchasedLeadCardProps) => {
             <Button 
               variant="outline"
               className="w-full"
-              onClick={() => navigate('/nachrichten')}
+              onClick={() =>
+                navigate(
+                  `/nachrichten?project=${match.project.id}&customer=${match.project.customer_id}`
+                )
+              }
             >
               <MessageSquare className="h-4 w-4 mr-2" />
               Chat öffnen
