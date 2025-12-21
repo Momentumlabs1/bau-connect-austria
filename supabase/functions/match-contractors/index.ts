@@ -339,7 +339,7 @@ Deno.serve(async (req) => {
           .insert({
             project_id: projectId,
             contractor_id: contractor.id,
-            match_type: 'auto',
+            match_type: 'suggested',
             score: Math.round(score),
             status: 'pending',
             lead_purchased: false
