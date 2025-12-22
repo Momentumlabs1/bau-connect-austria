@@ -181,7 +181,9 @@ export default function ContractorDashboard() {
         .eq("status", "accepted")
         .order("updated_at", { ascending: false });
 
-      setActiveProjects(activeData || []);
+      // Filter out matches where project is null
+      const validActiveProjects = (activeData || []).filter(m => m.project !== null);
+      setActiveProjects(validActiveProjects);
 
       // Load completed projects
       const { data: completedData } = await supabase
@@ -194,7 +196,9 @@ export default function ContractorDashboard() {
         .in("status", ["won", "lost", "completed"])
         .order("updated_at", { ascending: false });
 
-      setCompletedProjects(completedData || []);
+      // Filter out matches where project is null
+      const validCompletedProjects = (completedData || []).filter(m => m.project !== null);
+      setCompletedProjects(validCompletedProjects);
 
       // Load open offers count
       const { count } = await supabase

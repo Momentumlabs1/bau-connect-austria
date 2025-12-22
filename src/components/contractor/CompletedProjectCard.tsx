@@ -32,6 +32,26 @@ export const CompletedProjectCard = ({ match, index }: CompletedProjectCardProps
   const [showReviewDialog, setShowReviewDialog] = useState(false);
   const isWon = match.status === 'won' || match.status === 'completed';
 
+  // Null-Check: Falls das Projekt nicht verfügbar ist
+  if (!match.project) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+      >
+        <Card className="p-6 border-muted bg-muted/30">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline">Archiviert</Badge>
+            <p className="text-sm text-muted-foreground">
+              Dieses Projekt ist nicht mehr verfügbar.
+            </p>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
   const handleReviewSuccess = () => {
     setShowReviewDialog(false);
   };

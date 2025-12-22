@@ -42,6 +42,26 @@ interface AvailableLeadCardProps {
 export const AvailableLeadCard = ({ match, index, onSelect }: AvailableLeadCardProps) => {
   const navigate = useNavigate();
 
+  // Null-Check: Falls das Projekt nicht verfügbar ist
+  if (!match.project) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+      >
+        <Card className="p-6 border-muted bg-muted/30">
+          <div className="flex items-center gap-3">
+            <Badge variant="outline">Nicht verfügbar</Badge>
+            <p className="text-sm text-muted-foreground">
+              Dieses Projekt ist nicht mehr verfügbar.
+            </p>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
   const getUrgencyBadge = (urgency: string) => {
     switch (urgency) {
       case 'high': return <Badge variant="destructive">Dringend</Badge>;
