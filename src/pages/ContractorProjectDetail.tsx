@@ -407,13 +407,14 @@ export default function ContractorProjectDetail() {
                       projectId={id!}
                       projectTitle={project.title}
                       projectCity={project.city}
-                      onSuccess={() => {
+                      onSuccess={async () => {
                         setShowOfferDialog(false);
                         toast({
                           title: "Angebot gesendet",
                           description: "Dein Angebot wurde erfolgreich an den Kunden gesendet"
                         });
-                        navigate('/nachrichten');
+                        // Direkt zum Chat navigieren mit korrekter Conversation-ID
+                        await handleStartChat();
                       }}
                     />
                   </DialogContent>
