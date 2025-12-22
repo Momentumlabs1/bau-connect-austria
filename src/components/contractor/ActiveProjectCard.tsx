@@ -29,6 +29,26 @@ export const ActiveProjectCard = ({ match, index }: ActiveProjectCardProps) => {
   const navigate = useNavigate();
   const { navigateToChat, isNavigating } = useChatNavigation();
 
+  // Null-Check: Falls das Projekt nicht verfügbar ist
+  if (!match.project) {
+    return (
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        transition={{ delay: index * 0.05 }}
+      >
+        <Card className="p-6 border-destructive/20 bg-destructive/5">
+          <div className="flex items-center gap-3">
+            <Badge variant="destructive">Nicht verfügbar</Badge>
+            <p className="text-sm text-muted-foreground">
+              Dieses Projekt ist nicht mehr verfügbar.
+            </p>
+          </div>
+        </Card>
+      </motion.div>
+    );
+  }
+
   const getStatusBadge = (status: string) => {
     switch (status) {
       case 'accepted': return <Badge variant="default">Angenommen</Badge>;
