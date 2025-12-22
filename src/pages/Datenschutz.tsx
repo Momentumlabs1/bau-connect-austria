@@ -26,7 +26,7 @@ const Datenschutz = () => {
               <p>4332 Au an der Donau</p>
               <p>Österreich</p>
               <p className="mt-2">Telefon: +43 676 7360103</p>
-              <p>E-Mail: <a href="mailto:datenschutz@bauconnect24.at" className="text-primary hover:underline">datenschutz@bauconnect24.at</a></p>
+              <p>E-Mail: <a href="mailto:kontakt@bauconnect24.at" className="text-primary hover:underline">kontakt@bauconnect24.at</a></p>
             </section>
 
             <section>
@@ -169,7 +169,7 @@ const Datenschutz = () => {
                 <li><strong>Beschwerderecht:</strong> Sie haben das Recht, sich bei der Datenschutzbehörde zu beschweren.</li>
               </ul>
               <p className="mb-2">Zur Ausübung Ihrer Rechte kontaktieren Sie uns unter:</p>
-              <p><a href="mailto:datenschutz@bauconnect24.at" className="text-primary hover:underline">datenschutz@bauconnect24.at</a></p>
+              <p><a href="mailto:kontakt@bauconnect24.at" className="text-primary hover:underline">kontakt@bauconnect24.at</a></p>
             </section>
 
             <section>

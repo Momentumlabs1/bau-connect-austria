@@ -85,7 +85,7 @@ const AGB = () => {
 
             <section>
               <h2 className="text-xl font-semibold mb-2">§10 Kündigung und Löschung des Nutzerkontos</h2>
-              <p className="mb-2"><strong>10.1</strong> Nutzer können ihr Konto jederzeit ohne Angabe von Gründen kündigen. Die Löschung erfolgt über die Account-Einstellungen oder per E-Mail an info@bauconnect24.at.</p>
+              <p className="mb-2"><strong>10.1</strong> Nutzer können ihr Konto jederzeit ohne Angabe von Gründen kündigen. Die Löschung erfolgt über die Account-Einstellungen oder per E-Mail an kontakt@bauconnect24.at.</p>
               <p className="mb-2"><strong>10.2</strong> BauConnect24 kann Nutzerkonten bei Verstoß gegen diese AGB oder bei rechtswidrigem Verhalten mit sofortiger Wirkung sperren oder löschen.</p>
               <p className="mb-2"><strong>10.3</strong> Bei Kontolöschung werden personenbezogene Daten gemäß der Datenschutzerklärung gelöscht. Buchungsbelege werden aus steuerrechtlichen Gründen 7 Jahre aufbewahrt.</p>
               <p className="mb-2"><strong>10.4</strong> Ein Anspruch auf Rückerstattung von Wallet-Guthaben besteht bei Kündigung nicht, sofern keine gesetzliche Ausnahme greift.</p>

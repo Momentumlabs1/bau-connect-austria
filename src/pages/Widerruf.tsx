@@ -30,7 +30,7 @@ const Widerruf = () => {
                 <p>Schwemmgasse 3</p>
                 <p>4332 Au an der Donau</p>
                 <p>Österreich</p>
-                <p className="mt-2">E-Mail: <a href="mailto:info@bauconnect24.at" className="text-primary hover:underline">info@bauconnect24.at</a></p>
+                <p className="mt-2">E-Mail: <a href="mailto:kontakt@bauconnect24.at" className="text-primary hover:underline">kontakt@bauconnect24.at</a></p>
                 <p>Telefon: +43 676 7360103</p>
               </div>
               <p className="mb-4">mittels einer eindeutigen Erklärung (z. B. ein mit der Post versandter Brief oder E-Mail) über Ihren Entschluss, diesen Vertrag zu widerrufen, informieren. Sie können dafür das beigefügte Muster-Widerrufsformular verwenden, das jedoch nicht vorgeschrieben ist.</p>
@@ -64,7 +64,7 @@ const Widerruf = () => {
                 <p>Schwemmgasse 3</p>
                 <p>4332 Au an der Donau</p>
                 <p>Österreich</p>
-                <p className="mb-4">E-Mail: info@bauconnect24.at</p>
+                <p className="mb-4">E-Mail: kontakt@bauconnect24.at</p>
                 
                 <p className="mb-4">Hiermit widerrufe(n) ich/wir (*) den von mir/uns (*) abgeschlossenen Vertrag über die Erbringung der folgenden Dienstleistung (*) / den Kauf der folgenden Waren (*):</p>
                 <p className="mb-4">_________________________________________________________________</p>
