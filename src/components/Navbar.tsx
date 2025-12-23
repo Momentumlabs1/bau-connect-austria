@@ -133,12 +133,28 @@ export const Navbar = () => {
           </div>
 
           {/* Mobile Navigation */}
-          <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
-            <SheetTrigger asChild className="md:hidden">
-              <Button variant="ghost" size="sm">
-                <Menu className="h-6 w-6" />
+          <div className="flex items-center gap-2 md:hidden">
+            {user && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/nachrichten')}
+                className="relative"
+              >
+                <MessageSquare className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <Badge className="absolute -top-1 -right-1 h-5 w-5 p-0 flex items-center justify-center text-xs">
+                    {unreadCount}
+                  </Badge>
+                )}
               </Button>
-            </SheetTrigger>
+            )}
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button variant="ghost" size="sm">
+                  <Menu className="h-6 w-6" />
+                </Button>
+              </SheetTrigger>
             <SheetContent side="right" className="w-[300px]">
               <div className="flex flex-col gap-4 mt-8">
                 {user ? (
@@ -228,7 +244,8 @@ export const Navbar = () => {
                 )}
               </div>
             </SheetContent>
-          </Sheet>
+            </Sheet>
+          </div>
         </div>
       </div>
     </nav>
