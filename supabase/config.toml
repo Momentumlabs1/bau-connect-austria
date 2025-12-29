@@ -62,3 +62,9 @@ verify_jwt = false
 
 [functions.reset-password]
 verify_jwt = false
+
+[functions.send-offer-response-notification]
+verify_jwt = false
+
+[functions.send-lead-purchase-confirmation]
+verify_jwt = false
