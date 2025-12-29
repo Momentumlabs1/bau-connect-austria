@@ -205,6 +205,35 @@ Deno.serve(async (req) => {
       // Don't fail the whole operation
     }
 
+    // Send email notification to contractor
+    try {
+      const supabaseUrl = Deno.env.get('SUPABASE_URL') ?? '';
+      const emailResponse = await fetch(`${supabaseUrl}/functions/v1/send-offer-response-notification`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')}`,
+        },
+        body: JSON.stringify({
+          offerId,
+          action,
+          contractorId: offer.contractor_id,
+          projectId: offer.project_id,
+          amount: offer.amount
+        }),
+      });
+
+      if (!emailResponse.ok) {
+        const emailError = await emailResponse.text();
+        console.error('❌ Failed to send email notification:', emailError);
+      } else {
+        console.log('✅ Email notification sent to contractor');
+      }
+    } catch (emailError) {
+      console.error('❌ Error sending email notification:', emailError);
+      // Don't fail the whole operation
+    }
+
     console.log(`✅ Offer ${action}ed successfully`);
 
     return new Response(
