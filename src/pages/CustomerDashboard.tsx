@@ -281,6 +281,7 @@ export default function CustomerDashboard() {
     const statusConfig: Record<string, { label: string; variant: any }> = {
       open: { label: "Offen", variant: "default" },
       assigned: { label: "In Bearbeitung", variant: "secondary" },
+      in_progress: { label: "In Bearbeitung", variant: "secondary" },
       completed: { label: "Abgeschlossen", variant: "outline" },
       cancelled: { label: "Abgebrochen", variant: "destructive" },
     };
@@ -292,7 +293,7 @@ export default function CustomerDashboard() {
   const filterProjects = (status: string) => {
     if (status === "all") return projects;
     if (status === "open") return projects.filter(p => p.status === "open");
-    if (status === "active") return projects.filter(p => p.status === "assigned");
+    if (status === "active") return projects.filter(p => p.status === "assigned" || p.status === "in_progress");
     if (status === "completed") return projects.filter(p => p.status === "completed");
     return projects;
   };
