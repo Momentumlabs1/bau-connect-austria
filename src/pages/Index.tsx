@@ -23,7 +23,8 @@ import {
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import logoNew from "@/assets/bauconnect-logo-new.png";
-import contractorHero from "@/assets/contractor-hero.png";
+// Hero image served directly from public/ for faster loading
+const contractorHero = "/contractor-hero.png";
 import { TopContractors } from "@/components/TopContractors";
 import { Footer } from "@/components/Footer";
 import { useAuth } from "@/stores/authStore";
@@ -40,7 +41,7 @@ const Index = () => {
   const [searchSuggestions, setSearchSuggestions] = useState<any[]>([]);
   const [showSuggestions, setShowSuggestions] = useState(false);
   const [visibleItems, setVisibleItems] = useState<number[]>([]);
-  const [heroImageLoaded, setHeroImageLoaded] = useState(false);
+  const [heroImageLoaded, setHeroImageLoaded] = useState(true);
   const [stats, setStats] = useState({
     openProjects: 0,
     totalContractors: 0,
@@ -53,25 +54,7 @@ const Index = () => {
     navigate("/");
   };
 
-  // Preload hero image
-  useEffect(() => {
-    const img = new Image();
-    img.src = contractorHero;
-    img.onload = () => {
-      setHeroImageLoaded(true);
-    };
-    img.onerror = () => {
-      // Still show page even if image fails to load
-      setHeroImageLoaded(true);
-    };
-    
-    // Force loading screen to disappear after 1.5 seconds max
-    const timeout = setTimeout(() => {
-      setHeroImageLoaded(true);
-    }, 1500);
-    
-    return () => clearTimeout(timeout);
-  }, []);
+  // Hero image is now preloaded in LoadingSpinner component
 
   useEffect(() => {
     const handleScroll = () => {
