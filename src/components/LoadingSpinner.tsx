@@ -32,6 +32,11 @@ export const LoadingScreen = ({ message }: { message?: string }) => {
           className="h-24 md:h-32 w-auto animate-pulse"
         />
       </div>
+      
+      {/* Preload hero image in background during loading screen */}
+      <div className="hidden">
+        <img src="/contractor-hero.png" alt="" />
+      </div>
     </div>
   );
 };
