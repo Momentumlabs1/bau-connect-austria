@@ -19,6 +19,7 @@ interface Conversation {
   project?: { title: string };
   customer?: { first_name: string; last_name: string };
   contractor?: { company_name: string };
+  unread_count?: number;
 }
 
 interface Message {
@@ -254,6 +255,46 @@ export default function Messages() {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages]);
 
+  // Global realtime listener for unread message updates
+  useEffect(() => {
+    if (!userId || conversations.length === 0) return;
+
+    const conversationIds = conversations.map((c) => c.id);
+
+    const channel = supabase
+      .channel("global-messages")
+      .on(
+        "postgres_changes",
+        {
+          event: "INSERT",
+          schema: "public",
+          table: "messages",
+        },
+        (payload) => {
+          const msg = payload.new as Message;
+          // Only increment unread if message is from someone else and not in the currently open chat
+          if (
+            msg.sender_id !== userId &&
+            conversationIds.includes(msg.conversation_id) &&
+            msg.conversation_id !== selectedConvId
+          ) {
+            setConversations((prev) =>
+              prev.map((conv) =>
+                conv.id === msg.conversation_id
+                  ? { ...conv, unread_count: (conv.unread_count || 0) + 1 }
+                  : conv
+              )
+            );
+          }
+        }
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [userId, conversations.length, selectedConvId]);
+
   const checkAuthAndLoad = async () => {
     const { data: { session } } = await supabase.auth.getSession();
     if (!session) {
@@ -290,6 +331,7 @@ export default function Messages() {
         return;
       }
 
+      const conversationIds = list.map((c) => c.id);
       const contractorIds = Array.from(
         new Set(list.map((c) => c.contractor_id).filter(Boolean))
       ) as string[];
@@ -297,14 +339,28 @@ export default function Messages() {
         new Set(list.map((c) => c.customer_id).filter(Boolean))
       ) as string[];
 
-      const [{ data: contractors }, { data: customers }] = await Promise.all([
+      // Fetch contractors, customers, and unread counts in parallel
+      const [{ data: contractors }, { data: customers }, { data: unreadMessages }] = await Promise.all([
         contractorIds.length
           ? supabase.from("contractors").select("id, company_name").in("id", contractorIds)
           : Promise.resolve({ data: [] } as any),
         customerIds.length
           ? supabase.from("profiles").select("id, first_name, last_name").in("id", customerIds)
           : Promise.resolve({ data: [] } as any),
+        supabase
+          .from("messages")
+          .select("conversation_id")
+          .in("conversation_id", conversationIds)
+          .neq("sender_id", uid)
+          .eq("read", false),
       ]);
+
+      // Build unread count map
+      const unreadMap = new Map<string, number>();
+      (unreadMessages || []).forEach((msg: any) => {
+        const count = unreadMap.get(msg.conversation_id) || 0;
+        unreadMap.set(msg.conversation_id, count + 1);
+      });
 
       const contractorMap = new Map((contractors || []).map((c: any) => [c.id, c]));
       const customerMap = new Map((customers || []).map((p: any) => [p.id, p]));
@@ -313,6 +369,7 @@ export default function Messages() {
         ...conv,
         contractor: conv.contractor_id ? contractorMap.get(conv.contractor_id) : null,
         customer: conv.customer_id ? customerMap.get(conv.customer_id) : null,
+        unread_count: unreadMap.get(conv.id) || 0,
       }));
 
       setConversations(enriched as any);
@@ -342,11 +399,19 @@ export default function Messages() {
 
     setMessages(data || []);
 
+    // Mark messages as read in database
     await supabase
       .from("messages")
       .update({ read: true })
       .eq("conversation_id", convId)
       .neq("sender_id", userId);
+
+    // Update local unread count to 0
+    setConversations((prev) =>
+      prev.map((conv) =>
+        conv.id === convId ? { ...conv, unread_count: 0 } : conv
+      )
+    );
   };
 
   const subscribeToMessages = (convId: string) => {
@@ -529,19 +594,31 @@ export default function Messages() {
                     : `/kunde/projekt/${conv.project_id}`
                   : null;
 
+                const hasUnread = (conv.unread_count || 0) > 0;
+
                 return (
                   <div
                     key={conv.id}
                     className={cn(
-                      "p-3 rounded-lg cursor-pointer hover:bg-muted transition-colors",
-                      selectedConvId === conv.id && "bg-primary/10"
+                      "p-3 rounded-lg cursor-pointer transition-colors",
+                      selectedConvId === conv.id && "bg-primary/10",
+                      hasUnread && selectedConvId !== conv.id
+                        ? "bg-green-100 dark:bg-green-900/30 border-l-4 border-green-500 hover:bg-green-50 dark:hover:bg-green-900/40"
+                        : "hover:bg-muted"
                     )}
                     onClick={() => {
                       setSelectedConvId(conv.id);
                       setShowChat(true);
                     }}
                   >
-                    <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
+                    <div className="flex justify-between items-start">
+                      <h3 className="font-semibold">{getConversationTitle(conv)}</h3>
+                      {hasUnread && (
+                        <span className="bg-green-500 text-white text-xs font-bold px-2 py-0.5 rounded-full min-w-[20px] text-center">
+                          {conv.unread_count}
+                        </span>
+                      )}
+                    </div>
                     {projectLink ? (
                       <Link
                         to={projectLink}
