@@ -1,10 +1,12 @@
 import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { supabase } from '@/integrations/supabase/client';
 import { toast } from 'sonner';
 import { useAuth } from '@/stores/authStore';
 import { Bell, MessageSquare, CheckCircle, Euro } from 'lucide-react';
 
 export const NotificationToast = () => {
+  const navigate = useNavigate();
   const { user, isContractor } = useAuth();
 
   useEffect(() => {
@@ -62,7 +64,11 @@ export const NotificationToast = () => {
             toast('Neue Nachricht', {
               description: message.message.substring(0, 100) + (message.message.length > 100 ? '...' : ''),
               icon: <MessageSquare className="w-4 h-4" />,
-              duration: 5000
+              duration: 5000,
+              action: {
+                label: 'Öffnen',
+                onClick: () => navigate(`/nachrichten?conversation=${message.conversation_id}`)
+              }
             });
           }
         }

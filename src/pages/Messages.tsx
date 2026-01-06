@@ -619,20 +619,9 @@ export default function Messages() {
                         </span>
                       )}
                     </div>
-                    {projectLink ? (
-                      <Link
-                        to={projectLink}
-                        className="text-sm text-primary hover:underline flex items-center gap-1"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        {conv.project?.title || "Projekt"}
-                        <ExternalLink className="h-3 w-3" />
-                      </Link>
-                    ) : (
-                      <span className="text-sm text-muted-foreground">
-                        {conv.project?.title || "Projekt nicht verfügbar"}
-                      </span>
-                    )}
+                    <span className="text-sm text-muted-foreground">
+                      {conv.project?.title || "Projekt nicht verfügbar"}
+                    </span>
                   </div>
                 );
               })}
