@@ -374,7 +374,10 @@ export default function CustomerDashboard() {
                               </div>
 
                               <div className="grid grid-cols-2 gap-4 mt-4">
-                                <div className="bg-muted/50 p-4 rounded-lg">
+                                <div 
+                                  className="bg-muted/50 p-4 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                                  onClick={() => navigate(`/kunde/projekt/${project.id}?tab=contractors`)}
+                                >
                                   <div className="flex items-center gap-2 mb-1">
                                     <Users className="h-4 w-4 text-muted-foreground" />
                                     <span className="font-semibold text-2xl">
@@ -386,7 +389,10 @@ export default function CustomerDashboard() {
                                   </p>
                                 </div>
 
-                                <div className="bg-muted/50 p-4 rounded-lg">
+                                <div 
+                                  className="bg-muted/50 p-4 rounded-lg cursor-pointer hover:bg-muted transition-colors"
+                                  onClick={() => navigate(`/nachrichten?project=${project.id}`)}
+                                >
                                   <div className="flex items-center gap-2 mb-1">
                                     <MessageSquare className="h-4 w-4 text-muted-foreground" />
                                     <span className="font-semibold text-2xl">

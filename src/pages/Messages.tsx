@@ -67,6 +67,77 @@ export default function Messages() {
       let contractorId = searchParams.get("contractor");
       let customerId = searchParams.get("customer");
 
+      // Handle contractor-only deep link (from public profile "Nachricht senden")
+      if (contractorId && !projectId) {
+        console.log("🔗 Contractor-only deep link:", { contractorId, userId });
+        
+        // Customer wants to message a contractor - need to find/select a project
+        // First check if there are existing conversations with this contractor
+        const { data: existingConvs } = await supabase
+          .from("conversations")
+          .select("id, project:projects(id, title)")
+          .eq("customer_id", userId)
+          .eq("contractor_id", contractorId)
+          .order("updated_at", { ascending: false });
+
+        if (existingConvs && existingConvs.length > 0) {
+          // Use the most recent conversation
+          console.log("✅ Found existing conversation with contractor:", existingConvs[0].id);
+          setSelectedConvId(existingConvs[0].id);
+          setShowChat(true);
+          return;
+        }
+
+        // No existing conversation - check if customer has projects
+        const { data: customerProjects } = await supabase
+          .from("projects")
+          .select("id, title")
+          .eq("customer_id", userId)
+          .in("status", ["open", "assigned", "in_progress"])
+          .order("created_at", { ascending: false });
+
+        if (!customerProjects || customerProjects.length === 0) {
+          toast({
+            title: "Kein Projekt vorhanden",
+            description: "Erstellen Sie zuerst ein Projekt, um den Handwerker zu kontaktieren.",
+            variant: "destructive",
+          });
+          navigate("/kunde/projekt-erstellen");
+          return;
+        }
+
+        // Use the first/most recent project to start conversation
+        const selectedProjectId = customerProjects[0].id;
+        console.log("📝 Creating conversation with first project:", selectedProjectId);
+
+        const { data: newConv, error } = await supabase
+          .from("conversations")
+          .insert({
+            project_id: selectedProjectId,
+            customer_id: userId,
+            contractor_id: contractorId,
+            last_message_at: new Date().toISOString(),
+          })
+          .select("id")
+          .single();
+
+        if (error) {
+          console.error("❌ Error creating conversation:", error);
+          toast({
+            title: "Fehler",
+            description: "Konversation konnte nicht erstellt werden",
+            variant: "destructive",
+          });
+          return;
+        }
+
+        console.log("✅ Created new conversation:", newConv.id);
+        await loadConversations(userId);
+        setSelectedConvId(newConv.id);
+        setShowChat(true);
+        return;
+      }
+
       if (!projectId) return;
 
       console.log("🔗 Deep link detected:", { projectId, contractorId, customerId, userId });

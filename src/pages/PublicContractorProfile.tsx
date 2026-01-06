@@ -61,7 +61,8 @@ export default function PublicContractorProfile() {
       navigate('/login');
       return;
     }
-    navigate('/nachrichten');
+    // Navigate to messages with contractor ID - Messages page will handle project selection
+    navigate(`/nachrichten?contractor=${id}`);
   };
 
   if (loading) {
