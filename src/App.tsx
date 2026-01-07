@@ -53,9 +53,9 @@ const AppContent = () => {
     <>
       <Toaster />
       <Sonner />
-      {initialized && user && <NotificationToast />}
       <CookieBanner />
       <BrowserRouter>
+        {initialized && user && <NotificationToast />}
         <Routes>
           <Route path="/" element={<Index />} />
           <Route path="/register" element={<Register />} />
