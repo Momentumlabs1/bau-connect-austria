@@ -15,7 +15,7 @@ import {
   TableRow,
 } from "@/components/ui/table";
 import { VerificationBadge } from "@/components/contractor/VerificationBadge";
-import { ExternalLink, CheckCircle2, XCircle, Shield, Users, FileText, RefreshCw } from "lucide-react";
+import { ExternalLink, CheckCircle2, XCircle, Shield, Users, FileText, RefreshCw, AlertTriangle } from "lucide-react";
 import { format } from "date-fns";
 import { de } from "date-fns/locale";
 
@@ -144,6 +144,7 @@ export default function AdminDashboard() {
   const verifiedCount = contractors.filter(c => c.verified).length;
   const pendingCount = contractors.filter(c => !c.verified).length;
   const withDocsCount = contractors.filter(c => c.gewerbeschein_url).length;
+  const incompleteCount = contractors.filter(c => !c.trades || c.trades.length === 0).length;
 
   return (
     <div className="min-h-screen bg-muted/30">
@@ -165,7 +166,7 @@ export default function AdminDashboard() {
 
       <main className="container mx-auto px-4 py-8">
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-center gap-4">
@@ -201,6 +202,19 @@ export default function AdminDashboard() {
                 <div>
                   <p className="text-2xl font-bold">{withDocsCount}</p>
                   <p className="text-sm text-muted-foreground">Mit Gewerbeschein</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+          <Card className={incompleteCount > 0 ? "border-orange-300 bg-orange-50/50" : ""}>
+            <CardContent className="pt-6">
+              <div className="flex items-center gap-4">
+                <div className="p-3 bg-orange-100 rounded-full">
+                  <AlertTriangle className="h-6 w-6 text-orange-600" />
+                </div>
+                <div>
+                  <p className="text-2xl font-bold">{incompleteCount}</p>
+                  <p className="text-sm text-muted-foreground">Ohne Gewerke</p>
                 </div>
               </div>
             </CardContent>
@@ -260,15 +274,24 @@ export default function AdminDashboard() {
                         </TableCell>
                         <TableCell>
                           <div className="flex flex-wrap gap-1">
-                            {contractor.trades.slice(0, 2).map((trade) => (
-                              <Badge key={trade} variant="secondary" className="text-xs">
-                                {getTradeLabel(trade)}
+                            {(!contractor.trades || contractor.trades.length === 0) ? (
+                              <Badge variant="outline" className="text-xs bg-orange-100 text-orange-700 border-orange-300">
+                                <AlertTriangle className="h-3 w-3 mr-1" />
+                                Onboarding unvollständig
                               </Badge>
-                            ))}
-                            {contractor.trades.length > 2 && (
-                              <Badge variant="outline" className="text-xs">
-                                +{contractor.trades.length - 2}
-                              </Badge>
+                            ) : (
+                              <>
+                                {contractor.trades.slice(0, 2).map((trade) => (
+                                  <Badge key={trade} variant="secondary" className="text-xs">
+                                    {getTradeLabel(trade)}
+                                  </Badge>
+                                ))}
+                                {contractor.trades.length > 2 && (
+                                  <Badge variant="outline" className="text-xs">
+                                    +{contractor.trades.length - 2}
+                                  </Badge>
+                                )}
+                              </>
                             )}
                           </div>
                         </TableCell>
