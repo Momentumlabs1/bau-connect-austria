@@ -9,6 +9,14 @@ import { Badge } from "@/components/ui/badge";
 import { cn } from "@/lib/utils";
 import { Loader2 } from "lucide-react";
 
+interface NotificationData {
+  projectId?: string;
+  project_id?: string;
+  leadPrice?: number;
+  offer_id?: string;
+  amount?: number;
+}
+
 interface Notification {
   id: string;
   type: string;
@@ -16,6 +24,7 @@ interface Notification {
   body: string;
   read: boolean;
   created_at: string;
+  data: NotificationData | null;
 }
 
 export default function Notifications() {
@@ -54,7 +63,7 @@ export default function Notifications() {
     }
     
     const { data } = await query;
-    setNotifications(data || []);
+    setNotifications((data as Notification[]) || []);
   };
 
   const markAllAsRead = async () => {
@@ -65,6 +74,28 @@ export default function Notifications() {
       .eq('read', false);
     
     loadNotifications(userId);
+  };
+
+  const handleNotificationClick = async (notif: Notification) => {
+    // Als gelesen markieren
+    if (!notif.read) {
+      await supabase
+        .from('notifications')
+        .update({ read: true, read_at: new Date().toISOString() })
+        .eq('id', notif.id);
+      
+      // Lokalen State aktualisieren
+      setNotifications(prev => 
+        prev.map(n => n.id === notif.id ? { ...n, read: true } : n)
+      );
+    }
+    
+    // Zur relevanten Seite navigieren
+    const projectId = notif.data?.projectId || notif.data?.project_id;
+    
+    if (projectId) {
+      navigate(`/handwerker/projekt/${projectId}`);
+    }
   };
 
   if (loading) {
@@ -109,8 +140,9 @@ export default function Notifications() {
             notifications.map(notif => (
               <Card 
                 key={notif.id}
+                onClick={() => handleNotificationClick(notif)}
                 className={cn(
-                  "p-6",
+                  "p-6 cursor-pointer hover:shadow-md transition-shadow",
                   !notif.read && "border-l-4 border-l-primary bg-primary/5"
                 )}
               >
