@@ -57,7 +57,7 @@ export default function CustomerContractorSearch() {
         service_radius,
         postal_codes
       `)
-      .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW']);
+      .in('handwerker_status', ['APPROVED', 'UNDER_REVIEW']); // Nur verifizierte/in Prüfung
 
     if (filters.gewerk && filters.gewerk !== 'all') {
       query = query.contains('trades', [filters.gewerk]);

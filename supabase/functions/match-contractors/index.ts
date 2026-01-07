@@ -250,7 +250,7 @@ Deno.serve(async (req) => {
       .from('contractors')
       .select('*')
       .contains('trades', [project.gewerk_id])
-      .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
+      .in('handwerker_status', ['APPROVED', 'UNDER_REVIEW']) // REGISTERED = Onboarding nicht abgeschlossen
     
     if (contractorsError) {
       throw new Error(`Failed to fetch contractors: ${contractorsError.message}`)
