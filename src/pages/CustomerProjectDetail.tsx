@@ -106,7 +106,7 @@ export default function CustomerProjectDetail() {
           .from('contractors')
           .select('*')
           .contains('trades', [projectData.gewerk_id])
-          .in('handwerker_status', ['REGISTERED', 'APPROVED', 'UNDER_REVIEW'])
+          .in('handwerker_status', ['APPROVED', 'UNDER_REVIEW']) // Nur verifizierte/in Prüfung
           .order('rating', { ascending: false })
           .limit(10);
         

@@ -87,7 +87,11 @@ export default function ContractorDashboard() {
         return;
       }
 
-      if (contractorData.handwerker_status === 'INCOMPLETE' || contractorData.handwerker_status === 'REGISTERED') {
+      // Prüfe Status UND ob Gewerke gewählt wurden
+      if (contractorData.handwerker_status === 'INCOMPLETE' || 
+          contractorData.handwerker_status === 'REGISTERED' ||
+          !contractorData.trades || 
+          contractorData.trades.length === 0) {
         navigate("/handwerker/onboarding");
         return;
       }
